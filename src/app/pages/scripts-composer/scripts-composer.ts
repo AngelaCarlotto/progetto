@@ -210,13 +210,12 @@ export class ScriptsComposer {
         ftpPassword: this.scriptForm.ftpPassword
       };
 
-      // MODIFICA: orario completo ripristinato
       this.data.logs.push({
         id: 'LOG-' + Math.floor(Math.random() * 99999),
         scriptId: this.scriptForm?.id || 'SRV-1',
         level: 'INFO',
         message: "Script modificato dall'utente",
-        createdAt: new Date().toISOString(), // <-- Rimosso lo split
+        createdAt: new Date().toISOString(), 
         executionId: 'N/A'
       });
     }
@@ -226,19 +225,34 @@ export class ScriptsComposer {
   }
 
   deleteScript(id: string) {
-    if (confirm('Sei sicuro di voler eliminare questo script?')) {
-      if (this.data && this.data.scripts) {
-        
-        // Questo rimuove lo script dall'array globale nel DataService
-        this.data.scripts = this.data.scripts.filter((s: any) => s.id !== id);
-        
-        // SE hai una funzione nel servizio per salvare i dati nel localStorage, decommenta la riga sotto:
-        // this.data.saveToStorage(); 
+  if (confirm('Sei sicuro di voler eliminare questo script?')) {
+    if (this.data && this.data.scripts) {
+      
+      const scriptDaEliminare = this.data.scripts.find((s: any) => s.id === id);
+      const customerId = scriptDaEliminare ? scriptDaEliminare.customerId : '';
+      const serverId = scriptDaEliminare ? scriptDaEliminare.serverId : '';
 
-        // AGGIUSTAMENTO: Rimosso il calcolo che mandava in crash il compilatore!
+      // 2. CREIAMO IL NUOVO LOG DI ELIMINAZIONE
+      if (this.data.logs) {
+        const nuovoLog = {
+          id: 'LOG-' + Math.floor(100000 + Math.random() * 900000), 
+          scriptId: id,
+          customerId: customerId,
+          serverId: serverId,
+          level: 'INFO',
+          createdAt: new Date().toISOString(), 
+          message: `Lo script con ID ${id} è stato rimosso dall'utente.` 
+        };
+
+        this.data.logs.unshift(nuovoLog);
       }
+      
+      this.data.scripts = this.data.scripts.filter((s: any) => s.id !== id);
+      
+       this.data.saveToStorage();
     }
   }
+}
 
   filteredScripts() {
     if (!this.searchId) return this.data.scripts;

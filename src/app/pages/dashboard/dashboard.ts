@@ -94,7 +94,6 @@ export class DashboardComponent implements OnInit {
       d.setDate(d.getDate() - (4 - i)); 
       const dateStr = d.toISOString().split('T')[0];
 
-      // Mostra l'andamento dei soli backup andati a buon fine (SUCCESS)
       const count = this.data.logs.filter((l: any) => 
         l.createdAt && 
         l.createdAt.substring(0, 10) === dateStr &&
@@ -119,7 +118,6 @@ export class DashboardComponent implements OnInit {
     return this.data.scripts ? this.data.scripts.length : 0; 
   }
   
-  // FIX: Conta solo i successi di oggi
   getBackupOggi(): number {
     if (!this.data.logs) return 0;
     const todayStr = new Date().toISOString().split('T')[0];
