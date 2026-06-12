@@ -9,8 +9,6 @@ import { DataService } from '../../services/data';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
-
-
 export class DashboardComponent implements OnInit {
 
   loading = false;
@@ -49,19 +47,18 @@ export class DashboardComponent implements OnInit {
     }, 600);
   }
 
-  // Esegue tutti i calcoli grafici unificati
+  // Esegue tutti i calcoli grafici unificati (VERSIONE UNICA E CORRETTA)
   calculatePercentagesAndCharts() {
-    // 1. CALCOLO DONUT CHART
     let mysqlSteps = 0;
     let filesSteps = 0;
 
     if (this.data && this.data.scripts && this.data.scripts.length > 0) {
       this.data.scripts.forEach((s: any) => {
         if (s.mysqlComponent && s.selectedMysqlFiles) {
-          mysqlSteps += s.selectedMysqlFiles.length || 0;
+          mysqlSteps += Array.isArray(s.selectedMysqlFiles) ? s.selectedMysqlFiles.length : 0;
         }
         if (s.filesComponent && s.selectedFiles) {
-          filesSteps += s.selectedFiles.length || 0;
+          filesSteps += Array.isArray(s.selectedFiles) ? s.selectedFiles.length : 0;
         }
       });
     }
@@ -80,7 +77,6 @@ export class DashboardComponent implements OnInit {
       this.donutGradient = 'conic-gradient(#e2e8f0 0% 100%)'; 
     }
 
-    // 2. CALCOLO LINE CHART STORICO
     this.generateLineChart();
   }
 
@@ -98,10 +94,14 @@ export class DashboardComponent implements OnInit {
       d.setDate(d.getDate() - (4 - i)); 
       const dateStr = d.toISOString().split('T')[0];
 
-      const count = this.data.logs.filter((l: any) => l.createdAt && l.createdAt.substring(0, 10) === dateStr).length;
+      // Mostra l'andamento dei soli backup andati a buon fine (SUCCESS)
+      const count = this.data.logs.filter((l: any) => 
+        l.createdAt && 
+        l.createdAt.substring(0, 10) === dateStr &&
+        l.level?.toLowerCase() === 'success'
+      ).length;
 
       const x = i * widthStep;
-   
       const y = Math.max(20, 180 - (count * 25)); 
 
       points.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
@@ -110,7 +110,7 @@ export class DashboardComponent implements OnInit {
     this.lineChartPath = points.join(' ');
   }
 
-  //FUNZIONI DI CONTEGGIO IN TEMPO REALE
+  // FUNZIONI DI CONTEGGIO IN TEMPO REALE
   getClientiTotali(): number { 
     return this.data.customers ? this.data.customers.length : 0; 
   }
@@ -119,10 +119,15 @@ export class DashboardComponent implements OnInit {
     return this.data.scripts ? this.data.scripts.length : 0; 
   }
   
+  // FIX: Conta solo i successi di oggi
   getBackupOggi(): number {
     if (!this.data.logs) return 0;
     const todayStr = new Date().toISOString().split('T')[0];
-    return this.data.logs.filter(l => l.createdAt && l.createdAt.substring(0, 10) === todayStr).length;
+    return this.data.logs.filter(l => 
+      l.createdAt && 
+      l.createdAt.substring(0, 10) === todayStr &&
+      l.level?.toLowerCase() === 'success'
+    ).length;
   }
   
   getErroriRilevati(): number {

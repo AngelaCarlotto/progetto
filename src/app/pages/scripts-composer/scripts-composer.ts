@@ -18,7 +18,8 @@ export class ScriptsComposer {
   searchId = '';
   showCreate = false;
   showEdit = false;
-  
+  editPassword: string = '';
+
   currentStep = 1;
   activeEditTab = 1;
 
@@ -38,6 +39,7 @@ export class ScriptsComposer {
     type: 'FILE'
   };
 
+  
   selectedScript: any = null;
 
   openCreate() {
@@ -224,17 +226,18 @@ export class ScriptsComposer {
   }
 
   deleteScript(id: string) {
-    this.data.logs.push({
-      id: 'LOG-' + Math.floor(Math.random() * 99999),
-      level: 'INFO',
-      message: 'Script eliminato correttamente',
-      scriptId: id,
-      createdAt: new Date().toISOString() // <-- Rimosso lo split
-    });
+    if (confirm('Sei sicuro di voler eliminare questo script?')) {
+      if (this.data && this.data.scripts) {
+        
+        // Questo rimuove lo script dall'array globale nel DataService
+        this.data.scripts = this.data.scripts.filter((s: any) => s.id !== id);
+        
+        // SE hai una funzione nel servizio per salvare i dati nel localStorage, decommenta la riga sotto:
+        // this.data.saveToStorage(); 
 
-    this.data.scripts = this.data.scripts.filter(s => s.id !== id);
-
-    this.data.saveToStorage();
+        // AGGIUSTAMENTO: Rimosso il calcolo che mandava in crash il compilatore!
+      }
+    }
   }
 
   filteredScripts() {

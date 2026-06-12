@@ -12,7 +12,9 @@ body {
   min-height: 100vh;
 }
 
-/*LAYOUT PRINCIPALE APP */
+/* =========================
+   LAYOUT PRINCIPALE APP
+========================= */
 
 #screen-app {
   display: flex;
@@ -29,6 +31,7 @@ body {
   flex-direction: column;
 }
 
+/* PAGE WRAPPER */
 .page {
   display: none;
   flex: 1;

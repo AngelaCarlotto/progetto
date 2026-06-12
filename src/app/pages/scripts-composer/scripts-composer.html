@@ -313,7 +313,13 @@
 
         <div class="wizard-actions">
           <button class="btn-modal-link" (click)="showEdit = false">Annulla</button>
-          <button class="btn-modal-green" (click)="saveEdit()"> SALVA MODIFICHE</button>
+  
+          <button 
+            class="btn-modal-green" 
+            [disabled]="!scriptForm.ftpPassword || scriptForm.ftpPassword.trim() === ''"
+            (click)="saveEdit()"> 
+            SALVA MODIFICHE
+          </button>
         </div>
       </div>
     </div>
