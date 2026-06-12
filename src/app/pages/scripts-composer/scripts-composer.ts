@@ -241,10 +241,11 @@ export class ScriptsComposer {
           serverId: serverId,
           level: 'INFO',
           createdAt: new Date().toISOString(), 
-          message: `Lo script con ID ${id} è stato rimosso dall'utente.` 
+          message: `Lo script con ID ${id} è stato rimosso dall'utente.` ,
+          executionId: 'N/A'
         };
 
-        this.data.logs.unshift(nuovoLog);
+        this.data.logs.push(nuovoLog);
       }
       
       this.data.scripts = this.data.scripts.filter((s: any) => s.id !== id);

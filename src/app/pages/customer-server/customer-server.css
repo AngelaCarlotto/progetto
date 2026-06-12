@@ -155,6 +155,8 @@
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
+  margin-left: 1.5%;
+  margin-right: 0.5%;
 }
 
 .btn-green {
@@ -171,14 +173,7 @@
   opacity: 0.9;
 }
 
-.pulsanti-destra {
-  display: flex;
-  justify-content: flex-end; 
-  gap: 12px;                 
-  width: 100%;               
-  margin-bottom: 20px;      
-  margin-right: 5%;          
-}
+
 
 .modal-overlay {
   position: fixed;
