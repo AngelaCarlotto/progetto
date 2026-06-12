@@ -9,14 +9,12 @@ export class DataService {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
-  // Inizializziamo gli array vuoti di base
   public scripts: any[] = [];
   public logs: any[] = [];
   public customers: any[] = [];
   public servers: any[] = [];
 
   constructor() {
-    // Carichiamo i dati dal localStorage SOLO se siamo nel browser
     if (this.isBrowser) {
       this.scripts = JSON.parse(localStorage.getItem('backup_scripts') || '[]');
       this.logs = JSON.parse(localStorage.getItem('backup_logs') || '[]');
@@ -25,9 +23,6 @@ export class DataService {
     }
   }
 
-  /**
-   * Salva lo stato corrente nel localStorage (solo lato browser)
-   */
   saveToStorage() {
     if (this.isBrowser) {
       localStorage.setItem('backup_scripts', JSON.stringify(this.scripts));

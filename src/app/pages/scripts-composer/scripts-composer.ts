@@ -158,7 +158,6 @@ export class ScriptsComposer {
       ftpUser: this.scriptForm.ftpUser
     });
 
-    // CREAZIONE: orario completo ripristinato
     this.data.logs.push({
       id: 'LOG-' + Math.floor(Math.random() * 99999),
       level: 'SUCCESS',
@@ -225,7 +224,6 @@ export class ScriptsComposer {
   }
 
   deleteScript(id: string) {
-    // ELIMINAZIONE: orario completo ripristinato
     this.data.logs.push({
       id: 'LOG-' + Math.floor(Math.random() * 99999),
       level: 'INFO',

@@ -75,8 +75,8 @@ export class GraphsComponent implements OnInit {
 
       this.loading = false;
       this.cdr.detectChanges();
-    }, 600); // <-- Assicurati che questa parentesi tonda e graffa siano chiuse così!
-  } // <-- Questa chiude il metodo ricalcola()
+    }, 600); 
+  } 
 
   calculateAllStats() {
     // 1. RESET TOTALE DEI CONTATORI E DELLE LABEL
@@ -86,7 +86,7 @@ export class GraphsComponent implements OnInit {
     this.globalError = 0;
     this.todaySuccess = 0;
     this.todayError = 0;
-    this.historyLabels = []; // <-- Svuota le label dello storico per evitare duplicati ad ogni click
+    this.historyLabels = []; 
 
     const todayStr = new Date().toISOString().split('T')[0];
 
@@ -95,7 +95,6 @@ export class GraphsComponent implements OnInit {
       this.data.scripts.forEach((s: any) => {
         if (s.mysqlComponent || s.hasMysql) {
           if (s.selectedMysqlFiles && Array.isArray(s.selectedMysqlFiles)) {
-            // Usa la lunghezza dell'array dello script corrente senza accumulare o duplicare
             this.mysqlCount += s.selectedMysqlFiles.length;
           } 
           else {
@@ -104,7 +103,6 @@ export class GraphsComponent implements OnInit {
         }
         if (s.filesComponent || s.hasFiles) {
           if (s.selectedFiles && Array.isArray(s.selectedFiles)) {
-            // Usa la lunghezza dell'array dello script corrente
             this.filesCount += s.selectedFiles.length;
           } 
           else {

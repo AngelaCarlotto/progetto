@@ -42,8 +42,8 @@
               <td>{{ getCustomerName(s.customerId) }}</td>
               <td>
                 <button class="btn-modifica" (click)="openEdit(s)">
-  <h5 class="btn-text-mod">Modifica</h5>
-</button>
+                  <h5 class="btn-text-mod">Modifica</h5>
+                </button>
                 <button class="btn-elimina" (click)="deleteScript(s.id)"> <h5 class="btn-text-elimina">Elimina</h5> </button>
               </td>
             </tr>
@@ -313,9 +313,7 @@
 
         <div class="wizard-actions">
           <button class="btn-modal-link" (click)="showEdit = false">Annulla</button>
-          <button class="btn-modal-green" (click)="saveEdit()">
-  SALVA MODIFICHE
-</button>
+          <button class="btn-modal-green" (click)="saveEdit()"> SALVA MODIFICHE</button>
         </div>
       </div>
     </div>

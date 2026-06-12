@@ -47,7 +47,7 @@ export class CustomerServerComponent {
     return this.expandedCustomerIds.includes(customerId);
   }
 
-  // Ritorna i server filtrati per un determinato cliente (usiamo == flessibile)
+  
   getServersByCustomer(customerId: string | number) {
     return this.data.servers.filter(s => s.customerId == customerId);
   }
