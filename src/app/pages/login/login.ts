@@ -11,12 +11,19 @@ import { FormsModule } from '@angular/forms';
 })
 export class LoginComponent {
 
-  @Output() logged = new EventEmitter<void>();
+  @Output() logged = new EventEmitter<string>();
 
-  username = 'admin';
-  password = 'password123';
+  username = '';
+  password = '';
+  errorMessage = '';
 
-  login() {
-    this.logged.emit();
+  onFormSubmit() {
+    this.errorMessage = '';
+
+    if (this.username === 'admin' && this.password === '123') {
+      this.logged.emit(this.username);
+    } else {
+      this.errorMessage = 'Credenziali non valide. Accesso negato.';
+    }
   }
 }

@@ -168,3 +168,15 @@
 .github-icon {
   color: #e6edf3;
 }
+
+.login-error-box {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: left;
+}

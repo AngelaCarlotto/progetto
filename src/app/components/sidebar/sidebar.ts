@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 export class SidebarComponent {
 
   @Input() currentPage = '';
+  @Input() username = ''; // <-- AGGIUNGI QUESTO INPUT QUI!
   @Output() changePage = new EventEmitter<string>();
 
   setPage(page: string) {

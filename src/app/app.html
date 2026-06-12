@@ -1,13 +1,17 @@
-@if (currentPage === 'login') {
+@if (currentPage === 'login' || !isLoggedIn) {
   
-  <app-login (logged)="currentPage = 'dashboard'"></app-login>
+  <app-login (logged)="login($event)"></app-login>
 
 } 
- @else {
+@else {
 
   <div class="app-container" style="display: flex;">
     
-    <app-sidebar [currentPage]="currentPage" (changePage)="currentPage = $event"></app-sidebar>
+    <app-sidebar 
+      [currentPage]="currentPage" 
+      [username]="loggedUser"
+      (changePage)="setPage($event)">
+    </app-sidebar>
     
     <div class="main-content" style="flex: 1; height: 100vh; overflow-y: auto;">
       @if (currentPage === 'dashboard') {

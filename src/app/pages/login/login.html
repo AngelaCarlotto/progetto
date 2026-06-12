@@ -4,26 +4,31 @@
     <div class="login-header">
       <div class="login-logo">🐧</div>
       <h1 class="login-title">PENGUIN PROTECT</h1>
-      <br/>
-
+      <div class="login-sub">Pannello di controllo Backup</div>
     </div>
 
-    <form (ngSubmit)="login()" class="login-form">
+    @if (errorMessage) {
+      <div class="login-error-box">
+        ⚠️ {{ errorMessage }}
+      </div>
+    }
+
+    <div class="login-form">
       
       <div class="form-group">
-        <label class="form-label">Username o Email</label>
+        <label class="form-label">Username o Email</label> 
         <div class="input-wrapper">
           <input 
             class="form-input" 
             name="username"
             [(ngModel)]="username" 
-            placeholder="admin"
+            placeholder="Inserisci l'username"
             required />
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Password</label>
+        <label class="form-label">Password</label> 
         <div class="input-wrapper">
           <input 
             class="form-input" 
@@ -35,7 +40,7 @@
         </div>
       </div>
 
-      <button type="submit" class="btn-login">
+      <button type="button" (click)="onFormSubmit()" class="btn-login">
         ACCEDI <span>→</span>
       </button>
       
@@ -48,6 +53,6 @@
         Accedi con GitHub
       </button>
 
-    </form>
+    </div>
   </div>
 </div>

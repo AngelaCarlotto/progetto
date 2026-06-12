@@ -31,12 +31,21 @@ export class AppComponent {
 
   isLoggedIn = false;
   currentPage = 'dashboard';
+  loggedUser = ''; // <-- 1. Nuova variabile per salvare il nome dell'utente
 
-  login() {
+  // 2. Modificato per ricevere il nome dal LoginComponent
+  login(username: string) {
+    this.loggedUser = username;
     this.isLoggedIn = true;
+    this.currentPage = 'dashboard'; // Ti sposta sulla dashboard appena accedi
   }
 
+  // 3. Modificato per intercettare il logout e svuotare il nome
   setPage(page: string) {
+    if (page === 'login') {
+      this.isLoggedIn = false;
+      this.loggedUser = ''; // Svuota il nome al logout
+    }
     this.currentPage = page;
   }
 }

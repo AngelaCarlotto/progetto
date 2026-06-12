@@ -5,7 +5,6 @@ import { isPlatformBrowser } from '@angular/common';
   providedIn: 'root'
 })
 export class DataService {
-  // Iniezione del token per capire su quale piattaforma siamo (Server o Browser)
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
