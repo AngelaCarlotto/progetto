@@ -1,0 +1,86 @@
+<div class="page active" id="page-graphs" style="display: flex; flex-direction: column; width: 100%;">
+
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Statistiche e Monitoraggio</div>
+      <div class="topbar-sub">Analisi quantitativa dei job di backup ed esito delle operazioni</div>
+    </div>
+    
+    <div class="topbar-actions">
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="ricalcola()"
+        [disabled]="loading"
+        [style.background]="loading ? '#64748b' : '#2563eb'">
+        {{ loading ? ' Sto ricalcolando...' : '↻ Aggiorna Dati' }}
+      </button>
+    </div>
+  </div>
+  
+  <div class="page-body" style="padding: 24px; display: block; overflow-y: auto;">
+    <div class="graphs-grid">
+      
+      <div class="graph-card">
+        <div class="graph-title">Numero di Step Divisi per Tipo</div>
+        <div class="bar-chart">
+          <div class="bar-col">
+            <div class="bar-val">{{ mysqlCount }}</div>
+            <div class="bar" [style.height]="mysqlHeight" style="background-color: #3b82f6; width: 100%;"></div>
+            <div class="bar-label">MySQL</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-val">{{ filesCount }}</div>
+            <div class="bar" [style.height]="filesHeight" style="background-color: #f59e0b; width: 100%;"></div>
+            <div class="bar-label">Files</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="graph-card">
+        <div class="graph-title">Statistiche Globali (Esecuzioni)</div>
+        <div class="bar-chart">
+          <div class="bar-col">
+            <div class="bar-val">{{ globalSuccess }}</div>
+            <div class="bar" [style.height]="globalSuccessHeight" style="background-color: #10b981; width: 100%;"></div>
+            <div class="bar-label">SUCCESS</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-val">{{ globalError }}</div>
+            <div class="bar" [style.height]="globalErrorHeight" style="background-color: #ef4444; width: 100%;"></div>
+            <div class="bar-label">ERROR</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="graph-card">
+        <div class="graph-title">Stato Esecuzioni Odierne (Today)</div>
+        <div class="bar-chart">
+          <div class="bar-col">
+            <div class="bar-val">{{ todaySuccess }}</div>
+            <div class="bar" [style.height]="todaySuccessHeight" style="background-color: #10b981; width: 100%;"></div>
+            <div class="bar-label">SUCCESS</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-val">{{ todayError }}</div>
+            <div class="bar" [style.height]="todayErrorHeight" style="background-color: #ef4444; width: 100%;"></div>
+            <div class="bar-label">ERROR</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="graph-card">
+        <div class="graph-title">Andamento Storico (Job Totali Ultimi 10 Giorni)</div>
+        <div class="chart-placeholder">
+          <svg class="chart" viewBox="0 0 400 130" style="width: 100%; height: 100%; overflow: visible;">
+            <polyline fill="none" stroke="#3b82f6" stroke-width="2.5" [attr.points]="svgPoints"/>
+            @for (label of historyLabels; track label.text) {
+              <text [attr.x]="label.x" y="128" font-size="11" fill="#94a3b8">{{ label.text }}</text>
+            }
+          </svg>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

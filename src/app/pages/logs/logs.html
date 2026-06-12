@@ -1,0 +1,98 @@
+<div class="page active">
+
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Logs</div>
+      <div class="topbar-sub">
+        Monitoraggio esecuzioni backup in tempo reale
+      </div>
+    </div>
+  </div>
+
+  <div class="page-body">
+
+    <div class="logs-toolbar">
+      <input
+        type="text"
+        placeholder="Cerca log..."
+        [(ngModel)]="search"
+        (ngModelChange)="currentPage = 1"
+        class="search-input"
+      >
+
+      <div class="items-selector">
+        <span>Elementi per pagina</span>
+        <select [(ngModel)]="itemsPerPage" (ngModelChange)="currentPage = 1">
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="25">25</option>
+          <option [ngValue]="50">50</option>
+          <option [ngValue]="100">100</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Log ID</th>
+            <th>Level</th>
+            <th>Message</th>
+            <th>Script ID</th>
+            <th>Execution ID</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of filteredLogs(); track log.id) {
+            <tr>
+              <td>{{ log.id }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [class.success]="log.level?.toLowerCase() === 'success'"
+                  [class.error]="log.level?.toLowerCase() === 'error'"
+                  [class.info]="log.level?.toLowerCase() === 'info'"
+                >
+                  {{ log.level }}
+                </span>
+              </td>
+              <td>{{ log.message }}</td>
+              <td><strong>{{ log.scriptId }}</strong></td>
+             <td>{{ log?.executionId }}</td>
+              <td>{{ log.createdAt | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+            </tr>
+          }
+          @if (filteredLogs().length === 0) {
+            <tr>
+              <td colspan="6" style="text-align: center; color: #64748b; padding: 30px;">
+                Nessun log registrato al momento. Crea uno script per avviare il tracciamento.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button
+        (click)="previousPage()"
+        [disabled]="currentPage === 1"
+      >
+        ← Previous
+      </button>
+
+      <span>
+        Page {{ currentPage }} / {{ totalPages() }}
+      </span>
+
+      <button
+        (click)="nextPage()"
+        [disabled]="currentPage === totalPages()"
+      >
+        Next →
+      </button>
+    </div>
+
+  </div>
+</div>

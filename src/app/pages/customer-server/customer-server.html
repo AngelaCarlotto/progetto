@@ -1,0 +1,149 @@
+<div class="page active">
+
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Customer / Server Manager</div>
+    </div>
+  </div>
+
+  <div class="page-body">
+
+    <div class="pulsanti-destra">
+      <button class="btn-primary" (click)="openCustomerModal()">+ Customer</button>
+      <button class="btn-primary btn-green" (click)="openServerModal()">+ Server</button>
+    </div>
+
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 40px;"></th>
+            <th>Customer Name</th>
+            <th>Customer ID</th>
+            <th>Created at</th>
+            <th style="text-align: center;">Delete Customer</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (c of data.customers; track c.id) {
+            <tr class="customer-row" [class.row-expanded]="isExpanded(c.id)">
+              <td class="expand-trigger" (click)="toggleExpand(c.id)">
+                {{ isExpanded(c.id) ? '▼' : '▶' }}
+              </td>
+              <td class="customer-name-cell" (click)="toggleExpand(c.id)">
+                <b>{{ c.name }}</b> 
+                <span class="server-count-badge">({{ getServersByCustomer(c.id).length }} server)</span>
+              </td>
+              <td><code>{{ c.id }}</code></td>
+              <td>{{ c.createdAt }}</td>
+              <td style="text-align: center;">
+                <button class="btn-text-delete" (click)="deleteCustomer(c.id)">Elimina</button>
+              </td>
+            </tr>
+
+            @if (isExpanded(c.id)) {
+              <tr>
+                <td colspan="5" class="nested-server-container">
+                  <div class="nested-server-box">
+                    
+                    @if (getServersByCustomer(c.id).length === 0) {
+                      <div class="no-servers-placeholder">
+                        Nessun server associato a questo cliente. Clicca su "+ Server" in alto per aggiungerne uno.
+                      </div>
+                    } @else {
+                      <table class="nested-server-table">
+                        <thead>
+                          <tr>
+                            <th>Server ID</th>
+                            <th>Server Name</th>
+                            <th style="text-align: center;">Delete Server</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (s of getServersByCustomer(c.id); track s.id) {
+                            <tr>
+                              <td><code>{{ s.id }}</code></td>
+                              <td>{{ s.name }}</td>
+                              <td style="text-align: center;">
+                                <button class="btn-text-delete" (click)="deleteServer(s.id)">Elimina</button>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    }
+
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  @if (showCustomerModal) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Create Customer</h3>
+          <button class="close-x" (click)="showCustomerModal = false">✕</button>
+        </div>
+        <div class="modal-section">
+          <input [(ngModel)]="customerForm.name" placeholder="Customer Name">
+          <button (click)="createCustomer()" class="btn-modal-green">
+            CREA
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showServerModal) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Create Server</h3>
+          <button class="close-x" (click)="showServerModal = false">✕</button>
+        </div>
+        <div class="modal-section">
+          <input [(ngModel)]="serverForm.name" placeholder="Server Name">
+
+          <select [(ngModel)]="serverForm.customerId">
+            <option [ngValue]="null" disabled selected>Select Customer</option>
+            @for (c of data.customers; track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}</option>
+            }
+          </select>
+
+          <button (click)="createServer()" class="btn-modal-green" [disabled]="!serverForm.name || !serverForm.customerId">
+            CREA
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showSecretModal) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Credentials Generated</h3>
+        </div>
+        <div class="modal-section">
+          <div class="credentials-box">
+            <p style="margin: 4px 0;"><b>ID:</b> <code>{{ credentials.clientId }}</code></p>
+            <p style="margin: 4px 0;"><b>SECRET:</b> <code>{{ credentials.clientSecret }}</code></p>
+          </div>
+          <p style="font-size: 11px; color: #64748b; margin: 4px 0;">Copy these credentials. They won't be shown again.</p>
+          <button (click)="closeSecretModal()" class="btn-modal-green">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

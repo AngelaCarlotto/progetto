@@ -1,0 +1,45 @@
+
+/* RESET BASE */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0d1117;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+}
+
+/*LAYOUT PRINCIPALE APP */
+
+#screen-app {
+  display: flex;
+  height: 100vh;
+  flex-direction: row;
+  background: #f0f2f5;
+}
+
+.main-content {
+  flex: 1;
+  background: #f0f2f5;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+}
+
+.page.active {
+  display: flex;
+}
+
+.page-body {
+  padding: 28px 32px;
+  flex: 1;
+}

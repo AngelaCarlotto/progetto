@@ -1,0 +1,170 @@
+#screen-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #0b0f17;
+  background-image: radial-gradient(circle at 50% 50%, #121824 0%, #0b0f17 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.login-card {
+  background: #111827;
+  border-radius: 14px;
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  border: 1px solid #1f293d;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+}
+
+.login-logo {
+  font-size: 46px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.2));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+.login-title {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin: 0 0 6px 0;
+}
+
+.login-sub {
+  color: #6b7280;
+  font-size: 13px;
+  margin: 0 0 32px 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  text-align: left;
+}
+
+.form-label {
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+}
+
+.form-input {
+  width: 100%;
+  background: #1f293d;
+  border: 1px solid #2d3748;
+  color: #ffffff;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #22c55e;
+  background: #161f30;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+
+.form-input::placeholder {
+  color: #4b5563;
+}
+
+.btn-login {
+  width: 100%;
+  background: #22c55e;
+  color: #ffffff;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.btn-login:hover {
+  background: #16a34a;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+}
+
+.btn-login:active {
+  transform: scale(0.98);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #4b5563;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 4px 0;
+}
+
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #1f293d;
+}
+
+.divider:not(:empty)::before { margin-right: .75em; }
+.divider:not(:empty)::after { margin-left: .75em; }
+
+.btn-github {
+  width: 100%;
+  background: #24292e;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.btn-github:hover {
+  background: #30363d;
+  border-color: #8b949e;
+}
+
+.btn-github:active {
+  transform: scale(0.98);
+}
+
+.github-icon {
+  color: #e6edf3;
+}

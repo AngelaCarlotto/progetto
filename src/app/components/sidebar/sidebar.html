@@ -1,0 +1,55 @@
+<div class="sidebar">
+
+  <div class="sidebar-brand">
+    <span>PenguinProtect</span>
+  </div>
+
+  <nav class="sidebar-nav">
+
+    <div class="nav-item"
+      [class.active]="currentPage === 'dashboard'"
+      (click)="setPage('dashboard')">
+      Dashboard
+    </div>
+
+    <div class="nav-item"
+      [class.active]="currentPage === 'customer'"
+      (click)="setPage('customer')">
+      Customer-Server
+    </div>
+
+    <div class="nav-item"
+      [class.active]="currentPage === 'scripts'"
+      (click)="setPage('scripts')">
+      Scripts
+    </div>
+
+    <div class="nav-item"
+      [class.active]="currentPage === 'graphs'"
+      (click)="setPage('graphs')">
+      Graphs
+    </div>
+
+    <div class="nav-item"
+      [class.active]="currentPage === 'logs'"
+      (click)="setPage('logs')">
+      Logs
+    </div>
+
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-profile">
+      <div class="user-avatar">AD</div>
+      <div class="user-info">
+        <span class="user-name">Admin User</span>
+        <span class="user-email">admin@backup.it</span>
+      </div>
+    </div>
+    
+    <button type="button" class="btn-logout" (click)="logout()">
+      <span class="logout-text">Logout</span>
+    </button>
+  </div>
+
+</div>

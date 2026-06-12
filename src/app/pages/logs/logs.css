@@ -1,0 +1,117 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  min-height: 70px;
+}
+
+.topbar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.topbar-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.topbar-sub {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.logs-toolbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 280px;
+  padding: 10px;
+  border: 1px solid #dbe2ea;
+  border-radius: 8px;
+}
+
+.items-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.items-selector select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #dbe2ea;
+}
+
+.table-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+
+}
+
+.data-table th {
+  background: #f8fafc;
+  padding: 13px;
+  text-align: center;
+
+}
+
+.data-table td {
+  padding: 14px;
+  border-top: 1px solid #eef2f7;
+  font-size: 12px;
+  text-align: center;
+}
+
+.badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.error {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.pagination button {
+  padding: 8px 14px;
+  border: 1px solid #dbe2ea;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
