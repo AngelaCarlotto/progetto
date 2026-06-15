@@ -44,6 +44,7 @@
 .btn-green {
   background: #10b981;
   margin-left: 1%;
+  font-size: 13px;
 }
 
 .btn-primary:hover {
@@ -166,49 +167,47 @@
   color: #475569;
 }
 
-/* CONTENITORE PRINCIPALE DELLE CHECKBOX */
+
 .components-selection {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Divide lo spazio esattamente in 2 colonne uguali */
-  gap: 16px;                     /* Spazio tra la colonna DB e la colonna Files */
+  grid-template-columns: 1fr 1fr; 
+  gap: 16px;                  
   padding: 12px 4px;
-  background: #f8fafc;           /* Un leggero sfondo neutro per racchiudere le scelte */
+  background: #f8fafc;           
   border-radius: 8px;
-  border: 1px solid #e2e8f0;     /* Contorno pulito */
+  border: 1px solid #e2e8f0;    
   margin-bottom: 8px;
 }
 
-/* LA SINGOLA VOCE (Checkbox + Testo) */
 .checkbox-container {
   display: flex;
-  align-items: center;           /* Allinea perfettamente al centro verticale la checkbox e il testo */
-  gap: 10px;                     /* Spazio fisso e invalicabile tra il quadratino e la scritta */
+  align-items: center;           
+  gap: 10px;                     
   cursor: pointer;
   padding: 6px;
   border-radius: 6px;
   transition: background-color 0.2s;
 }
 
-/* Effetto feedback quando passi sopra l'opzione */
+
 .checkbox-container:hover {
   background-color: #f1f5f9;
 }
 
-/* Forza la checkbox a non rimpicciolirsi mai, mantenendo i suoi 16x16px */
 .checkbox-container input[type="checkbox"] {
   width: 16px !important;
   height: 16px !important;
-  margin: 0;                     /* Rimuove i margini di default del browser */
-  flex-shrink: 0;                /* Impedisce alla checkbox di schiacciarsi se il testo è lungo */
+  margin: 0;                    
+  flex-shrink: 0;                
   cursor: pointer;
 }
 
-/* Stile del testo accanto alla checkbox */
+
 .checkbox-label {
   font-size: 14px;
   font-weight: 500;
   color: #1e293b;
-  white-space: nowrap;           /* Impedisce al testo di andare a capo spezzando le parole */
+  white-space: nowrap;         
 }
 
 
@@ -402,6 +401,7 @@
   border-radius: 8px;
   margin-left: 25px;
   margin-top: 20px;
+  font-size: 13px;
 }
 
 .edit-tabs-nav {

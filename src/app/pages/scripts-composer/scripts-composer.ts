@@ -294,7 +294,7 @@ export class ScriptsComposer {
             serverId: serverId,
             level: 'INFO',
             createdAt: new Date().toISOString(), 
-            message: `Lo script con ID ${id} è stato rimosso dall'utente.`,
+            message: `Lo script con ID ${id} è stato rimosso.`,
             executionId: 'N/A'
           });
         }
