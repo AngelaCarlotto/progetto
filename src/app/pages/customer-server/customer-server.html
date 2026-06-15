@@ -2,7 +2,7 @@
 
   <div class="topbar">
     <div>
-      <div class="topbar-title">Customer / Server Manager</div>
+      <div class="topbar-title">Customer / Server </div>
     </div>
   </div>
 
@@ -57,7 +57,7 @@
                           <tr>
                             <th>Server ID</th>
                             <th>Server Name</th>
-                            <th style="text-align: center;">Delete Server</th>
+                            <th style="text-align: center; width: 60px;">Azioni</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -65,9 +65,35 @@
                             <tr>
                               <td><code>{{ s.id }}</code></td>
                               <td>{{ s.name }}</td>
-                              <td style="text-align: center;">
-                                <button class="btn-text-delete" (click)="deleteServer(s.id)">Elimina</button>
+                              
+                              <td style="text-align: center; position: relative; overflow: visible;">
+                                <div class="dropdown-container" style="display: inline-block;">
+                                  
+                                  <button class="btn-dots" (click)="toggleDropdown(s.id, $event)" 
+                                          style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 10px; line-height: 1;">
+                                    &#8942;
+                                  </button>
+
+                                  @if (activeDropdownServerId === s.id) {
+                                    <div class="dropdown-menu" 
+                                         style="position: absolute; right: 0; top: 100%; background: white; border: 1px solid #e2e8f0; box-shadow: 0px 4px 12px rgba(0,0,0,0.1); border-radius: 6px; z-index: 100; min-width: 160px; text-align: left; padding: 4px 0;">
+                                      
+                                      <button (click)="regenerateCredentials(s.id)" 
+                                              style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; text-align: left; cursor: pointer; font-size: 13px; color: #1e293b;">
+                                        🔄 Rigenera Credenziali
+                                      </button>
+                                      
+                                      <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
+                                      
+                                      <button (click)="deleteServer(s.id)" 
+                                              style="display: block; width: 100%; padding: 10px 14px; background: none; border: none; text-align: left; cursor: pointer; font-size: 13px; color: #ef4444;">
+                                        🗑️ Elimina Server
+                                      </button>
+                                    </div>
+                                  }
+                                </div>
                               </td>
+
                             </tr>
                           }
                         </tbody>

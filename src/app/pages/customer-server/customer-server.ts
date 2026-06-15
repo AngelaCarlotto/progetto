@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data';
@@ -10,8 +10,6 @@ import { DataService } from '../../services/data';
   templateUrl: './customer-server.html',
   styleUrl: './customer-server.css'
 })
-
-
 export class CustomerServerComponent {
 
   constructor(public data: DataService) {}
@@ -19,6 +17,8 @@ export class CustomerServerComponent {
   showCustomerModal = false;
   showServerModal = false;
   showSecretModal = false;
+
+  activeDropdownServerId: string | null = null;
 
   customerForm = { name: '' };
 
@@ -34,6 +34,23 @@ export class CustomerServerComponent {
 
   expandedCustomerIds: (string | number)[] = [];
 
+  @HostListener('document:click', ['$event'])
+  clickout(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.dropdown-container')) {
+      this.activeDropdownServerId = null;
+    }
+  }
+
+  toggleDropdown(serverId: string, event: Event) {
+    event.stopPropagation(); 
+    if (this.activeDropdownServerId === serverId) {
+      this.activeDropdownServerId = null;
+    } else {
+      this.activeDropdownServerId = serverId;
+    }
+  }
+
   toggleExpand(customerId: string | number) {
     const index = this.expandedCustomerIds.indexOf(customerId);
     if (index > -1) {
@@ -47,7 +64,6 @@ export class CustomerServerComponent {
     return this.expandedCustomerIds.includes(customerId);
   }
 
-  
   getServersByCustomer(customerId: string | number) {
     return this.data.servers.filter(s => s.customerId == customerId);
   }
@@ -61,26 +77,22 @@ export class CustomerServerComponent {
   }
 
   createCustomer() {
-    // 1. CONTROLLO DI SICUREZZA
     if (!this.customerForm.name || !this.customerForm.name.trim()) {
       alert('Attenzione: Il nome del cliente non può essere vuoto!');
       return; 
     }
 
-    // 2. CALCOLO DELLA DATA 
     const oggi = new Date();
     const anno = oggi.getFullYear();
     const mese = String(oggi.getMonth() + 1).padStart(2, '0');
     const giorno = String(oggi.getDate()).padStart(2, '0');
 
-    // 3. AGGIUNTA DEL CLIENTE
     this.data.customers.push({
       id: 'CLI-' + Math.floor(Math.random() * 9999),
       name: this.customerForm.name.trim(),
       createdAt: `${anno}-${mese}-${giorno}` 
     });
 
-    // 4. RESET E CHIUSURA MODALE
     this.customerForm = { name: '' };
     this.showCustomerModal = false; 
   }
@@ -109,6 +121,35 @@ export class CustomerServerComponent {
     this.showSecretModal = true;
   }
 
+  regenerateCredentials(serverId: string) {
+    const server = this.data.servers.find(s => s.id === serverId);
+    
+    if (!server) {
+      alert('Errore: Server non trovato!');
+      return;
+    }
+
+    const conferma = confirm(`Sei sicuro di voler rigenerare le credenziali per il server "${server.name}"?\nLe vecchie credenziali smetteranno di funzionare immediatamente.`);
+    if (!conferma) {
+      this.activeDropdownServerId = null;
+      return;
+    }
+
+    const newClientId = 'cli_' + Math.random().toString(36).substring(2, 10);
+    const newClientSecret = 'sec_' + Math.random().toString(36).substring(2, 16);
+
+    server.clientId = newClientId;
+    server.clientSecret = newClientSecret;
+
+    this.credentials = { 
+      clientId: newClientId, 
+      clientSecret: newClientSecret 
+    };
+
+    this.activeDropdownServerId = null; // Chiude il menu a tendina
+    this.showSecretModal = true; // Mostra la modale con le nuove chiavi
+  }
+
   closeSecretModal() {
     this.showSecretModal = false;
   }
@@ -121,5 +162,6 @@ export class CustomerServerComponent {
 
   deleteServer(id: string) {
     this.data.servers = this.data.servers.filter(s => s.id !== id);
+    this.activeDropdownServerId = null;
   }
 }

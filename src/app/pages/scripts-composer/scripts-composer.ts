@@ -18,10 +18,12 @@ export class ScriptsComposer {
   searchId = '';
   showCreate = false;
   showEdit = false;
-  editPassword: string = '';
 
   currentStep = 1;
   activeEditTab = 1;
+
+  // Stato per verificare se l'utente sta modificando intenzionalmente la password FTP
+  isChangingFtpPassword = false;
 
   scriptForm = {
     id: '',
@@ -29,17 +31,27 @@ export class ScriptsComposer {
     schedule: '',
     serverId: '',
     customerId: '',
+    
+    // Componente MySQL con i nuovi campi richiesti
     mysqlComponent: false,     
     selectedMysqlFiles: [] as File[], 
+    mysqlHost: '',
+    mysqlPort: '3306',
+    mysqlUser: '',
+    mysqlPassword: '',
+    mysqlDatabase: '',
+
+    // Componente File Fisici
     filesComponent: false,     
     selectedFiles: [] as File[],      
+    filesSourcePath: 'C:\\', // Path predefinito impostato su C:
+    
     ftpHost: '',
     ftpUser: '',
     ftpPassword: '',
     type: 'FILE'
   };
 
-  
   selectedScript: any = null;
 
   openCreate() {
@@ -60,18 +72,38 @@ export class ScriptsComposer {
     }
   }
 
+  // Restituisce solo i server associati al customer selezionato
+  getFilteredServers(): any[] {
+    if (!this.scriptForm.customerId) return [];
+    return this.data.servers.filter(s => s.customerId === this.scriptForm.customerId);
+  }
+
+  // Quando cambia il customer, resetta il server precedentemente selezionato
+  onCustomerChange() {
+    this.scriptForm.serverId = '';
+  }
+
   isStep1Valid(): boolean {
     return !!(this.scriptForm.path && this.scriptForm.schedule && this.scriptForm.customerId && this.scriptForm.serverId);
   }
 
   isStep2Valid(): boolean {
     if (!this.scriptForm.mysqlComponent && !this.scriptForm.filesComponent) return false;
-    if (this.scriptForm.mysqlComponent && this.scriptForm.selectedMysqlFiles.length === 0) {
-      return !!(this.scriptForm.filesComponent && this.scriptForm.selectedFiles.length > 0);
+    
+    // Validazione MySQL: se attivo, servono i dati di connessione e almeno un file dump
+    if (this.scriptForm.mysqlComponent) {
+      const mysqlDataValid = !!(this.scriptForm.mysqlHost && this.scriptForm.mysqlPort && this.scriptForm.mysqlUser && this.scriptForm.mysqlDatabase);
+      const mysqlFilesValid = this.scriptForm.selectedMysqlFiles.length > 0;
+      if (!mysqlDataValid || !mysqlFilesValid) return false;
     }
-    if (this.scriptForm.filesComponent && this.scriptForm.selectedFiles.length === 0) {
-      return !!(this.scriptForm.mysqlComponent && this.scriptForm.selectedMysqlFiles.length > 0);
+
+    // Validazione File Fisici: se attivo, serve il path sorgente e almeno un file/cartella
+    if (this.scriptForm.filesComponent) {
+      const filesDataValid = !!this.scriptForm.filesSourcePath;
+      const filesValid = this.scriptForm.selectedFiles.length > 0;
+      if (!filesDataValid || !filesValid) return false;
     }
+
     return true;
   }
 
@@ -80,22 +112,19 @@ export class ScriptsComposer {
   }
 
   isTab1Valid(): boolean {
-    return !!(this.scriptForm.path && this.scriptForm.schedule && this.scriptForm.customerId && this.scriptForm.serverId);
+    return this.isStep1Valid();
   }
 
   isTab2Valid(): boolean {
-    if (!this.scriptForm.mysqlComponent && !this.scriptForm.filesComponent) return false;
-    if (this.scriptForm.mysqlComponent && this.scriptForm.selectedMysqlFiles.length === 0) {
-      return !!(this.scriptForm.filesComponent && this.scriptForm.selectedFiles.length > 0);
-    }
-    if (this.scriptForm.filesComponent && this.scriptForm.selectedFiles.length === 0) {
-      return !!(this.scriptForm.mysqlComponent && this.scriptForm.selectedMysqlFiles.length > 0);
-    }
-    return true;
+    return this.isStep2Valid();
   }
 
+  // Nella modifica la password è valida se è già presente o se l'utente la sta riscrivendo adesso
   isTab3Valid(): boolean {
-    return !!(this.scriptForm.ftpHost && this.scriptForm.ftpUser && this.scriptForm.ftpPassword);
+    if (this.isChangingFtpPassword) {
+      return !!(this.scriptForm.ftpHost && this.scriptForm.ftpUser && this.scriptForm.ftpPassword);
+    }
+    return !!(this.scriptForm.ftpHost && this.scriptForm.ftpUser);
   }
 
   isFormValid(): boolean {
@@ -106,10 +135,16 @@ export class ScriptsComposer {
     if (type === 'mysql') {
       if (!this.scriptForm.mysqlComponent) {
         this.scriptForm.selectedMysqlFiles = [];
+        this.scriptForm.mysqlHost = '';
+        this.scriptForm.mysqlPort = '3306';
+        this.scriptForm.mysqlUser = '';
+        this.scriptForm.mysqlPassword = '';
+        this.scriptForm.mysqlDatabase = '';
       }
     } else if (type === 'files') {
       if (!this.scriptForm.filesComponent) {
         this.scriptForm.selectedFiles = [];
+        this.scriptForm.filesSourcePath = 'C:\\';
       }
     }
   }
@@ -152,12 +187,22 @@ export class ScriptsComposer {
       serverId: this.scriptForm.serverId,
       customerId: this.scriptForm.customerId,
       type: this.scriptForm.type,
+      
       mysqlComponent: this.scriptForm.mysqlComponent,
       selectedMysqlFiles: this.scriptForm.selectedMysqlFiles, 
+      mysqlHost: this.scriptForm.mysqlHost,
+      mysqlPort: this.scriptForm.mysqlPort,
+      mysqlUser: this.scriptForm.mysqlUser,
+      mysqlPassword: this.scriptForm.mysqlPassword,
+      mysqlDatabase: this.scriptForm.mysqlDatabase,
+
       filesComponent: this.scriptForm.filesComponent,
       selectedFiles: this.scriptForm.selectedFiles,           
+      filesSourcePath: this.scriptForm.filesSourcePath,
+
       ftpHost: this.scriptForm.ftpHost,
-      ftpUser: this.scriptForm.ftpUser
+      ftpUser: this.scriptForm.ftpUser,
+      ftpPassword: this.scriptForm.ftpPassword
     });
 
     this.data.logs.push({
@@ -166,28 +211,34 @@ export class ScriptsComposer {
       message: 'Script creato con successo',
       scriptId: id,
       executionId: 'EXE-' + Math.floor(Math.random() * 99999),
-      createdAt: new Date().toISOString() // <-- Rimosso lo split
+      createdAt: new Date().toISOString()
     });
 
     this.showCreate = false;
     this.resetForm();
-
     this.data.saveToStorage(); 
-
-    this.showCreate = false;
-    this.resetForm();
   }
 
-   openEdit(script: any) {
+  openEdit(script: any) {
     this.selectedScript = script;
     this.activeEditTab = 1; 
+    this.isChangingFtpPassword = false; // Di base non obblighiamo a reinserire la password
+    
     this.scriptForm = { 
       ...script, 
-      mysqlComponent: !!(script.selectedMysqlFiles && script.selectedMysqlFiles.length > 0),
+      mysqlComponent: !!script.mysqlComponent,
       selectedMysqlFiles: script.selectedMysqlFiles ?? [],
+      mysqlHost: script.mysqlHost ?? '',
+      mysqlPort: script.mysqlPort ?? '3306',
+      mysqlUser: script.mysqlUser ?? '',
+      mysqlPassword: script.mysqlPassword ?? '',
+      mysqlDatabase: script.mysqlDatabase ?? '',
+
+      filesComponent: !!script.filesComponent,
+      selectedFiles: script.selectedFiles ?? [],
+      filesSourcePath: script.filesSourcePath ?? 'C:\\',
       
-      filesComponent: !!(script.selectedFiles && script.selectedFiles.length > 0),
-      selectedFiles: script.selectedFiles ?? [] 
+      ftpPassword: script.ftpPassword ?? '' // Mantiene quella vecchia in memoria
     };
     this.showEdit = true;
   }
@@ -201,13 +252,23 @@ export class ScriptsComposer {
         schedule: this.scriptForm.schedule,
         serverId: this.scriptForm.serverId,
         customerId: this.scriptForm.customerId,
+        
         mysqlComponent: this.scriptForm.mysqlComponent,
         selectedMysqlFiles: this.scriptForm.selectedMysqlFiles,
+        mysqlHost: this.scriptForm.mysqlHost,
+        mysqlPort: this.scriptForm.mysqlPort,
+        mysqlUser: this.scriptForm.mysqlUser,
+        mysqlPassword: this.scriptForm.mysqlPassword,
+        mysqlDatabase: this.scriptForm.mysqlDatabase,
+
         filesComponent: this.scriptForm.filesComponent,
         selectedFiles: this.scriptForm.selectedFiles,
+        filesSourcePath: this.scriptForm.filesSourcePath,
+
         ftpHost: this.scriptForm.ftpHost,
         ftpUser: this.scriptForm.ftpUser,
-        ftpPassword: this.scriptForm.ftpPassword
+        // Aggiorna la password nel database solo se l'utente ha scelto di modificarla
+        ftpPassword: this.isChangingFtpPassword ? this.scriptForm.ftpPassword : this.data.scripts[index].ftpPassword
       };
 
       this.data.logs.push({
@@ -221,39 +282,33 @@ export class ScriptsComposer {
     }
     this.showEdit = false;
     this.data.saveToStorage(); 
-    this.showEdit = false;
   }
 
   deleteScript(id: string) {
-  if (confirm('Sei sicuro di voler eliminare questo script?')) {
-    if (this.data && this.data.scripts) {
-      
-      const scriptDaEliminare = this.data.scripts.find((s: any) => s.id === id);
-      const customerId = scriptDaEliminare ? scriptDaEliminare.customerId : '';
-      const serverId = scriptDaEliminare ? scriptDaEliminare.serverId : '';
+    if (confirm('Sei sicuro di voler eliminare questo script?')) {
+      if (this.data && this.data.scripts) {
+        const scriptDaEliminare = this.data.scripts.find((s: any) => s.id === id);
+        const customerId = scriptDaEliminare ? scriptDaEliminare.customerId : '';
+        const serverId = scriptDaEliminare ? scriptDaEliminare.serverId : '';
 
-      // 2. CREIAMO IL NUOVO LOG DI ELIMINAZIONE
-      if (this.data.logs) {
-        const nuovoLog = {
-          id: 'LOG-' + Math.floor(100000 + Math.random() * 900000), 
-          scriptId: id,
-          customerId: customerId,
-          serverId: serverId,
-          level: 'INFO',
-          createdAt: new Date().toISOString(), 
-          message: `Lo script con ID ${id} è stato rimosso dall'utente.` ,
-          executionId: 'N/A'
-        };
-
-        this.data.logs.push(nuovoLog);
+        if (this.data.logs) {
+          this.data.logs.push({
+            id: 'LOG-' + Math.floor(100000 + Math.random() * 900000), 
+            scriptId: id,
+            customerId: customerId,
+            serverId: serverId,
+            level: 'INFO',
+            createdAt: new Date().toISOString(), 
+            message: `Lo script con ID ${id} è stato rimosso dall'utente.`,
+            executionId: 'N/A'
+          });
+        }
+        
+        this.data.scripts = this.data.scripts.filter((s: any) => s.id !== id);
+        this.data.saveToStorage();
       }
-      
-      this.data.scripts = this.data.scripts.filter((s: any) => s.id !== id);
-      
-       this.data.saveToStorage();
     }
   }
-}
 
   filteredScripts() {
     if (!this.searchId) return this.data.scripts;
@@ -277,12 +332,19 @@ export class ScriptsComposer {
       customerId: '',
       mysqlComponent: false,
       selectedMysqlFiles: [],
+      mysqlHost: '',
+      mysqlPort: '3306',
+      mysqlUser: '',
+      mysqlPassword: '',
+      mysqlDatabase: '',
       filesComponent: false,
       selectedFiles: [],
+      filesSourcePath: 'C:\\',
       ftpHost: '',
       ftpUser: '',
       ftpPassword: '',
       type: 'FILE'
     };
+    this.isChangingFtpPassword = false;
   }
 }
