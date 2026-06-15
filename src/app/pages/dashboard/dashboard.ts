@@ -47,7 +47,6 @@ export class DashboardComponent implements OnInit {
     }, 600);
   }
 
-  // Esegue tutti i calcoli grafici unificati (VERSIONE UNICA E CORRETTA)
   calculatePercentagesAndCharts() {
     let mysqlSteps = 0;
     let filesSteps = 0;

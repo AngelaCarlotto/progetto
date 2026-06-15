@@ -17,7 +17,14 @@ export class Logs {
   search = '';
   itemsPerPage = 10;
   currentPage = 1;
+  
+  dropdownAperto = false;
 
+  toggleDropdown() {
+    this.dropdownAperto = !this.dropdownAperto;
+  }
+
+  //per cercare i log filtra in base a id, livello, messaggio, data di creazione e script id
   filteredLogs() {
     let result = this.data.logs || [];
 
@@ -32,8 +39,25 @@ export class Logs {
       );
     }
 
+    result = [...result].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
+
     const start = (this.currentPage - 1) * this.itemsPerPage;
     return result.slice(start, start + this.itemsPerPage);
+  }
+
+
+  //elimina i logs se si preme svuota log 
+  clearAllLogs() {
+    this.dropdownAperto = false; 
+    
+    if (confirm('Sei sicuro di voler svuotare tutti i log visualizzati?')) {
+      this.data.logs = []; 
+      this.currentPage = 1; 
+    }
   }
 
   totalPages() {

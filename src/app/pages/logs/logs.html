@@ -20,6 +20,24 @@
         class="search-input"
       >
 
+      <div class="dropdown-container">
+        <button 
+          (click)="toggleDropdown()" 
+          class="btn-actions" 
+          title="Opzioni"
+        >
+          &#8942;
+        </button>
+
+        @if (dropdownAperto) {
+          <div class="dropdown-menu">
+            <button (click)="clearAllLogs()" class="dropdown-item delete-action">
+               Svuota Log
+            </button>
+          </div>
+        }
+      </div>
+
       <div class="items-selector">
         <span>Elementi per pagina</span>
         <select [(ngModel)]="itemsPerPage" (ngModelChange)="currentPage = 1">
@@ -59,7 +77,7 @@
               </td>
               <td>{{ log.message }}</td>
               <td><strong>{{ log.scriptId }}</strong></td>
-             <td>{{ log?.executionId }}</td>
+              <td>{{ log?.executionId }}</td>
               <td>{{ log.createdAt | date:'yyyy-MM-dd HH:mm:ss' }}</td>
             </tr>
           }

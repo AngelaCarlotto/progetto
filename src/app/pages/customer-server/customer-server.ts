@@ -85,7 +85,6 @@ export class CustomerServerComponent {
     this.showCustomerModal = false; 
   }
   
-  // CREATE SERVER
   createServer() {
     const serverId = 'SRV-' + Math.floor(Math.random() * 9999);
     const clientId = 'cli_' + Math.random().toString(36).substring(2, 10);

@@ -166,23 +166,49 @@
   color: #475569;
 }
 
+/* CONTENITORE PRINCIPALE DELLE CHECKBOX */
 .components-selection {
-  display: flex;
-  gap: 24px;
-  padding: 8px 2px;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Divide lo spazio esattamente in 2 colonne uguali */
+  gap: 16px;                     /* Spazio tra la colonna DB e la colonna Files */
+  padding: 12px 4px;
+  background: #f8fafc;           /* Un leggero sfondo neutro per racchiudere le scelte */
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;     /* Contorno pulito */
+  margin-bottom: 8px;
 }
 
+/* LA SINGOLA VOCE (Checkbox + Testo) */
 .checkbox-container {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: center;           /* Allinea perfettamente al centro verticale la checkbox e il testo */
+  gap: 10px;                     /* Spazio fisso e invalicabile tra il quadratino e la scritta */
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+/* Effetto feedback quando passi sopra l'opzione */
+.checkbox-container:hover {
+  background-color: #f1f5f9;
+}
+
+/* Forza la checkbox a non rimpicciolirsi mai, mantenendo i suoi 16x16px */
+.checkbox-container input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0;                     /* Rimuove i margini di default del browser */
+  flex-shrink: 0;                /* Impedisce alla checkbox di schiacciarsi se il testo è lungo */
   cursor: pointer;
 }
 
+/* Stile del testo accanto alla checkbox */
 .checkbox-label {
   font-size: 14px;
   font-weight: 500;
   color: #1e293b;
+  white-space: nowrap;           /* Impedisce al testo di andare a capo spezzando le parole */
 }
 
 
