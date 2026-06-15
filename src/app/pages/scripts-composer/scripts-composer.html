@@ -85,9 +85,9 @@
             <label>Customer *</label>
             <select [(ngModel)]="scriptForm.customerId" (change)="onCustomerChange()">
               <option value="" disabled selected>Select Customer</option>
-              <option *ngFor="let c of data.customers" [ngValue]="c.id">
-                {{ c.name }}
-              </option>
+              @for (c of data.customers; track c.id) {
+                <option [ngValue]="c.id">{{ c.name }}</option>
+              }
             </select>
           </div>
 
@@ -95,9 +95,9 @@
             <label>Server *</label>
             <select [(ngModel)]="scriptForm.serverId" [disabled]="!scriptForm.customerId">
               <option value="" disabled selected>Select Server</option>
-              <option *ngFor="let s of getFilteredServers()" [ngValue]="s.id">
-                {{ s.name }}
-              </option>
+              @for (s of getFilteredServers(); track s.id) {
+                <option [ngValue]="s.id">{{ s.name }}</option>
+              }
             </select>
           </div>
 
@@ -137,17 +137,19 @@
               </div>
               <input [(ngModel)]="scriptForm.mysqlDatabase" placeholder="Nome Database" style="margin-bottom: 12px;">
 
-              <input type="file" multiple (change)="onMysqlFilesSelected($event)" class="file-input-hidden" id="mysqlFileInput">
+              <input type="file" multiple accept=".sql" (change)="onMysqlFilesSelected($event)" class="file-input-hidden" id="mysqlFileInput">
               <label for="mysqlFileInput" class="file-input-trigger btn-mysql-trigger">
                 📂 Seleziona file Dump (.sql)
               </label>
 
               @if (scriptForm.selectedMysqlFiles.length > 0) {
                 <div class="selected-files-list">
-                  <div *ngFor="let file of scriptForm.selectedMysqlFiles; let i = index" class="file-item">
-                    <span class="file-name">⚙️ {{ file.name }}</span>
-                    <button class="btn-remove-file" (click)="removeMysqlFile(i)">✕</button>
-                  </div>
+                  @for (file of scriptForm.selectedMysqlFiles; track file.name; let i = $index) {
+                    <div class="file-item">
+                      <span class="file-name">⚙️ {{ file.name }}</span>
+                      <button class="btn-remove-file" (click)="removeMysqlFile(i)">✕</button>
+                    </div>
+                  }
                 </div>
               }
             </div>
@@ -158,17 +160,29 @@
               <label class="box-title">📄 File sorgenti e cartelle</label>
               <input [(ngModel)]="scriptForm.filesSourcePath" placeholder="Path di origine" style="margin-bottom: 12px;">
 
-              <input type="file" multiple webkitdirectory directory (change)="onFilesSelected($event)" class="file-input-hidden" id="multiFileInput">
-              <label for="multiFileInput" class="file-input-trigger">
-                📁 Seleziona File o Intere Cartelle
-              </label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                <div>
+                  <input type="file" multiple (change)="onFilesSelected($event)" class="file-input-hidden" id="multiFileInput">
+                  <label for="multiFileInput" class="file-input-trigger" style="margin: 0; text-align: center; display: block;">
+                    📄 Seleziona File
+                  </label>
+                </div>
+                <div>
+                  <input type="file" multiple webkitdirectory directory (change)="onFilesSelected($event)" class="file-input-hidden" id="directoryInput">
+                  <label for="directoryInput" class="file-input-trigger btn-directory-trigger" style="margin: 0; text-align: center; display: block;">
+                    📁 Seleziona Cartella
+                  </label>
+                </div>
+              </div>
 
               @if (scriptForm.selectedFiles.length > 0) {
                 <div class="selected-files-list">
-                  <div *ngFor="let file of scriptForm.selectedFiles; let i = index" class="file-item">
-                    <span class="file-name">📁 {{ file.name }}</span>
-                    <button class="btn-remove-file" (click)="removeFile(i)">✕</button>
-                  </div>
+                  @for (file of scriptForm.selectedFiles; track file.name; let i = $index) {
+                    <div class="file-item">
+                      <span class="file-name">📁 {{ file.name }}</span>
+                      <button class="btn-remove-file" (click)="removeFile(i)">✕</button>
+                    </div>
+                  }
                 </div>
               }
             </div>
@@ -250,13 +264,17 @@
             <div class="form-group">
               <label>Customer *</label>
               <select [(ngModel)]="scriptForm.customerId" (change)="onCustomerChange()">
-                <option *ngFor="let c of data.customers" [ngValue]="c.id">{{ c.name }}</option>
+                @for (c of data.customers; track c.id) {
+                  <option [ngValue]="c.id">{{ c.name }}</option>
+                }
               </select>
             </div>
             <div class="form-group">
               <label>Server *</label>
               <select [(ngModel)]="scriptForm.serverId" [disabled]="!scriptForm.customerId">
-                <option *ngFor="let s of getFilteredServers()" [ngValue]="s.id">{{ s.name }}</option>
+                @for (s of getFilteredServers(); track s.id) {
+                  <option [ngValue]="s.id">{{ s.name }}</option>
+                }
               </select>
             </div>
           }
@@ -286,13 +304,15 @@
                 </div>
                 <input [(ngModel)]="scriptForm.mysqlDatabase" placeholder="Nome Database" style="margin-bottom: 12px;">
 
-                <input type="file" multiple (change)="onMysqlFilesSelected($event)" class="file-input-hidden" id="editMysqlInput">
+                <input type="file" multiple accept=".sql" (change)="onMysqlFilesSelected($event)" class="file-input-hidden" id="editMysqlInput">
                 <label for="editMysqlInput" class="file-input-trigger btn-mysql-trigger">➕ Carica Altri File DB</label>
                 <div class="selected-files-list">
-                  <div *ngFor="let file of scriptForm.selectedMysqlFiles; let i = index" class="file-item">
-                    <span class="file-name">⚙️ {{ file.name }}</span>
-                    <button class="btn-remove-file" (click)="removeMysqlFile(i)">✕</button>
-                  </div>
+                  @for (file of scriptForm.selectedMysqlFiles; track file.name; let i = $index) {
+                    <div class="file-item">
+                      <span class="file-name">⚙️ {{ file.name }}</span>
+                      <button class="btn-remove-file" (click)="removeMysqlFile(i)">✕</button>
+                    </div>
+                  }
                 </div>
               </div>
             }
@@ -302,13 +322,28 @@
                 <label class="box-title">📄 File Sorgenti e Cartelle</label>
                 <input [(ngModel)]="scriptForm.filesSourcePath" placeholder="Path di origine" style="margin-bottom: 12px;">
 
-                <input type="file" multiple webkitdirectory directory (change)="onFilesSelected($event)" class="file-input-hidden" id="editGenericInput">
-                <label for="editGenericInput" class="file-input-trigger">➕ Seleziona Altri File o Cartelle</label>
-                <div class="selected-files-list">
-                  <div *ngFor="let file of scriptForm.selectedFiles; let i = index" class="file-item">
-                    <span class="file-name">📁 {{ file.name }}</span>
-                    <button class="btn-remove-file" (click)="removeFile(i)">✕</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                  <div>
+                    <input type="file" multiple (change)="onFilesSelected($event)" class="file-input-hidden" id="editGenericInput">
+                    <label for="editGenericInput" class="file-input-trigger" style="margin: 0; text-align: center; display: block;">
+                      ➕ Seleziona Altri File
+                    </label>
                   </div>
+                  <div>
+                    <input type="file" multiple webkitdirectory directory (change)="onFilesSelected($event)" class="file-input-hidden" id="editDirectoryInput">
+                    <label for="editDirectoryInput" class="file-input-trigger btn-directory-trigger" style="margin: 0; text-align: center; display: block;">
+                      📁 Seleziona Cartella
+                    </label>
+                  </div>
+                </div>
+
+                <div class="selected-files-list">
+                  @for (file of scriptForm.selectedFiles; track file.name; let i = $index) {
+                    <div class="file-item">
+                      <span class="file-name">📁 {{ file.name }}</span>
+                      <button class="btn-remove-file" (click)="removeFile(i)">✕</button>
+                    </div>
+                  }
                 </div>
               </div>
             }

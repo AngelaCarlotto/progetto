@@ -10,7 +10,6 @@ import { DataService } from '../../services/data';
   templateUrl: './scripts-composer.html',
   styleUrl: './scripts-composer.css'
 })
-
 export class ScriptsComposer {
 
   constructor(public data: DataService) {}
@@ -22,7 +21,6 @@ export class ScriptsComposer {
   currentStep = 1;
   activeEditTab = 1;
 
-  // Stato per verificare se l'utente sta modificando intenzionalmente la password FTP
   isChangingFtpPassword = false;
 
   scriptForm = {
@@ -32,7 +30,6 @@ export class ScriptsComposer {
     serverId: '',
     customerId: '',
     
-    // Componente MySQL con i nuovi campi richiesti
     mysqlComponent: false,     
     selectedMysqlFiles: [] as File[], 
     mysqlHost: '',
@@ -41,10 +38,9 @@ export class ScriptsComposer {
     mysqlPassword: '',
     mysqlDatabase: '',
 
-    // Componente File Fisici
     filesComponent: false,     
     selectedFiles: [] as File[],      
-    filesSourcePath: 'C:\\', // Path predefinito impostato su C:
+    filesSourcePath: 'C:\\', 
     
     ftpHost: '',
     ftpUser: '',
@@ -72,13 +68,11 @@ export class ScriptsComposer {
     }
   }
 
-  // Restituisce solo i server associati al customer selezionato
   getFilteredServers(): any[] {
     if (!this.scriptForm.customerId) return [];
     return this.data.servers.filter(s => s.customerId === this.scriptForm.customerId);
   }
 
-  // Quando cambia il customer, resetta il server precedentemente selezionato
   onCustomerChange() {
     this.scriptForm.serverId = '';
   }
@@ -90,14 +84,12 @@ export class ScriptsComposer {
   isStep2Valid(): boolean {
     if (!this.scriptForm.mysqlComponent && !this.scriptForm.filesComponent) return false;
     
-    // Validazione MySQL: se attivo, servono i dati di connessione e almeno un file dump
     if (this.scriptForm.mysqlComponent) {
       const mysqlDataValid = !!(this.scriptForm.mysqlHost && this.scriptForm.mysqlPort && this.scriptForm.mysqlUser && this.scriptForm.mysqlDatabase);
       const mysqlFilesValid = this.scriptForm.selectedMysqlFiles.length > 0;
       if (!mysqlDataValid || !mysqlFilesValid) return false;
     }
 
-    // Validazione File Fisici: se attivo, serve il path sorgente e almeno un file/cartella
     if (this.scriptForm.filesComponent) {
       const filesDataValid = !!this.scriptForm.filesSourcePath;
       const filesValid = this.scriptForm.selectedFiles.length > 0;
@@ -119,7 +111,6 @@ export class ScriptsComposer {
     return this.isStep2Valid();
   }
 
-  // Nella modifica la password è valida se è già presente o se l'utente la sta riscrivendo adesso
   isTab3Valid(): boolean {
     if (this.isChangingFtpPassword) {
       return !!(this.scriptForm.ftpHost && this.scriptForm.ftpUser && this.scriptForm.ftpPassword);
@@ -150,13 +141,15 @@ export class ScriptsComposer {
   }
 
   onMysqlFilesSelected(event: any) {
-    const files: FileList = event.target.files;
-    if (files) {
-      for (let i = 0; i < files.length; i++) {
-        this.scriptForm.selectedMysqlFiles.push(files[i]);
-      }
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const filesArray = Array.from(input.files);
+      this.scriptForm.selectedMysqlFiles = [...this.scriptForm.selectedMysqlFiles, ...filesArray];
+      
+      setTimeout(() => {
+        input.value = '';
+      }, 100);
     }
-    event.target.value = '';
   }
 
   removeMysqlFile(index: number) {
@@ -164,13 +157,15 @@ export class ScriptsComposer {
   }
 
   onFilesSelected(event: any) {
-    const files: FileList = event.target.files;
-    if (files) {
-      for (let i = 0; i < files.length; i++) {
-        this.scriptForm.selectedFiles.push(files[i]);
-      }
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const filesArray = Array.from(input.files);
+      this.scriptForm.selectedFiles = [...this.scriptForm.selectedFiles, ...filesArray];
+      
+      setTimeout(() => {
+        input.value = '';
+      }, 100);
     }
-    event.target.value = ''; 
   }
 
   removeFile(index: number) {
@@ -222,7 +217,7 @@ export class ScriptsComposer {
   openEdit(script: any) {
     this.selectedScript = script;
     this.activeEditTab = 1; 
-    this.isChangingFtpPassword = false; // Di base non obblighiamo a reinserire la password
+    this.isChangingFtpPassword = false; 
     
     this.scriptForm = { 
       ...script, 
@@ -238,7 +233,7 @@ export class ScriptsComposer {
       selectedFiles: script.selectedFiles ?? [],
       filesSourcePath: script.filesSourcePath ?? 'C:\\',
       
-      ftpPassword: script.ftpPassword ?? '' // Mantiene quella vecchia in memoria
+      ftpPassword: script.ftpPassword ?? '' 
     };
     this.showEdit = true;
   }
@@ -267,7 +262,7 @@ export class ScriptsComposer {
 
         ftpHost: this.scriptForm.ftpHost,
         ftpUser: this.scriptForm.ftpUser,
-        // Aggiorna la password nel database solo se l'utente ha scelto di modificarla
+      
         ftpPassword: this.isChangingFtpPassword ? this.scriptForm.ftpPassword : this.data.scripts[index].ftpPassword
       };
 
