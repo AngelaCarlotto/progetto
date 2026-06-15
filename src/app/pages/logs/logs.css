@@ -122,7 +122,7 @@
 }
 
 .items-selector {
-  margin-left: auto; /* Spinge il selettore tutto a destra */
+  margin-left: auto; 
   display: flex;
   align-items: center;
   gap: 8px;
