@@ -59,8 +59,8 @@
   padding: 14px 16px;
   font-size: 14px;
   color: #1e293b;
-  border-bottom: 1px solid #f1f5f9;
-  text-align: cen;
+  border-bottom: 1px solid #f1f5f9cd;
+  text-align: center;
 }
 
 .data-table tbody tr.customer-row:hover {
@@ -129,7 +129,7 @@
 .nested-server-table td {
   padding: 10px 12px;
   font-size: 13px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #b9bcbf97;
   text-align : center;
 }
 
