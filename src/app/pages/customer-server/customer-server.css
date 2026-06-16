@@ -165,10 +165,10 @@ tbody {
 
 .nested-server-table th:nth-child(1), .nested-server-table td:nth-child(1),
 .nested-server-table th:nth-child(2), .nested-server-table td:nth-child(2) {
-  width: 45%;
+  width: 33.3%;
 }
 .nested-server-table th:nth-child(3), .nested-server-table td:nth-child(3) {
-  width: 10%; 
+  width: 33.3%; 
 }
 
 .nested-server-table tr:has(.kebab-dropdown) {
