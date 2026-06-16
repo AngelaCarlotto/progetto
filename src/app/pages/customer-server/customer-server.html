@@ -1,5 +1,12 @@
 <div class="page active">
 
+  @if (activeDropdownCustomerId || activeDropdownServerId) {
+    <div 
+      style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9; background: transparent;" 
+      (click)="closeAllDropdowns()">
+    </div>
+  }
+
   <div class="topbar">
     <div class="topbar-title">Customer / Server Dashboard</div>
   </div>
@@ -19,7 +26,7 @@
             <th>Customer Name</th>
             <th>Customer ID</th>
             <th>Created at</th>
-            <th class="text-center">Actions</th>
+            <th class="text-center col-actions">Azioni</th>
           </tr>
         </thead>
 
@@ -34,8 +41,22 @@
                 <span class="server-count-badge">({{ getServersByCustomer(c.id).length }} server)</span>
               </td>
               <td><code>{{ c.id }}</code></td>
-              <td>{{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}</td> <td class="text-center">
-                <button class="btn-text-delete" (click)="deleteCustomer(c.id)">Elimina</button>
+              <td>{{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+              
+              <td class="text-center cell-overflow-visible">
+                <div class="dropdown-container" style="position: relative; z-index: 10;">
+                  <button class="btn-dots" (click)="toggleCustomerDropdown(c.id, $event)">
+                    &#8942;
+                  </button>
+
+                  @if (activeDropdownCustomerId === c.id) {
+                    <div class="dropdown-menu">
+                      <button class="dropdown-item btn-delete" (click)="deleteCustomer(c.id)">
+                        <span>🗑️</span> Elimina Cliente
+                      </button>
+                    </div>
+                  }
+                </div>
               </td>
             </tr>
 
@@ -62,9 +83,9 @@
                             <tr>
                               <td><code>{{ s.id }}</code></td>
                               <td>{{ s.name }}</td>
+                              
                               <td class="text-center cell-overflow-visible">
-                                
-                                <div class="dropdown-container">
+                                <div class="dropdown-container" style="position: relative; z-index: 10;">
                                   <button class="btn-dots" (click)="toggleDropdown(s.id, $event)">
                                     &#8942;
                                   </button>
@@ -81,7 +102,6 @@
                                     </div>
                                   }
                                 </div>
-
                               </td>
                             </tr>
                           }
@@ -100,7 +120,7 @@
   </div>
 
   @if (showCustomerModal) {
-    <div class="modal-overlay">
+    <div class="modal-overlay" style="z-index: 100;">
       <div class="modal-card">
         <div class="modal-header">
           <h3>Create Customer</h3>
@@ -117,7 +137,7 @@
   }
 
   @if (showServerModal) {
-    <div class="modal-overlay">
+    <div class="modal-overlay" style="z-index: 100;">
       <div class="modal-card">
         <div class="modal-header">
           <h3>Create Server</h3>
@@ -128,11 +148,11 @@
 
           <select [(ngModel)]="serverForm.customerId">
             <option [ngValue]="null" disabled selected>Select Customer</option>
-            @for (c of data.customers; track c.id) {
-            <option [ngValue]="c.id">
-              {{ c.name }} &nbsp; — &nbsp; [ID: {{ c.id }}]
-            </option>
-}
+            @for (cust of data.customers; track cust.id) {
+              <option [ngValue]="cust.id">
+                {{ cust.name }} &nbsp; — &nbsp; [ID: {{ cust.id }}]
+              </option>
+            }
           </select>
 
           <button (click)="createServer()" class="btn-modal-green" [disabled]="!serverForm.name || !serverForm.customerId">
@@ -144,7 +164,7 @@
   }
 
   @if (showSecretModal) {
-    <div class="modal-overlay">
+    <div class="modal-overlay" style="z-index: 110;">
       <div class="modal-card">
         <div class="modal-header">
           <h3>Credentials Generated</h3>

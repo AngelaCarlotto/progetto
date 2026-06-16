@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data';
@@ -19,6 +19,7 @@ export class CustomerServerComponent {
   showSecretModal = false;
 
   activeDropdownServerId: string | null = null;
+  activeDropdownCustomerId: string | null = null;
 
   customerForm = { name: '' };
 
@@ -34,16 +35,26 @@ export class CustomerServerComponent {
 
   expandedCustomerIds: (string | number)[] = [];
 
-  @HostListener('document:click', ['$event'])
-  clickout(event: Event) {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.dropdown-container')) {
-      this.activeDropdownServerId = null;
+  closeAllDropdowns() {
+    this.activeDropdownServerId = null;
+    this.activeDropdownCustomerId = null;
+  }
+
+  toggleCustomerDropdown(customerId: string, event: Event) {
+    event.stopPropagation(); 
+    this.activeDropdownServerId = null; 
+    
+    if (this.activeDropdownCustomerId === customerId) {
+      this.activeDropdownCustomerId = null;
+    } else {
+      this.activeDropdownCustomerId = customerId;
     }
   }
 
   toggleDropdown(serverId: string, event: Event) {
     event.stopPropagation(); 
+    this.activeDropdownCustomerId = null; 
+    
     if (this.activeDropdownServerId === serverId) {
       this.activeDropdownServerId = null;
     } else {
@@ -69,10 +80,12 @@ export class CustomerServerComponent {
   }
 
   openCustomerModal() {
+    this.closeAllDropdowns();
     this.showCustomerModal = true;
   }
 
   openServerModal() {
+    this.closeAllDropdowns();
     this.showServerModal = true;
   }
 
@@ -90,7 +103,7 @@ export class CustomerServerComponent {
     this.data.customers.push({
       id: 'CLI-' + Math.floor(Math.random() * 9999),
       name: this.customerForm.name.trim(),
-      createdAt: `${anno}-${mese}-${giorno}` 
+      createdAt: new Date().toISOString()  
     });
 
     this.customerForm = { name: '' };
@@ -131,7 +144,7 @@ export class CustomerServerComponent {
 
     const conferma = confirm(`Sei sicuro di voler rigenerare le credenziali per il server "${server.name}"?\nLe vecchie credenziali smetteranno di funzionare immediatamente.`);
     if (!conferma) {
-      this.activeDropdownServerId = null;
+      this.closeAllDropdowns();
       return;
     }
 
@@ -146,8 +159,8 @@ export class CustomerServerComponent {
       clientSecret: newClientSecret 
     };
 
-    this.activeDropdownServerId = null; // Chiude il menu a tendina
-    this.showSecretModal = true; // Mostra la modale con le nuove chiavi
+    this.closeAllDropdowns();
+    this.showSecretModal = true; 
   }
 
   closeSecretModal() {
@@ -155,13 +168,20 @@ export class CustomerServerComponent {
   }
 
   deleteCustomer(id: string | number) {
+    const conferma = confirm("Sei sicuro di voler eliminare questo cliente?\nL'operazione eliminerà anche tutti i server ad esso associati in modo irreversibile.");
+    if (!conferma) {
+      this.closeAllDropdowns();
+      return;
+    }
+
     this.data.customers = this.data.customers.filter(c => c.id != id);
     this.data.servers = this.data.servers.filter(s => s.customerId != id);
     this.expandedCustomerIds = this.expandedCustomerIds.filter(expandedId => expandedId != id);
+    this.closeAllDropdowns();
   }
 
   deleteServer(id: string) {
     this.data.servers = this.data.servers.filter(s => s.id !== id);
-    this.activeDropdownServerId = null;
+    this.closeAllDropdowns();
   }
 }

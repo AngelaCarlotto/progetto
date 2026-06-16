@@ -23,6 +23,9 @@ export class ScriptsComposer {
 
   isChangingFtpPassword = false;
 
+  // Stato per gestire quale menu a kebab è aperto (contiene l'ID dello script)
+  activeKebabId: string | null = null;
+
   scriptForm = {
     id: '',
     path: '',
@@ -50,7 +53,18 @@ export class ScriptsComposer {
 
   selectedScript: any = null;
 
+  // Gestione apertura/chiusura menu a kebab
+  toggleKebab(scriptId: string, event: MouseEvent) {
+    event.stopPropagation(); // Impedisce la chiusura immediata causata da click nidificati
+    this.activeKebabId = this.activeKebabId === scriptId ? null : scriptId;
+  }
+
+  closeKebab() {
+    this.activeKebabId = null;
+  }
+
   openCreate() {
+    this.closeKebab();
     this.currentStep = 1; 
     this.resetForm();
     this.showCreate = true;
@@ -215,6 +229,7 @@ export class ScriptsComposer {
   }
 
   openEdit(script: any) {
+    this.closeKebab();
     this.selectedScript = script;
     this.activeEditTab = 1; 
     this.isChangingFtpPassword = false; 
@@ -280,6 +295,7 @@ export class ScriptsComposer {
   }
 
   deleteScript(id: string) {
+    this.closeKebab();
     if (confirm('Sei sicuro di voler eliminare questo script?')) {
       if (this.data && this.data.scripts) {
         const scriptDaEliminare = this.data.scripts.find((s: any) => s.id === id);

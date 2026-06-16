@@ -1,3 +1,89 @@
+/* ==========================================================================
+   KEBAB MENU & DROPDOWN (Sistemato per fluttuare sopra la tabella)
+   ========================================================================== */
+
+/* Container per isolare la posizione del menu e del suo rispettivo dropdown */
+.kebab-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Bottone Kebab a tre punti verticali (SVG) */
+.btn-kebab {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s, color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-kebab:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Dropdown fluttuante agganciato al menu a kebab */
+.kebab-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 9999 !important; /* Forza il dropdown sopra ogni riga e sopra i bordi */
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  min-width: 140px;
+  padding: 6px 0;
+  animation: fadeInKebab 0.15s ease-out;
+}
+
+/* Voci interne del menu dropdown */
+.dropdown-item {
+  width: 100%;
+  padding: 9px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  transition: background-color 0.15s;
+}
+
+.dropdown-item:hover {
+  background-color: #f8fafc;
+}
+
+/* Trattamento distruttivo per l'azione elimina */
+.dropdown-item.delete-item:hover {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+/* Animazione di comparsa */
+@keyframes fadeInKebab {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   CLASSI STRUTTURALI DELLA PAGINA E FIX OVERFLOW
+   ========================================================================== */
+
 .page {
   display: flex;
   flex-direction: column;
@@ -51,16 +137,19 @@
   opacity: 0.9;
 }
 
+/* Sistemato: cambiato da hidden a visible per non tagliare il menu a kebab */
 .table-card {
   background: white;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
-  overflow: hidden;
+  overflow: visible; 
 }
 
+/* Sistemato: assicuriamo che la tabella permetta la visibilità esterna */
 .data-table {
   width: 100%;
   border-collapse: collapse;
+  overflow: visible;
 }
 
 .data-table th {
@@ -72,14 +161,26 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+/* Sistemato: la cella deve avere posizione relativa ed essere visibile */
 .data-table td {
   text-align: center;
   padding: 12px;
   border-bottom: 1px solid #f1f5f9;
   font-size: 13px;
   color: #111827;
+  position: relative;
+  overflow: visible;
 }
 
+/* Quando una riga contiene un kebab aperto, solleva l'intero livello della riga */
+.data-table tr:has(.kebab-dropdown) {
+  position: relative;
+  z-index: 90;
+}
+
+/* ==========================================================================
+   MODALI E WIZARD (Invariati)
+   ========================================================================== */
 
 .modal-overlay {
   position: fixed;
@@ -154,7 +255,6 @@
   transition: width 0.3s ease-in-out;
 }
 
-
 .form-group {
   display: flex;
   flex-direction: column;
@@ -166,7 +266,6 @@
   font-weight: 600;
   color: #475569;
 }
-
 
 .components-selection {
   display: grid;
@@ -189,7 +288,6 @@
   transition: background-color 0.2s;
 }
 
-
 .checkbox-container:hover {
   background-color: #f1f5f9;
 }
@@ -202,14 +300,12 @@
   cursor: pointer;
 }
 
-
 .checkbox-label {
   font-size: 14px;
   font-weight: 500;
   color: #1e293b;
   white-space: nowrap;         
 }
-
 
 .box-title {
   font-size: 12px;
@@ -342,6 +438,7 @@
   color: #1e293b;
 }
 
+/* Vecchi bottoni tabellari (Mantenuti per compatibilità se usati altrove) */
 .btn-modifica {
   background: white;
   border-color: #0073ff;
