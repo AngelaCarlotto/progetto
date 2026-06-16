@@ -471,7 +471,6 @@
   line-height: 1.4;
 }
 
-/* Strutture di Layout e Griglie */
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -488,7 +487,6 @@
   align-items: center;
 }
 
-/* Helpers di spaziatura ed elementi */
 .mb-12 { margin-bottom: 12px; }
 .m-0 { margin: 0; }
 .w-100 { width: 100%; }
@@ -507,7 +505,6 @@
   white-space: nowrap;
 }
 
-/* Fix semantici bottoni tabella */
 .btn-text-mod, .btn-text-elimina {
   font-size: inherit;
   font-weight: 600;
