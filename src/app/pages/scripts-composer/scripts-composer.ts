@@ -23,7 +23,6 @@ export class ScriptsComposer {
 
   isChangingFtpPassword = false;
 
-  // Stato per gestire quale menu a kebab è aperto (contiene l'ID dello script)
   activeKebabId: string | null = null;
 
   scriptForm = {
@@ -53,9 +52,8 @@ export class ScriptsComposer {
 
   selectedScript: any = null;
 
-  // Gestione apertura/chiusura menu a kebab
   toggleKebab(scriptId: string, event: MouseEvent) {
-    event.stopPropagation(); // Impedisce la chiusura immediata causata da click nidificati
+    event.stopPropagation(); 
     this.activeKebabId = this.activeKebabId === scriptId ? null : scriptId;
   }
 

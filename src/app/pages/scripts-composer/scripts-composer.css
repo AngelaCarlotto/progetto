@@ -1,14 +1,8 @@
-/* ==========================================================================
-   KEBAB MENU & DROPDOWN (Sistemato per fluttuare sopra la tabella)
-   ========================================================================== */
-
-/* Container per isolare la posizione del menu e del suo rispettivo dropdown */
 .kebab-menu-container {
   position: relative;
   display: inline-block;
 }
 
-/* Bottone Kebab a tre punti verticali (SVG) */
 .btn-kebab {
   background: none;
   border: none;
@@ -27,12 +21,11 @@
   color: #0f172a;
 }
 
-/* Dropdown fluttuante agganciato al menu a kebab */
 .kebab-dropdown {
   position: absolute;
   right: 0;
   top: 100%;
-  z-index: 9999 !important; /* Forza il dropdown sopra ogni riga e sopra i bordi */
+  z-index: 9999 !important; 
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -42,7 +35,6 @@
   animation: fadeInKebab 0.15s ease-out;
 }
 
-/* Voci interne del menu dropdown */
 .dropdown-item {
   width: 100%;
   padding: 9px 14px;
@@ -62,13 +54,11 @@
   background-color: #f8fafc;
 }
 
-/* Trattamento distruttivo per l'azione elimina */
 .dropdown-item.delete-item:hover {
   background-color: #fef2f2;
   color: #ef4444;
 }
 
-/* Animazione di comparsa */
 @keyframes fadeInKebab {
   from {
     opacity: 0;
@@ -79,10 +69,6 @@
     transform: translateY(0);
   }
 }
-
-/* ==========================================================================
-   CLASSI STRUTTURALI DELLA PAGINA E FIX OVERFLOW
-   ========================================================================== */
 
 .page {
   display: flex;
@@ -137,7 +123,6 @@
   opacity: 0.9;
 }
 
-/* Sistemato: cambiato da hidden a visible per non tagliare il menu a kebab */
 .table-card {
   background: white;
   border-radius: 12px;
@@ -145,7 +130,6 @@
   overflow: visible; 
 }
 
-/* Sistemato: assicuriamo che la tabella permetta la visibilità esterna */
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -161,7 +145,6 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* Sistemato: la cella deve avere posizione relativa ed essere visibile */
 .data-table td {
   text-align: center;
   padding: 12px;
@@ -172,15 +155,10 @@
   overflow: visible;
 }
 
-/* Quando una riga contiene un kebab aperto, solleva l'intero livello della riga */
 .data-table tr:has(.kebab-dropdown) {
   position: relative;
   z-index: 90;
 }
-
-/* ==========================================================================
-   MODALI E WIZARD (Invariati)
-   ========================================================================== */
 
 .modal-overlay {
   position: fixed;
@@ -438,7 +416,6 @@
   color: #1e293b;
 }
 
-/* Vecchi bottoni tabellari (Mantenuti per compatibilità se usati altrove) */
 .btn-modifica {
   background: white;
   border-color: #0073ff;

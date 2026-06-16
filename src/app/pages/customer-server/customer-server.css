@@ -37,6 +37,7 @@
   display: flex;       
   justify-content: flex-end; 
   gap: 10px;         
+  margin: 0 20px;
 }
 
 .table-card {
@@ -44,13 +45,14 @@
   border-radius: 14px;
   border: 1px solid #e8ecef;
   margin: 20px;
-  overflow-x: auto; 
+  overflow: visible !important; 
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
+  overflow: visible !important;
 }
 
 .data-table th {
@@ -71,6 +73,8 @@
   border-bottom: 1px solid #f1f5f9cd;
   text-align: center;
   white-space: nowrap; 
+  position: relative;
+  overflow: visible !important; 
 }
 
 .data-table tbody tr.customer-row:hover {
@@ -104,9 +108,15 @@ tbody {
   margin-left: 6px;
 }
 
+.data-table tr.customer-row:has(.kebab-dropdown) {
+  position: relative;
+  z-index: 90;
+}
+
 .nested-server-container {
   padding: 10px 20px 20px 40px !important;
   background: #fdfefe;
+  overflow: visible !important;
 }
 
 .nested-server-box {
@@ -115,6 +125,7 @@ tbody {
   border-radius: 10px;
   padding: 16px;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  overflow: visible !important;
 }
 
 .no-servers-placeholder {
@@ -128,6 +139,7 @@ tbody {
 .nested-server-table {
   width: 100%;
   border-collapse: collapse;
+  overflow: visible !important;
 }
 
 .nested-server-table th {
@@ -147,65 +159,93 @@ tbody {
   color: #1e293b;
   border-bottom: 1px solid #e2e8f0;
   text-align: center; 
+  position: relative;
+  overflow: visible !important;
 }
 
 .nested-server-table th:nth-child(1), .nested-server-table td:nth-child(1),
-.nested-server-table th:nth-child(2), .nested-server-table td:nth-child(2),
+.nested-server-table th:nth-child(2), .nested-server-table td:nth-child(2) {
+  width: 45%;
+}
 .nested-server-table th:nth-child(3), .nested-server-table td:nth-child(3) {
-  width: 33.33%;
+  width: 10%; 
 }
 
-.dropdown-container {
+.nested-server-table tr:has(.kebab-dropdown) {
+  position: relative;
+  z-index: 95;
+}
+
+.kebab-menu-container {
   position: relative;
   display: inline-block;
 }
 
-.btn-dots {
-  background: #f8fafc; 
-  border: 1px solid #e2e8f0;
+.btn-kebab {
+  background: none;
+  border: none;
+  color: #64748b;
   cursor: pointer;
-  font-size: 22px; 
-  padding: 8px 16px; 
-  color: #475569;
-  transition: all 0.2s ease;
-  line-height: 1;
-  border-radius: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s, color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-dots:hover {
-  background-color: #f1f5f9 !important;
-  color: #1e293b;
-  border-color: #cbd5e1;
+.btn-kebab:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 
-.dropdown-menu {
-  position: fixed;
-  transform: translate(-25px, -25px);  
-  background: white;
+.kebab-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 99999 !important; 
+  background-color: #ffffff;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   border-radius: 8px;
-  z-index: 99999 !important;
-  min-width: 190px; 
-  text-align: left;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  min-width: 180px; 
   padding: 6px 0;
+  animation: fadeInKebab 0.15s ease-out;
 }
-.dropdown-menu button {
-  display: block;
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  padding: 12px 16px; 
+  padding: 10px 14px;
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
-  font-size: 14px; 
+  font-size: 13px;
   font-weight: 500;
   color: #334155;
-  transition: background 0.2s;
+  transition: background-color 0.15s, color 0.15s;
 }
 
-.dropdown-menu button:hover {
+.dropdown-item:hover {
   background-color: #f8fafc !important;
+}
+
+.dropdown-item.delete-item:hover {
+  background-color: #fef2f2 !important;
+  color: #ef4444;
+}
+
+.dropdown-item.keys-item:hover {
+  background-color: #f0fdf4 !important;
+  color: #16a34a;
+}
+
+@keyframes fadeInKebab {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .btn-primary, .btn-green {
@@ -224,38 +264,6 @@ tbody {
 
 .btn-primary:hover, .btn-green:hover {
   opacity: 0.9;
-}
-
-.btn-action-delete {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-  padding: 8px 12px; 
-  border-radius: 6px;
-  transition: background 0.2s;
-}
-
-.btn-action-delete:hover {
-  background: #fee2e2;
-}
-
-.btn-text-delete {
-  background: none;
-  border: 1px solid #cbd5e1;
-  color: #64748b;
-  padding: 6px 14px; 
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-text-delete:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #dc2626;
 }
 
 .modal-overlay {
@@ -347,67 +355,14 @@ tbody {
   word-break: break-all; 
 }
 
-.text-center { text-align: center; }
-.col-shrink { width: 40px; }
-.col-actions { width: 60px; }
-.cell-overflow-visible { position: relative; overflow: visible; }
-
-.dropdown-container {
-  display: inline-block;
-  position: relative;
-}
-
-.btn-dots {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 4px 10px;
-  line-height: 1;
-  color: #64748b;
-  transition: color 0.2s;
-}
-.btn-dots:hover { color: #1e293b; }
-
-.dropdown-menu {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background: white;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-  border-radius: 6px;
-  z-index: 100;
-  min-width: 180px;
-  text-align: left;
-  padding: 4px 0;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 14px;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  font-size: 13px;
-  color: #1e293b;
-}
-.dropdown-item:hover { background-color: #f8fafc; }
-.dropdown-item.btn-delete { color: #ef4444; }
-.dropdown-item.btn-delete:hover { background-color: #fef2f2; }
-
-.dropdown-divider {
-  border-top: 1px solid #f1f5f9;
-  margin: 4px 0;
-}
-
 .credentials-box p { margin: 4px 0; }
 .credentials-warning {
   font-size: 11px;
   color: #64748b;
   margin: 8px 0 4px 0;
 }
+
+.text-center { text-align: center; }
+.col-shrink { width: 40px; }
+.col-actions { width: 80px; }
+.cell-overflow-visible { position: relative; overflow: visible !important; }

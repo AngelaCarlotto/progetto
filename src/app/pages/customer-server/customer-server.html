@@ -1,11 +1,4 @@
-<div class="page active">
-
-  @if (activeDropdownCustomerId || activeDropdownServerId) {
-    <div 
-      style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9; background: transparent;" 
-      (click)="closeAllDropdowns()">
-    </div>
-  }
+<div class="page active" (click)="closeAllDropdowns()">
 
   <div class="topbar">
     <div class="topbar-title">Customer / Server Dashboard</div>
@@ -44,15 +37,17 @@
               <td>{{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
               
               <td class="text-center cell-overflow-visible">
-                <div class="dropdown-container" style="position: relative; z-index: 10;">
-                  <button class="btn-dots" (click)="toggleCustomerDropdown(c.id, $event)">
-                    &#8942;
+                <div class="kebab-menu-container">
+                  <button class="btn-kebab" (click)="toggleCustomerDropdown(c.id, $event)" title="Opzioni">
+                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M2 4C3.1 4 4 3.1 4 2C4 0.9 3.1 0 2 0C0.9 0 0 0.9 0 2C0 3.1 0.9 4 2 4ZM2 6C0.9 6 0 6.9 0 8C0 9.1 0.9 10 2 10C3.1 10 4 9.1 4 8C4 6.9 3.1 6 2 6ZM2 12C0.9 12 0 12.9 0 14C0 15.1 0.9 16 2 16C3.1 16 4 15.1 4 14C4 12.9 3.1 12 2 12Z"/>
+                    </svg>
                   </button>
 
                   @if (activeDropdownCustomerId === c.id) {
-                    <div class="dropdown-menu">
-                      <button class="dropdown-item btn-delete" (click)="deleteCustomer(c.id)">
-                        <span>🗑️</span> Elimina Cliente
+                    <div class="kebab-dropdown" (click)="$event.stopPropagation()">
+                      <button class="dropdown-item delete-item" (click)="deleteCustomer(c.id)">
+                        <span>🗑️ Elimina Cliente</span>
                       </button>
                     </div>
                   }
@@ -85,19 +80,20 @@
                               <td>{{ s.name }}</td>
                               
                               <td class="text-center cell-overflow-visible">
-                                <div class="dropdown-container" style="position: relative; z-index: 10;">
-                                  <button class="btn-dots" (click)="toggleDropdown(s.id, $event)">
-                                    &#8942;
+                                <div class="kebab-menu-container">
+                                  <button class="btn-kebab" (click)="toggleDropdown(s.id, $event)" title="Opzioni">
+                                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M2 4C3.1 4 4 3.1 4 2C4 0.9 3.1 0 2 0C0.9 0 0 0.9 0 2C0 3.1 0.9 4 2 4ZM2 6C0.9 6 0 6.9 0 8C0 9.1 0.9 10 2 10C3.1 10 4 9.1 4 8C4 6.9 3.1 6 2 6ZM2 12C0.9 12 0 12.9 0 14C0 15.1 0.9 16 2 16C3.1 16 4 15.1 4 14C4 12.9 3.1 12 2 12Z"/>
+                                    </svg>
                                   </button>
 
                                   @if (activeDropdownServerId === s.id) {
-                                    <div class="dropdown-menu">
-                                      <button class="dropdown-item" (click)="regenerateCredentials(s.id)">
-                                        <span>🔄</span> Rigenera Credenziali
+                                    <div class="kebab-dropdown" (click)="$event.stopPropagation()">
+                                      <button class="dropdown-item keys-item" (click)="regenerateCredentials(s.id)">
+                                        <span>🔄 Rigenera Chiavi</span>
                                       </button>
-                                      <div class="dropdown-divider"></div>
-                                      <button class="dropdown-item btn-delete" (click)="deleteServer(s.id)">
-                                        <span>🗑️</span> Elimina Server
+                                      <button class="dropdown-item delete-item" (click)="deleteServer(s.id)">
+                                        <span>🗑️ Elimina Server</span>
                                       </button>
                                     </div>
                                   }

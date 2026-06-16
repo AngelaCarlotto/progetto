@@ -95,11 +95,6 @@ export class CustomerServerComponent {
       return; 
     }
 
-    const oggi = new Date();
-    const anno = oggi.getFullYear();
-    const mese = String(oggi.getMonth() + 1).padStart(2, '0');
-    const giorno = String(oggi.getDate()).padStart(2, '0');
-
     this.data.customers.push({
       id: 'CLI-' + Math.floor(Math.random() * 9999),
       name: this.customerForm.name.trim(),
