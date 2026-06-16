@@ -42,10 +42,10 @@
               <td>{{ getCustomerName(s.customerId) }}</td>
               <td>
                 <button class="btn-modifica" (click)="openEdit(s)">
-                  <h5 class="btn-text-mod">Modifica</h5>
+                  <span class="btn-text-mod">Modifica</span>
                 </button>
                 <button class="btn-elimina" (click)="deleteScript(s.id)"> 
-                  <h5 class="btn-text-elimina">Elimina</h5> 
+                  <span class="btn-text-elimina">Elimina</span> 
                 </button>
               </td>
             </tr>
@@ -86,7 +86,9 @@
             <select [(ngModel)]="scriptForm.customerId" (change)="onCustomerChange()">
               <option value="" disabled selected>Select Customer</option>
               @for (c of data.customers; track c.id) {
-                <option [ngValue]="c.id">{{ c.name }}</option>
+                <option [ngValue]="c.id">
+                  {{ c.name }} &nbsp; — &nbsp; [ID: {{ c.id }}]
+                </option>
               }
             </select>
           </div>
@@ -96,7 +98,7 @@
             <select [(ngModel)]="scriptForm.serverId" [disabled]="!scriptForm.customerId">
               <option value="" disabled selected>Select Server</option>
               @for (s of getFilteredServers(); track s.id) {
-                <option [ngValue]="s.id">{{ s.name }}</option>
+                <option [ngValue]="s.id">{{ s.name }} &nbsp; — &nbsp; [ID: {{ s.id }}]</option>
               }
             </select>
           </div>
@@ -127,15 +129,15 @@
           @if (scriptForm.mysqlComponent) {
             <div class="file-upload-box mysql-box">
               <label class="box-title">🗄️ Parametri e Configurazione MySQL</label>
-              <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 8px; margin-bottom: 8px;">
+              <div class="grid-3-1">
                 <input [(ngModel)]="scriptForm.mysqlHost" placeholder="Host IP (es. 127.0.0.1)">
                 <input [(ngModel)]="scriptForm.mysqlPort" placeholder="Porta (3306)">
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+              <div class="grid-2">
                 <input [(ngModel)]="scriptForm.mysqlUser" placeholder="Username DB">
                 <input [(ngModel)]="scriptForm.mysqlPassword" type="password" placeholder="Password DB">
               </div>
-              <input [(ngModel)]="scriptForm.mysqlDatabase" placeholder="Nome Database" style="margin-bottom: 12px;">
+              <input [(ngModel)]="scriptForm.mysqlDatabase" placeholder="Nome Database" class="mb-12">
 
               <input type="file" multiple accept=".sql" (change)="onMysqlFilesSelected($event)" class="file-input-hidden" id="mysqlFileInput">
               <label for="mysqlFileInput" class="file-input-trigger btn-mysql-trigger">
@@ -158,18 +160,18 @@
           @if (scriptForm.filesComponent) {
             <div class="file-upload-box">
               <label class="box-title">📄 File sorgenti e cartelle</label>
-              <input [(ngModel)]="scriptForm.filesSourcePath" placeholder="Path di origine" style="margin-bottom: 12px;">
+              <input [(ngModel)]="scriptForm.filesSourcePath" placeholder="Path di origine" class="mb-12">
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div class="grid-2 mb-12">
                 <div>
                   <input type="file" multiple (change)="onFilesSelected($event)" class="file-input-hidden" id="multiFileInput">
-                  <label for="multiFileInput" class="file-input-trigger" style="margin: 0; text-align: center; display: block;">
+                  <label for="multiFileInput" class="file-input-trigger m-0 text-center block">
                     📄 Seleziona File
                   </label>
                 </div>
                 <div>
                   <input type="file" multiple webkitdirectory directory (change)="onFilesSelected($event)" class="file-input-hidden" id="directoryInput">
-                  <label for="directoryInput" class="file-input-trigger btn-directory-trigger" style="margin: 0; text-align: center; display: block;">
+                  <label for="directoryInput" class="file-input-trigger btn-directory-trigger m-0 text-center block">
                     📁 Seleziona Cartella
                   </label>
                 </div>
@@ -238,12 +240,10 @@
             ℹ️ Info 
             @if (!isTab1Valid()) { <span class="tab-error-badge">⚠️</span> }
           </button>
-          
           <button type="button" [class.active]="activeEditTab === 2" (click)="activeEditTab = 2">
             📂 Componenti 
             @if (!isTab2Valid()) { <span class="tab-error-badge">⚠️</span> }
           </button>
-          
           <button type="button" [class.active]="activeEditTab === 3" (click)="activeEditTab = 3">
             🌐 FTP 
             @if (!isTab3Valid()) { <span class="tab-error-badge">⚠️</span> }
@@ -265,7 +265,7 @@
               <label>Customer *</label>
               <select [(ngModel)]="scriptForm.customerId" (change)="onCustomerChange()">
                 @for (c of data.customers; track c.id) {
-                  <option [ngValue]="c.id">{{ c.name }}</option>
+                  <option [ngValue]="c.id">{{ c.name }} (ID: {{ c.id.substring(0,6) }}...)</option>
                 }
               </select>
             </div>
@@ -294,15 +294,15 @@
             @if (scriptForm.mysqlComponent) {
               <div class="file-upload-box mysql-box">
                 <label class="box-title">🗄️ Parametri e File Dump MySQL</label>
-                <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div class="grid-3-1">
                   <input [(ngModel)]="scriptForm.mysqlHost" placeholder="Host IP">
                   <input [(ngModel)]="scriptForm.mysqlPort" placeholder="Porta">
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div class="grid-2">
                   <input [(ngModel)]="scriptForm.mysqlUser" placeholder="Username DB">
                   <input [(ngModel)]="scriptForm.mysqlPassword" type="password" placeholder="Password DB">
                 </div>
-                <input [(ngModel)]="scriptForm.mysqlDatabase" placeholder="Nome Database" style="margin-bottom: 12px;">
+                <input [(ngModel)]="scriptForm.mysqlDatabase" placeholder="Nome Database" class="mb-12">
 
                 <input type="file" multiple accept=".sql" (change)="onMysqlFilesSelected($event)" class="file-input-hidden" id="editMysqlInput">
                 <label for="editMysqlInput" class="file-input-trigger btn-mysql-trigger">➕ Carica Altri File DB</label>
@@ -320,9 +320,9 @@
             @if (scriptForm.filesComponent) {
               <div class="file-upload-box">
                 <label class="box-title">📄 File Sorgenti e Cartelle</label>
-                <input [(ngModel)]="scriptForm.filesSourcePath" placeholder="Path di origine" style="margin-bottom: 12px;">
+                <input [(ngModel)]="scriptForm.filesSourcePath" placeholder="Path di origine" class="mb-12">
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                <div class="grid-2 mb-12">
                   <div>
                     <input type="file" multiple (change)="onFilesSelected($event)" class="file-input-hidden" id="editGenericInput">
                     <label for="editGenericInput" class="file-input-trigger" style="margin: 0; text-align: center; display: block;">
@@ -362,14 +362,14 @@
               <label>FTP Password *</label>
               
               @if (!isChangingFtpPassword) {
-                <div style="display: flex; gap: 10px; align-items: center;">
-                  <input type="text" value="••••••••" disabled style="background: #f1f5f9; color: #94a3b8; width: 100%;">
-                  <button type="button" class="btn-text-mod" (click)="isChangingFtpPassword = true" style="white-space: nowrap; background: none; border: none; cursor: pointer; font-weight: 600;">✏️ Cambia</button>
+                <div class="flex-gap-10-center">
+                  <input type="text" value="••••••••" disabled class="bg-disabled w-100">
+                  <button type="button" class="btn-text-mod no-bg-border" (click)="isChangingFtpPassword = true">✏️ Cambia</button>
                 </div>
               } @else {
-                <div style="display: flex; gap: 10px; align-items: center;">
-                  <input [(ngModel)]="scriptForm.ftpPassword" type="password" placeholder="Nuova password FTP" style="width: 100%;">
-                  <button type="button" class="btn-text-elimina" (click)="isChangingFtpPassword = false" style="white-space: nowrap; background: none; border: none; cursor: pointer; font-weight: 600;">Annulla</button>
+                <div class="flex-gap-10-center">
+                  <input [(ngModel)]="scriptForm.ftpPassword" type="password" placeholder="Nuova password FTP" class="w-100">
+                  <button type="button" class="btn-text-elimina no-bg-border" (click)="isChangingFtpPassword = false">Annulla</button>
                 </div>
               }
             </div>
@@ -385,10 +385,7 @@
 
         <div class="wizard-actions">
           <button class="btn-modal-link" (click)="showEdit = false">Annulla</button>
-          <button 
-            class="btn-modal-green" 
-            [disabled]="!isFormValid()"
-            (click)="saveEdit()"> 
+          <button class="btn-modal-green" [disabled]="!isFormValid()" (click)="saveEdit()"> 
             SALVA MODIFICHE
           </button>
         </div>

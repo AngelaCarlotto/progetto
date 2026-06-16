@@ -470,3 +470,46 @@
   margin: 0;
   line-height: 1.4;
 }
+
+/* Strutture di Layout e Griglie */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.grid-3-1 {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 8px;
+}
+.flex-gap-10-center {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Helpers di spaziatura ed elementi */
+.mb-12 { margin-bottom: 12px; }
+.m-0 { margin: 0; }
+.w-100 { width: 100%; }
+.block { display: block; }
+.text-center { text-align: center; }
+
+.bg-disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+.no-bg-border {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Fix semantici bottoni tabella */
+.btn-text-mod, .btn-text-elimina {
+  font-size: inherit;
+  font-weight: 600;
+  margin: 0;
+}
