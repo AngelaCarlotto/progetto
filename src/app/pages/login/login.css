@@ -1,25 +1,28 @@
+/* VERSIONE LIGHT */
 #screen-login {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: #0b0f17;
-  background-image: radial-gradient(circle at 50% 50%, #121824 0%, #0b0f17 100%);
+  background-color: #f8fafc; 
+  background-image: radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 100%);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   padding: 20px;
   box-sizing: border-box;
+  transition: background-color 0.3s ease;
 }
 
 .login-card {
-  background: #111827;
+  background: #ffffff; 
   border-radius: 14px;
   padding: 40px 32px;
   width: 100%;
   max-width: 400px;
   text-align: center;
-  border: 1px solid #1f293d;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 
 .login-logo {
@@ -36,7 +39,7 @@
 }
 
 .login-title {
-  color: #ffffff;
+  color: #0f172a; 
   font-size: 24px;
   font-weight: 800;
   letter-spacing: 1px;
@@ -44,7 +47,7 @@
 }
 
 .login-sub {
-  color: #6b7280;
+  color: #64748b;
   font-size: 13px;
   margin: 0 0 32px 0;
 }
@@ -60,7 +63,7 @@
 }
 
 .form-label {
-  color: #9ca3af;
+  color: #475569; 
   font-size: 12px;
   font-weight: 600;
   margin-bottom: 8px;
@@ -71,9 +74,9 @@
 
 .form-input {
   width: 100%;
-  background: #1f293d;
-  border: 1px solid #2d3748;
-  color: #ffffff;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
   padding: 12px 14px;
   border-radius: 8px;
   font-size: 14px;
@@ -84,12 +87,12 @@
 .form-input:focus {
   outline: none;
   border-color: #22c55e;
-  background: #161f30;
+  background: #ffffff;
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
 .form-input::placeholder {
-  color: #4b5563;
+  color: #94a3b8; 
 }
 
 .btn-login {
@@ -123,7 +126,7 @@
   display: flex;
   align-items: center;
   text-align: center;
-  color: #4b5563;
+  color: #94a3b8;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -133,7 +136,7 @@
 .divider::before, .divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid #1f293d;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .divider:not(:empty)::before { margin-right: .75em; }
@@ -141,9 +144,9 @@
 
 .btn-github {
   width: 100%;
-  background: #24292e;
-  color: #e6edf3;
-  border: 1px solid #30363d;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
   padding: 12px;
   border-radius: 8px;
   font-size: 14px;
@@ -157,8 +160,8 @@
 }
 
 .btn-github:hover {
-  background: #30363d;
-  border-color: #8b949e;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
 }
 
 .btn-github:active {
@@ -166,17 +169,86 @@
 }
 
 .github-icon {
-  color: #e6edf3;
+  color: #334155;
 }
 
 .login-error-box {
-  background-color: rgba(239, 68, 68, 0.15);
+  background-color: #fee2e2;
   border: 1px solid #ef4444;
-  color: #fca5a5;
+  color: #b91c1c;
   font-size: 13px;
   font-weight: 500;
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 20px;
   text-align: left;
+}
+
+
+/* VERSIONE DARK */
+:host-context(body.dark-theme) #screen-login {
+  background-color: #0b0f17;
+  background-image: radial-gradient(circle at 50% 50%, #121824 0%, #0b0f17 100%);
+}
+
+:host-context(body.dark-theme) .login-card {
+  background: #111827;
+  border: 1px solid #1f293d;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+:host-context(body.dark-theme) .login-title {
+  color: #ffffff;
+}
+
+:host-context(body.dark-theme) .login-sub {
+  color: #6b7280;
+}
+
+:host-context(body.dark-theme) .form-label {
+  color: #9ca3af;
+}
+
+:host-context(body.dark-theme) .form-input {
+  background: #1f293d;
+  border: 1px solid #2d3748;
+  color: #ffffff;
+}
+
+:host-context(body.dark-theme) .form-input:focus {
+  background: #161f30;
+}
+
+:host-context(body.dark-theme) .form-input::placeholder {
+  color: #6b7280; 
+}
+
+:host-context(body.dark-theme) .divider {
+  color: #4b5563;
+}
+
+:host-context(body.dark-theme) .divider::before, 
+:host-context(body.dark-theme) .divider::after {
+  border-bottom: 1px solid #1f293d;
+}
+
+:host-context(body.dark-theme) .btn-github {
+  background: #24292e;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+}
+
+:host-context(body.dark-theme) .btn-github:hover {
+  background: #30363d;
+  border-color: #8b949e;
+}
+
+:host-context(body.dark-theme) .github-icon {
+  color: #e6edf3;
+}
+
+:host-context(body.dark-theme) .login-error-box {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
 }

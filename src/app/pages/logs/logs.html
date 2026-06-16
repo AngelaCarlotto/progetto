@@ -1,4 +1,4 @@
-<div class="page active">
+<div class="logs-wrapper">
 
   <div class="topbar">
     <div>
@@ -64,7 +64,7 @@
         <tbody>
           @for (log of filteredLogs(); track log.id) {
             <tr>
-              <td>{{ log.id }}</td>
+              <td><code>{{ log.id }}</code></td>
               <td>
                 <span
                   class="badge"
@@ -72,18 +72,18 @@
                   [class.error]="log.level?.toLowerCase() === 'error'"
                   [class.info]="log.level?.toLowerCase() === 'info'"
                 >
-                  {{ log.level }}
+                  {{ log.level | uppercase }}
                 </span>
               </td>
-              <td>{{ log.message }}</td>
+              <td class="text-left-message">{{ log.message }}</td>
               <td><strong>{{ log.scriptId }}</strong></td>
-              <td>{{ log?.executionId }}</td>
-              <td>{{ log.createdAt | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+              <td><code>{{ log?.executionId }}</code></td>
+              <td class="timestamp-col">{{ log.createdAt | date:'yyyy-MM-dd HH:mm:ss' }}</td>
             </tr>
           }
           @if (filteredLogs().length === 0) {
             <tr>
-              <td colspan="6" style="text-align: center; color: #64748b; padding: 30px;">
+              <td colspan="6" class="no-data-cell">
                 Nessun log registrato al momento. Crea uno script per avviare il tracciamento.
               </td>
             </tr>
@@ -100,7 +100,7 @@
         ← Previous
       </button>
 
-      <span>
+      <span class="pagination-info">
         Page {{ currentPage }} / {{ totalPages() }}
       </span>
 

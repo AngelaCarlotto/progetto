@@ -2,40 +2,23 @@
 
   <div class="sidebar-brand">
     <span>PenguinProtect</span>
+    
+    <label class="theme-switch" title="Cambia Tema">
+      <input type="checkbox" [checked]="isDarkMode" (change)="toggleTheme()">
+      <span class="slider">
+        <span class="slider-icon">
+          {{ isDarkMode ? '🌙' : '☀️' }}
+        </span>
+      </span>
+    </label>
   </div>
 
   <nav class="sidebar-nav">
-
-    <div class="nav-item"
-      [class.active]="currentPage === 'dashboard'"
-      (click)="setPage('dashboard')">
-      Dashboard
-    </div>
-
-    <div class="nav-item"
-      [class.active]="currentPage === 'customer'"
-      (click)="setPage('customer')">
-      Customer-Server
-    </div>
-
-    <div class="nav-item"
-      [class.active]="currentPage === 'scripts'"
-      (click)="setPage('scripts')">
-      Scripts
-    </div>
-
-    <div class="nav-item"
-      [class.active]="currentPage === 'graphs'"
-      (click)="setPage('graphs')">
-      Graphs
-    </div>
-
-    <div class="nav-item"
-      [class.active]="currentPage === 'logs'"
-      (click)="setPage('logs')">
-      Logs
-    </div>
-
+    <div class="nav-item" [class.active]="currentPage === 'dashboard'" (click)="setPage('dashboard')">Dashboard</div>
+    <div class="nav-item" [class.active]="currentPage === 'customer'" (click)="setPage('customer')">Customer-Server</div>
+    <div class="nav-item" [class.active]="currentPage === 'scripts'" (click)="setPage('scripts')">Scripts</div>
+    <div class="nav-item" [class.active]="currentPage === 'graphs'" (click)="setPage('graphs')">Graphs</div>
+    <div class="nav-item" [class.active]="currentPage === 'logs'" (click)="setPage('logs')">Logs</div>
   </nav>
 
   <div class="sidebar-footer">
@@ -44,7 +27,9 @@
       <div class="user-info">
         <span class="user-name">{{ username }}</span>
       </div>
-    </div> <button type="button" class="btn-logout" (click)="logout()">
+    </div> 
+    
+    <button type="button" class="btn-logout" (click)="logout()">
       <span class="logout-text">Logout</span>
     </button>
   </div>

@@ -1,4 +1,4 @@
-<div class="page active">
+<div class="dashboard-wrapper">
 
   <div class="topbar">
     <div class="topbar-left">
@@ -9,9 +9,9 @@
       <button
         type="button"
         class="btn-primary"
+        [class.btn-loading]="loading"
         (click)="refreshDashboard()"
-        [disabled]="loading"
-        [style.background]="loading ? '#64748b' : '#2563eb'">
+        [disabled]="loading">
         {{ loading ? ' Sto ricalcolando...' : '↻ Aggiorna Dati' }}
       </button>
     </div>
@@ -41,10 +41,10 @@
         </div>
       </div>
 
-      <div class="stat-card" [style.border-left]="getErroriRilevati() > 0 ? '4px solid #ef4444' : '1px solid #e8ecef'">
+      <div class="stat-card card-error-control" [class.has-errors]="getErroriRilevati() > 0">
         <div>
-          <div class="stat-label" [style.color]="getErroriRilevati() > 0 ? '#ef4444' : '#94a3b8'">Errori rilevati</div>
-          <div class="stat-value" [style.color]="getErroriRilevati() > 0 ? '#ef4444' : '#1e293b'">{{ getErroriRilevati() }}</div>
+          <div class="stat-label label-error-target">Errori rilevati</div>
+          <div class="stat-value value-error-target">{{ getErroriRilevati() }}</div>
         </div>
       </div>
     </div>
@@ -55,9 +55,9 @@
         <h4 class="chart-title">Stato Backup (Andamento Storico)</h4>
         <div class="line-chart-mock">
           <svg viewBox="0 0 500 200" class="chart-svg">
-            <line x1="0" y1="180" x2="500" y2="180" stroke="#e2e8f0" stroke-width="1" />
-            <line x1="0" y1="100" x2="500" y2="100" stroke="#f1f5f9" stroke-width="1" />
-            <line x1="0" y1="30" x2="500" y2="30" stroke="#f1f5f9" stroke-width="1" />
+            <line x1="0" y1="180" x2="500" y2="180" class="chart-grid-line line-main" stroke-width="1" />
+            <line x1="0" y1="100" x2="500" y2="100" class="chart-grid-line" stroke-width="1" />
+            <line x1="0" y1="30" x2="500" y2="30" class="chart-grid-line" stroke-width="1" />
 
             <path [attr.d]="lineChartPath"
                   fill="none"
@@ -87,7 +87,7 @@
             </div>
           } 
           @else {
-            <div style="font-size: 12px; color: #94a3b8; font-weight: 500; text-align: center;">
+            <div class="no-data-legend-text">
               Nessun dato configurato negli script
             </div>
           }

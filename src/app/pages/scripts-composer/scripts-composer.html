@@ -1,4 +1,4 @@
-<div class="page active" (click)="closeKebab()">
+<div class="scripts-wrapper" (click)="closeKebab()">
 
   <div class="topbar">
     <div>
@@ -7,7 +7,7 @@
     </div>
   </div>
 
-  <div class="topbar-actions">
+  <div class="topbar-actions-container">
     <input
       type="text"
       placeholder="Search Script ID..."
@@ -35,9 +35,9 @@
         <tbody>
           @for (s of filteredScripts(); track s.id) {
             <tr>
-              <td>{{ s.id }}</td>
+              <td><code>{{ s.id }}</code></td>
               <td>{{ s.path }}</td>
-              <td>{{ s.schedule }}</td>
+              <td><span class="schedule-badge">{{ s.schedule }}</span></td>
               <td>{{ getServerName(s.serverId) }}</td>
               <td>{{ getCustomerName(s.customerId) }}</td>
               <td>
@@ -170,7 +170,7 @@
           }
 
           @if (scriptForm.filesComponent) {
-            <div class="file-upload-box">
+            <div class="file-upload-box files-generic-box">
               <label class="box-title">📄 File sorgenti e cartelle</label>
               <input [(ngModel)]="scriptForm.filesSourcePath" placeholder="Path di origine" class="mb-12">
 
@@ -244,7 +244,7 @@
     <div class="modal-overlay">
       <div class="modal-card">
         <div class="wizard-header">
-          <h3>Modifica Script: <span style="color: #2563eb;">{{ scriptForm.id }}</span></h3>
+          <h3>Modifica Script: <span class="edit-id-highlight">{{ scriptForm.id }}</span></h3>
         </div>
 
         <div class="edit-tabs-nav">
@@ -330,7 +330,7 @@
             }
 
             @if (scriptForm.filesComponent) {
-              <div class="file-upload-box">
+              <div class="file-upload-box files-generic-box">
                 <label class="box-title">📄 File Sorgenti e Cartelle</label>
                 <input [(ngModel)]="scriptForm.filesSourcePath" placeholder="Path di origine" class="mb-12">
 
@@ -401,6 +401,7 @@
             SALVA MODIFICHE
           </button>
         </div>
+
       </div>
     </div>
   }
