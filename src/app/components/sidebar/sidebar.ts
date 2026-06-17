@@ -25,6 +25,7 @@ export class SidebarComponent implements OnInit {
     }
   }
 
+  //per cambiare tema 
   toggleTheme() {
     this.isDarkMode = !this.isDarkMode;
     if (this.isDarkMode) {

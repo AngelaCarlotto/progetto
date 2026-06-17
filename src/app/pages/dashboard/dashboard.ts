@@ -31,6 +31,7 @@ export class DashboardComponent implements OnInit {
     this.calculatePercentagesAndCharts();
   }
 
+  //aggiorna la pagina
   refreshDashboard() {
     this.loading = true;
     this.cdr.detectChanges();
@@ -47,6 +48,7 @@ export class DashboardComponent implements OnInit {
     }, 600);
   }
 
+  //calcola la perchentuale di quanti file e sql sono stati caricati 
   calculatePercentagesAndCharts() {
     let mysqlSteps = 0;
     let filesSteps = 0;
@@ -79,6 +81,7 @@ export class DashboardComponent implements OnInit {
     this.generateLineChart();
   }
 
+  //genera il grafico lineare
   generateLineChart() {
     if (!this.data.logs || this.data.logs.length === 0) {
       this.lineChartPath = 'M 0 180 L 500 180';
@@ -108,7 +111,7 @@ export class DashboardComponent implements OnInit {
     this.lineChartPath = points.join(' ');
   }
 
-  // FUNZIONI DI CONTEGGIO IN TEMPO REALE
+  // calcolano in tempo reale il totale di clienti, script attivi e backup
   getClientiTotali(): number { 
     return this.data.customers ? this.data.customers.length : 0; 
   }

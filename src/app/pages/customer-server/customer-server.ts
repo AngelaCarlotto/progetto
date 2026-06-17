@@ -75,6 +75,7 @@ export class CustomerServerComponent {
     return this.expandedCustomerIds.includes(customerId);
   }
 
+  //quando selezioni il cliente ti fa vedere solo i server associati
   getServersByCustomer(customerId: string | number) {
     return this.data.servers.filter(s => s.customerId == customerId);
   }
@@ -89,6 +90,7 @@ export class CustomerServerComponent {
     this.showServerModal = true;
   }
 
+  //crea il cliente 
   createCustomer() {
     if (!this.customerForm.name || !this.customerForm.name.trim()) {
       alert('Attenzione: Il nome del cliente non può essere vuoto!');
@@ -105,6 +107,7 @@ export class CustomerServerComponent {
     this.showCustomerModal = false; 
   }
   
+  //crea il server
   createServer() {
     const serverId = 'SRV-' + Math.floor(Math.random() * 9999);
     const clientId = 'cli_' + Math.random().toString(36).substring(2, 10);
@@ -129,6 +132,7 @@ export class CustomerServerComponent {
     this.showSecretModal = true;
   }
 
+  //rigenera le credenziali secret id e id del server selezionato 
   regenerateCredentials(serverId: string) {
     const server = this.data.servers.find(s => s.id === serverId);
     
@@ -162,6 +166,7 @@ export class CustomerServerComponent {
     this.showSecretModal = false;
   }
 
+  //elimina il cliente 
   deleteCustomer(id: string | number) {
     const conferma = confirm("Sei sicuro di voler eliminare questo cliente?\nL'operazione eliminerà anche tutti i server ad esso associati in modo irreversibile.");
     if (!conferma) {
@@ -175,6 +180,7 @@ export class CustomerServerComponent {
     this.closeAllDropdowns();
   }
 
+  //elimina il server
   deleteServer(id: string) {
     this.data.servers = this.data.servers.filter(s => s.id !== id);
     this.closeAllDropdowns();

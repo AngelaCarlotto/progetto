@@ -17,6 +17,7 @@ export class LoginComponent {
   password = '';
   errorMessage = '';
 
+  //controlla le credenziali di login e nega o valida l'accesso
   onFormSubmit() {
     this.errorMessage = '';
 

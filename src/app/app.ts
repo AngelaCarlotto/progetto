@@ -34,8 +34,7 @@ export class AppComponent {
   loggedUser = ''; 
 
   constructor() {
-    // afterNextRender viene eseguito SOLO ed esclusivamente nel browser del tuo Mac.
-    // Il server Node.js salterà completamente questo blocco, azzerando l'errore su "window"
+    //rileva se il sistema del pc ha il tema scuro o chiaro e li imposta automaticamente anche nell'applicazione 
     afterNextRender(() => {
       const sistemaInDark = window.matchMedia('(prefers-color-scheme: dark)');
       
@@ -47,20 +46,20 @@ export class AppComponent {
         }
       };
 
-      // Controllo iniziale al caricamento della pagina
       applicaTemaAutomatico(sistemaInDark);
       
-      // Rimani in ascolto dei cambi di impostazione su macOS
       sistemaInDark.addEventListener('change', applicaTemaAutomatico);
     });
   }
 
+  //gestisce il login
   login(username: string) {
     this.loggedUser = username;
     this.isLoggedIn = true;
     this.currentPage = 'dashboard'; 
   }
 
+  //gestisce il cambio di pagina manuale 
   setPage(page: string) {
     if (page === 'login') {
       this.isLoggedIn = false;

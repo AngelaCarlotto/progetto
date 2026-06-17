@@ -52,6 +52,7 @@ export class ScriptsComposer {
 
   selectedScript: any = null;
 
+  // Gestisce apertura e chiusura del menu a tre puntini
   toggleKebab(scriptId: string, event: MouseEvent) {
     event.stopPropagation(); 
     this.activeKebabId = this.activeKebabId === scriptId ? null : scriptId;
@@ -68,18 +69,21 @@ export class ScriptsComposer {
     this.showCreate = true;
   }
 
+  //passa allo step successivo del wizard
   nextStep() {
     if (this.currentStep < 3) {
       this.currentStep++;
     }
   }
 
+  //torna indietro di uno step nel wizard
   prevStep() {
     if (this.currentStep > 1) {
       this.currentStep--;
     }
   }
 
+  //mostra solo i server che appartengono al cliente selezionato
   getFilteredServers(): any[] {
     if (!this.scriptForm.customerId) return [];
     return this.data.servers.filter(s => s.customerId === this.scriptForm.customerId);
@@ -89,10 +93,12 @@ export class ScriptsComposer {
     this.scriptForm.serverId = '';
   }
 
+  //verifica che i campi dello step1 siano compilati
   isStep1Valid(): boolean {
     return !!(this.scriptForm.path && this.scriptForm.schedule && this.scriptForm.customerId && this.scriptForm.serverId);
   }
 
+  //verifica step 2
   isStep2Valid(): boolean {
     if (!this.scriptForm.mysqlComponent && !this.scriptForm.filesComponent) return false;
     
@@ -111,6 +117,7 @@ export class ScriptsComposer {
     return true;
   }
 
+  //verifica step 3
   isStep3Valid(): boolean {
     return !!(this.scriptForm.ftpHost && this.scriptForm.ftpUser && this.scriptForm.ftpPassword);
   }
@@ -152,6 +159,7 @@ export class ScriptsComposer {
     }
   }
 
+//gestisce la selezione dei file sql
   onMysqlFilesSelected(event: any) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -164,10 +172,12 @@ export class ScriptsComposer {
     }
   }
 
+  //rimuove i file sql che erano stati selezionati
   removeMysqlFile(index: number) {
     this.scriptForm.selectedMysqlFiles.splice(index, 1);
   }
 
+  //gestisce l'aggiunta dei file 
   onFilesSelected(event: any) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -180,10 +190,12 @@ export class ScriptsComposer {
     }
   }
 
+  //rimuove i file che erano stati selezionati
   removeFile(index: number) {
     this.scriptForm.selectedFiles.splice(index, 1);
   }
 
+  //crea lo script
   createScript() {
     const id = 'SCR-' + Math.floor(Math.random() * 99999);
 
@@ -226,6 +238,7 @@ export class ScriptsComposer {
     this.data.saveToStorage(); 
   }
 
+  //carica i dati dello script gia esistenti e apre il pannello di modifica
   openEdit(script: any) {
     this.closeKebab();
     this.selectedScript = script;
@@ -251,6 +264,7 @@ export class ScriptsComposer {
     this.showEdit = true;
   }
 
+  //applica le modifiche allo script
   saveEdit() {
     const index = this.data.scripts.findIndex(s => s.id === this.selectedScript.id);
     if (index !== -1) {
@@ -292,6 +306,7 @@ export class ScriptsComposer {
     this.data.saveToStorage(); 
   }
 
+  //elimina lo script
   deleteScript(id: string) {
     this.closeKebab();
     if (confirm('Sei sicuro di voler eliminare questo script?')) {
@@ -319,15 +334,18 @@ export class ScriptsComposer {
     }
   }
 
+  //filtra gli script in bade all'id
   filteredScripts() {
     if (!this.searchId) return this.data.scripts;
     return this.data.scripts.filter(s => s.id.toLowerCase().includes(this.searchId.toLowerCase()));
   }
 
+  //se il customer di quello script non esiste o viene cancellato riporta unknow
   getCustomerName(id: any) {
     return this.data.customers.find(c => c.id == id)?.name ?? 'Unknown';
   }
 
+  //se il server dello script non esiste riporta unknow
   getServerName(id: any) {
     return this.data.servers.find(s => s.id == id)?.name ?? 'Unknown';
   }

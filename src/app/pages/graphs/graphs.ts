@@ -79,7 +79,7 @@ export class GraphsComponent implements OnInit {
   } 
 
   calculateAllStats() {
-    // 1. RESET TOTALE DEI CONTATORI E DELLE LABEL
+    //resetta i totali dei contatori e delle label
     this.mysqlCount = 0;
     this.filesCount = 0;
     this.globalSuccess = 0;
@@ -90,7 +90,7 @@ export class GraphsComponent implements OnInit {
 
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // 2. CONTEGGIO SCRIPT
+    //conta gli script
     if (this.data.scripts && this.data.scripts.length > 0) {
       this.data.scripts.forEach((s: any) => {
         if (s.mysqlComponent || s.hasMysql) {
@@ -112,7 +112,7 @@ export class GraphsComponent implements OnInit {
       });
     }
 
-    // 3. CONTEGGIO LOGS (GLOBALI E ODIERNI)
+    // conta i logs globali e odierni
     if (this.data.logs && this.data.logs.length > 0) {
       this.data.logs.forEach((l: any) => {
         const isError = l.level?.toLowerCase() === 'error' || l.message?.toLowerCase().includes('error');
@@ -134,7 +134,7 @@ export class GraphsComponent implements OnInit {
       });
     }
 
-    // 4. CALCOLO DELLE ALTEZZE PROPORZIONALI PER LE BARRE
+    // calcola le altezze per le barre 
     const maxSteps = Math.max(this.mysqlCount, this.filesCount, 1);
     this.mysqlHeight = this.mysqlCount > 0 ? `${(this.mysqlCount / maxSteps) * 130}px` : '10px';
     this.filesHeight = this.filesCount > 0 ? `${(this.filesCount / maxSteps) * 130}px` : '10px';
@@ -147,7 +147,7 @@ export class GraphsComponent implements OnInit {
     this.todaySuccessHeight = this.todaySuccess > 0 ? `${(this.todaySuccess / maxToday) * 130}px` : '10px';
     this.todayErrorHeight = this.todayError > 0 ? `${(this.todayError / maxToday) * 130}px` : '10px';
 
-    // 5. RIGENERA STORICO LINEARE
+    //rigenera lo storico lineare 
     this.generateHistorySvg();
   }
    
