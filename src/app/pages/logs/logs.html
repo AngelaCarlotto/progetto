@@ -78,7 +78,7 @@
               <td class="text-left-message">{{ log.message }}</td>
               <td><strong>{{ log.scriptId }}</strong></td>
               <td><code>{{ log?.executionId }}</code></td>
-              <td class="timestamp-col">{{ log.createdAt | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+              <td class="timestamp-col">{{ log.createdAt | date:'dd/MM/yyyy - HH:mm' }}</td>
             </tr>
           }
           @if (filteredLogs().length === 0) {
