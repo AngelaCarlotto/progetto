@@ -1,7 +1,6 @@
-import { Component, afterNextRender } from '@angular/core'; // Usiamo afterNextRender
+import { Component, afterNextRender } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
 import { LoginComponent } from './pages/login/login';
 import { SidebarComponent } from './components/sidebar/sidebar';
 import { DashboardComponent } from './pages/dashboard/dashboard';
@@ -34,7 +33,7 @@ export class AppComponent {
   loggedUser = ''; 
 
   constructor() {
-    //rileva se il sistema del pc ha il tema scuro o chiaro e li imposta automaticamente anche nell'applicazione 
+    //rileva se il sistema del pc ha il tema scuro o chiaro e lo imposta automaticamente anche nell'applicazione 
     afterNextRender(() => {
       const sistemaInDark = window.matchMedia('(prefers-color-scheme: dark)');
       
