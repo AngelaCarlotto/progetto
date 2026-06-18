@@ -205,6 +205,11 @@
   color: #1d4ed8;
 }
 
+.warning {
+  background: #fef3c7;
+  color: #d97706;
+}
+
 .pagination {
   display: flex;
   justify-content: flex-end;
@@ -335,6 +340,11 @@
 :host-context(body.dark-theme) .info {
   background: #1e3a8a; 
   color: #93c5fd; 
+}
+
+:host-context(body.dark-theme) .warning {
+  background: #78350f;
+  color: #fcd34d;
 }
 
 :host-context(body.dark-theme) .pagination button:hover:not(:disabled) {

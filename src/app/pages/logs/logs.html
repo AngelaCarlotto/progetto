@@ -71,6 +71,7 @@
                   [class.success]="log.level?.toLowerCase() === 'success'"
                   [class.error]="log.level?.toLowerCase() === 'error'"
                   [class.info]="log.level?.toLowerCase() === 'info'"
+                  [class.warning]="log.level?.toLowerCase() === 'warning'"
                 >
                   {{ log.level | uppercase }}
                 </span>
@@ -78,7 +79,7 @@
               <td class="text-left-message">{{ log.message }}</td>
               <td><strong>{{ log.scriptId }}</strong></td>
               <td><code>{{ log?.executionId }}</code></td>
-              <td class="timestamp-col">{{ log.createdAt | date:'dd/MM/yyyy - HH:mm' }}</td>
+              <td class="timestamp-col">{{ log.createdAt | date:'dd/MM/yyyy - HH:mm:ss' }}</td>
             </tr>
           }
           @if (filteredLogs().length === 0) {

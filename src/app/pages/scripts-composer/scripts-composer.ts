@@ -159,7 +159,7 @@ export class ScriptsComposer {
     }
   }
 
-//gestisce la selezione dei file sql
+  //gestisce la selezione dei file sql
   onMysqlFilesSelected(event: any) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -268,8 +268,49 @@ export class ScriptsComposer {
   saveEdit() {
     const index = this.data.scripts.findIndex(s => s.id === this.selectedScript.id);
     if (index !== -1) {
+      const originalScript = this.data.scripts[index];
+      const currentFtpPassword = this.isChangingFtpPassword ? this.scriptForm.ftpPassword : originalScript.ftpPassword;
+
+      const changedParts: string[] = [];
+
+      if (originalScript.path !== this.scriptForm.path) changedParts.push('Percorso (Path)');
+      if (originalScript.schedule !== this.scriptForm.schedule) changedParts.push('Pianificazione (Schedule)');
+      if (originalScript.customerId !== this.scriptForm.customerId) changedParts.push('Cliente');
+      if (originalScript.serverId !== this.scriptForm.serverId) changedParts.push('Server');
+
+      if (originalScript.mysqlComponent !== this.scriptForm.mysqlComponent) {
+        changedParts.push('Abilitazione componente MySQL');
+      } else if (this.scriptForm.mysqlComponent) {
+        if (originalScript.mysqlHost !== this.scriptForm.mysqlHost) changedParts.push('Host MySQL');
+        if (originalScript.mysqlPort !== this.scriptForm.mysqlPort) changedParts.push('Porta MySQL');
+        if (originalScript.mysqlUser !== this.scriptForm.mysqlUser) changedParts.push('Utente MySQL');
+        if (originalScript.mysqlPassword !== this.scriptForm.mysqlPassword) changedParts.push('Password MySQL');
+        if (originalScript.mysqlDatabase !== this.scriptForm.mysqlDatabase) changedParts.push('Database MySQL');
+      }
+      if (originalScript.selectedMysqlFiles?.length !== this.scriptForm.selectedMysqlFiles.length) {
+        changedParts.push('File SQL associati');
+      }
+
+      if (originalScript.filesComponent !== this.scriptForm.filesComponent) {
+        changedParts.push('Abilitazione componente File Locali');
+      } else if (this.scriptForm.filesComponent) {
+        if (originalScript.filesSourcePath !== this.scriptForm.filesSourcePath) changedParts.push('Percorso sorgente File');
+      }
+      if (originalScript.selectedFiles?.length !== this.scriptForm.selectedFiles.length) {
+        changedParts.push('File locali associati');
+      }
+
+      if (originalScript.ftpHost !== this.scriptForm.ftpHost) changedParts.push('Host FTP');
+      if (originalScript.ftpUser !== this.scriptForm.ftpUser) changedParts.push('Utente FTP');
+      if (originalScript.ftpPassword !== currentFtpPassword) changedParts.push('Password FTP');
+
+      if (changedParts.length === 0) {
+        this.showEdit = false;
+        return;
+      }
+
       this.data.scripts[index] = { 
-        ...this.data.scripts[index],
+        ...originalScript,
         path: this.scriptForm.path,
         schedule: this.scriptForm.schedule,
         serverId: this.scriptForm.serverId,
@@ -289,21 +330,23 @@ export class ScriptsComposer {
 
         ftpHost: this.scriptForm.ftpHost,
         ftpUser: this.scriptForm.ftpUser,
-      
-        ftpPassword: this.isChangingFtpPassword ? this.scriptForm.ftpPassword : this.data.scripts[index].ftpPassword
+        ftpPassword: currentFtpPassword
       };
+
+      const logMessage = `Script modificato. Campi aggiornati: ${changedParts.join(', ')}.`;
 
       this.data.logs.push({
         id: 'LOG-' + Math.floor(Math.random() * 99999),
         scriptId: this.scriptForm?.id || 'SRV-1',
         level: 'INFO',
-        message: "Script modificato dall'utente",
+        message: logMessage,
         createdAt: new Date().toISOString(), 
         executionId: 'N/A'
       });
+
+      this.data.saveToStorage(); 
     }
     this.showEdit = false;
-    this.data.saveToStorage(); 
   }
 
   //elimina lo script
@@ -321,7 +364,7 @@ export class ScriptsComposer {
             scriptId: id,
             customerId: customerId,
             serverId: serverId,
-            level: 'INFO',
+            level: 'WARNING',
             createdAt: new Date().toISOString(), 
             message: `Lo script con ID ${id} è stato rimosso.`,
             executionId: 'N/A'
@@ -340,12 +383,12 @@ export class ScriptsComposer {
     return this.data.scripts.filter(s => s.id.toLowerCase().includes(this.searchId.toLowerCase()));
   }
 
-  //se il customer di quello script non esiste o viene cancellato riporta unknow
+  //se il customer di quello script non esiste o viene cancellato riporta unknown
   getCustomerName(id: any) {
     return this.data.customers.find(c => c.id == id)?.name ?? 'Unknown';
   }
 
-  //se il server dello script non esiste riporta unknow
+  //se il server dello script non esiste riporta unknown
   getServerName(id: any) {
     return this.data.servers.find(s => s.id == id)?.name ?? 'Unknown';
   }
