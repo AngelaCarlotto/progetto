@@ -17,7 +17,7 @@ export class LoginComponent {
   password = '';
   errorMessage = '';
 
-  // Controlla le credenziali di login e nega o valida l'accesso
+  // login
   onFormSubmit() {
     this.errorMessage = '';
 
@@ -28,14 +28,12 @@ export class LoginComponent {
     }
   }
 
-  // NUOVA FUNZIONE: Simula l'accesso immediato tramite GitHub
+  //simula l'accesso con github
   loginConGitHub() {
     this.errorMessage = '';
     
-    // Mostriamo un piccolo avviso (opzionale, puoi anche toglierlo se vuoi farlo istantaneo)
     alert("Simulazione: Accesso tramite GitHub eseguito con successo!");
     
-    // Lanciamo l'evento di login simulando che l'utente si chiami 'admin_github'
     this.logged.emit('admin_github');
   }
 }
