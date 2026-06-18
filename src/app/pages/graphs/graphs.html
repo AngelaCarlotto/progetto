@@ -74,10 +74,12 @@
         <div class="chart-placeholder">
           <svg class="chart" viewBox="0 0 400 130">
             <polyline fill="none" class="chart-line-path" stroke-width="2.5" [attr.points]="svgPoints"/>
-            @for (label of historyLabels; track label.text) {
-              <text [attr.x]="label.x" y="128" font-size="11" class="chart-axis-text">{{ label.text }}</text>
-            }
           </svg>
+        </div>
+        <div class="chart-dates-grid">
+          @for (label of historyLabels; track label.text) {
+            <span class="chart-axis-date-text">{{ label.text }}</span>
+          }
         </div>
       </div>
 
