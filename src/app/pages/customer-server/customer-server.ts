@@ -92,20 +92,22 @@ export class CustomerServerComponent {
 
   //crea il cliente 
   createCustomer() {
-    if (!this.customerForm.name || !this.customerForm.name.trim()) {
-      alert('Attenzione: Il nome del cliente non può essere vuoto!');
-      return; 
-    }
-
-    this.data.customers.push({
-      id: 'CLI-' + Math.floor(Math.random() * 9999),
-      name: this.customerForm.name.trim(),
-      createdAt: new Date().toISOString()  
-    });
-
-    this.customerForm = { name: '' };
-    this.showCustomerModal = false; 
+  if (!this.customerForm.name || !this.customerForm.name.trim()) {
+    alert('Attenzione: Il nome del cliente non può essere vuoto!');
+    return; 
   }
+
+  const newCustomer = {
+    id: 'CLI-' + Math.floor(Math.random() * 9999),
+    name: this.customerForm.name.trim(),
+    createdAt: new Date().toISOString()  
+  };
+
+  this.data.customers = [newCustomer, ...this.data.customers];
+
+  this.customerForm = { name: '' };
+  this.showCustomerModal = false; 
+}
   
   //crea il server
   createServer() {

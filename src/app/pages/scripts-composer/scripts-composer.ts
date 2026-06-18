@@ -196,47 +196,49 @@ export class ScriptsComposer {
   }
 
   //crea lo script
-  createScript() {
-    const id = 'SCR-' + Math.floor(Math.random() * 99999);
+createScript() {
+  const id = 'SCR-' + Math.floor(Math.random() * 99999);
 
-    this.data.scripts.push({
-      id,
-      path: this.scriptForm.path,
-      schedule: this.scriptForm.schedule,
-      serverId: this.scriptForm.serverId,
-      customerId: this.scriptForm.customerId,
-      type: this.scriptForm.type,
-      
-      mysqlComponent: this.scriptForm.mysqlComponent,
-      selectedMysqlFiles: this.scriptForm.selectedMysqlFiles, 
-      mysqlHost: this.scriptForm.mysqlHost,
-      mysqlPort: this.scriptForm.mysqlPort,
-      mysqlUser: this.scriptForm.mysqlUser,
-      mysqlPassword: this.scriptForm.mysqlPassword,
-      mysqlDatabase: this.scriptForm.mysqlDatabase,
+  const newScript = {
+    id,
+    path: this.scriptForm.path,
+    schedule: this.scriptForm.schedule,
+    serverId: this.scriptForm.serverId,
+    customerId: this.scriptForm.customerId,
+    type: this.scriptForm.type,
+    
+    mysqlComponent: this.scriptForm.mysqlComponent,
+    selectedMysqlFiles: this.scriptForm.selectedMysqlFiles, 
+    mysqlHost: this.scriptForm.mysqlHost,
+    mysqlPort: this.scriptForm.mysqlPort,
+    mysqlUser: this.scriptForm.mysqlUser,
+    mysqlPassword: this.scriptForm.mysqlPassword,
+    mysqlDatabase: this.scriptForm.mysqlDatabase,
 
-      filesComponent: this.scriptForm.filesComponent,
-      selectedFiles: this.scriptForm.selectedFiles,           
-      filesSourcePath: this.scriptForm.filesSourcePath,
+    filesComponent: this.scriptForm.filesComponent,
+    selectedFiles: this.scriptForm.selectedFiles,           
+    filesSourcePath: this.scriptForm.filesSourcePath,
 
-      ftpHost: this.scriptForm.ftpHost,
-      ftpUser: this.scriptForm.ftpUser,
-      ftpPassword: this.scriptForm.ftpPassword
-    });
+    ftpHost: this.scriptForm.ftpHost,
+    ftpUser: this.scriptForm.ftpUser,
+    ftpPassword: this.scriptForm.ftpPassword
+  };
 
-    this.data.logs.push({
-      id: 'LOG-' + Math.floor(Math.random() * 99999),
-      level: 'SUCCESS',
-      message: 'Script creato con successo',
-      scriptId: id,
-      executionId: 'EXE-' + Math.floor(Math.random() * 99999),
-      createdAt: new Date().toISOString()
-    });
+  this.data.scripts = [newScript, ...this.data.scripts];
 
-    this.showCreate = false;
-    this.resetForm();
-    this.data.saveToStorage(); 
-  }
+  this.data.logs.push({
+    id: 'LOG-' + Math.floor(Math.random() * 99999),
+    level: 'SUCCESS',
+    message: 'Script creato con successo',
+    scriptId: id,
+    executionId: 'EXE-' + Math.floor(Math.random() * 99999),
+    createdAt: new Date().toISOString()
+  });
+
+  this.showCreate = false;
+  this.resetForm();
+  this.data.saveToStorage(); 
+}
 
   //carica i dati dello script gia esistenti e apre il pannello di modifica
   openEdit(script: any) {
