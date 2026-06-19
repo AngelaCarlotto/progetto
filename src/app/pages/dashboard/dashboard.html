@@ -73,22 +73,39 @@
 
     <div class="charts-container">
 
-      <div class="chart-card main-chart">
-        <h4 class="chart-title">Stato Backup (Andamento Storico)</h4>
+      <div class="chart-card line-chart-card">
+        <h4 class="chart-title-top">Frequenza degli Script (Ultimi 5 giorni)</h4>
+        
         <div class="line-chart-mock">
-          <svg viewBox="0 0 500 200" class="chart-svg" preserveAspectRatio="none">
-            <line x1="0" y1="180" x2="500" y2="180" class="chart-grid-line line-main" stroke-width="1" />
-            <line x1="0" y1="100" x2="500" y2="100" class="chart-grid-line" stroke-width="1" />
-            <line x1="0" y1="30" x2="500" y2="30" class="chart-grid-line" stroke-width="1" />
+          <svg viewBox="0 0 500 220" class="chart-svg" preserveAspectRatio="none">
+            <line x1="40" y1="140" x2="480" y2="140" class="chart-grid-line" />
+            <line x1="40" y1="80" x2="480" y2="80" class="chart-grid-line" />
+            
+            <line x1="40" y1="180" x2="40" y2="10" stroke="#64748b" stroke-width="2" />
+            <polygon points="36,15 40,5 44,15" fill="#64748b" /> 
+            
+            <line x1="40" y1="180" x2="495" y2="180" stroke="#64748b" stroke-width="2" />
+            <polygon points="490,176 500,180 490,184" fill="#64748b" /> 
 
             <path [attr.d]="lineChartPath"
                   fill="none"
                   stroke="#10b981"
                   stroke-width="3" 
                   style="transition: d 0.4s ease-in-out;" />
+
+            <circle *ngFor="let pt of chartPoints" 
+                    [attr.cx]="pt.x" 
+                    [attr.cy]="pt.y" 
+                    r="4" 
+                    fill="#10b981" />
           </svg>
-          <div class="chart-dates">
-            <span>Frequenza dei Log registrati negli ultimi 5 days</span>
+        </div>
+
+        <div class="chart-data-table">
+          <div *ngFor="let pt of chartPoints" class="chart-data-column">
+            <span class="data-date">{{ pt.label }}</span>
+            <div class="data-arrow">↑</div>
+            <span class="data-count">{{ pt.count }}</span>
           </div>
         </div>
       </div>

@@ -69,17 +69,41 @@
         </div>
       </div>
 
-      <div class="graph-card">
-        <div class="graph-title">Andamento Storico (Ultimi 10 Giorni)</div>
+      <div class="graph-card historical-card">
+        <div class="graph-title">Andamento Storico Logs (Ultimi 10 Giorni)</div>
+        
         <div class="chart-placeholder">
-          <svg class="chart" viewBox="0 0 400 130">
-            <polyline fill="none" class="chart-line-path" stroke-width="2.5" [attr.points]="svgPoints"/>
+          <svg class="chart" viewBox="0 0 420 150" preserveAspectRatio="none">
+            <line x1="40" y1="100" x2="400" y2="100" class="chart-grid-line" />
+            <line x1="40" y1="50" x2="400" y2="50" class="chart-grid-line" />
+            
+            <line x1="40" y1="130" x2="40" y2="10" stroke="#64748b" stroke-width="2" />
+            <polygon points="36,15 40,5 44,15" fill="#64748b" /> 
+            
+            <line x1="40" y1="130" x2="415" y2="130" stroke="#64748b" stroke-width="2" />
+            <polygon points="410,126 420,130 410,134" fill="#64748b" />
+
+            <polyline fill="none" 
+                      class="chart-line-path" 
+                      stroke="#10b981" 
+                      stroke-width="2.5" 
+                      [attr.points]="svgPoints"
+                      style="transition: points 0.4s ease-in-out;" />
+
+            <circle *ngFor="let pt of chartPoints" 
+                    [attr.cx]="pt.x" 
+                    [attr.cy]="pt.y" 
+                    r="4" 
+                    fill="#10b981" />
           </svg>
         </div>
-        <div class="chart-dates-grid">
-          @for (label of historyLabels; track label.text) {
-            <span class="chart-axis-date-text">{{ label.text }}</span>
-          }
+
+        <div class="chart-data-table-10">
+          <div *ngFor="let pt of chartPoints" class="chart-data-column-10">
+            <span class="data-date-10">{{ pt.label }}</span>
+            <div class="data-arrow-10">↑</div>
+            <span class="data-count-10">{{ pt.count }}</span>
+          </div>
         </div>
       </div>
 

@@ -19,8 +19,9 @@ export class DashboardComponent implements OnInit {
   donutGradient = 'conic-gradient(#2563eb 0% 50%, #10b981 50% 100%)';
   hasData = false;
 
-  // Variabile dinamica per la linea del grafico storico
-  lineChartPath = 'M 0 180 L 500 180'; 
+  // Variabili grafico Lineare Cartesiano
+  chartPoints: Array<{ x: number; y: number; count: number; label: string }> = [];
+  lineChartPath: string = 'M 40 180 L 480 180'; 
 
   constructor(
     public data: DataService,
@@ -31,7 +32,7 @@ export class DashboardComponent implements OnInit {
     this.calculatePercentagesAndCharts();
   }
 
-  //aggiorna la pagina
+  // Aggiorna la pagina
   refreshDashboard() {
     this.loading = true;
     this.cdr.detectChanges();
@@ -48,7 +49,7 @@ export class DashboardComponent implements OnInit {
     }, 600);
   }
 
-  //calcola la perchentuale di quanti file e sql sono stati caricati 
+  // Calcola la percentuale di quanti file e sql sono stati caricati 
   calculatePercentagesAndCharts() {
     let mysqlSteps = 0;
     let filesSteps = 0;
@@ -81,15 +82,22 @@ export class DashboardComponent implements OnInit {
     this.generateLineChart();
   }
 
-  //genera il grafico lineare
+  // Genera il grafico lineare cartesiano
   generateLineChart() {
     if (!this.data.logs || this.data.logs.length === 0) {
-      this.lineChartPath = 'M 0 180 L 500 180';
+      this.lineChartPath = 'M 40 180 L 480 180';
+      this.chartPoints = [];
       return;
     }
 
-    const points: string[] = [];
-    const widthStep = 500 / 4; 
+    const pointsStrings: string[] = [];
+    this.chartPoints = [];
+    
+    const startX = 40;
+    const endX = 480;
+    const widthStep = (endX - startX) / 4; 
+
+    const labels = ['-4 gg', '-3 gg', '-2 gg', '-1 gg', 'Oggi'];
 
     for (let i = 0; i < 5; i++) {
       const d = new Date();
@@ -102,16 +110,23 @@ export class DashboardComponent implements OnInit {
         l.level?.toLowerCase() === 'success'
       ).length;
 
-      const x = i * widthStep;
-      const y = Math.max(20, 180 - (count * 25)); 
+      const x = startX + (i * widthStep);
+      const y = Math.max(20, 180 - (count * 20)); 
 
-      points.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+      pointsStrings.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+      
+      this.chartPoints.push({ 
+        x, 
+        y, 
+        count, 
+        label: labels[i]
+      });
     }
 
-    this.lineChartPath = points.join(' ');
+    this.lineChartPath = pointsStrings.join(' ');
   }
 
-  // calcolano in tempo reale il totale di clienti, script attivi e backup
+  // Calcolano in tempo reale il totale di clienti, script attivi e backup
   getClientiTotali(): number { 
     return this.data.customers ? this.data.customers.length : 0; 
   }

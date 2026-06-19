@@ -1,4 +1,4 @@
-import { Component, OnInit, DoCheck, NgZone } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data';
 import { ChangeDetectorRef } from '@angular/core';
@@ -12,9 +12,9 @@ import { ChangeDetectorRef } from '@angular/core';
 })
 export class GraphsComponent implements OnInit {
 
-  loading=false
+  loading = false;
   
-  // Contatori per i grafici
+  // Contatori per i grafici a barre
   mysqlCount = 0;
   filesCount = 0;
 
@@ -32,11 +32,10 @@ export class GraphsComponent implements OnInit {
   todaySuccessHeight = '10px';
   todayErrorHeight = '10px';
 
-  // Punti per la linea SVG dello storico e relative date
+  // Variabili per il grafico storico lineare cartesiano
   svgPoints = '';
-  historyLabels: { x: number, text: string }[] = [];
+  chartPoints: Array<{ x: number; y: number; count: number; label: string }> = [];
 
-  // Variabili per gestire lo stato del popup
   showToast = false;
   testoToast = '';
 
@@ -46,7 +45,6 @@ export class GraphsComponent implements OnInit {
     trafficGb: 450
   };
 
-  // Proprietà di controllo per rilevare modifiche in tempo reale negli array
   private lastScriptsLength = 0;
   private lastLogsLength = 0;
 
@@ -79,40 +77,38 @@ export class GraphsComponent implements OnInit {
   } 
 
   calculateAllStats() {
-    //resetta i totali dei contatori e delle label
+    // Reset contatori e array ad ogni ricalcolo
     this.mysqlCount = 0;
     this.filesCount = 0;
     this.globalSuccess = 0;
     this.globalError = 0;
     this.todaySuccess = 0;
     this.todayError = 0;
-    this.historyLabels = []; 
+    this.chartPoints = []; 
 
     const todayStr = new Date().toISOString().split('T')[0];
 
-    //conta gli script
+    // Conteggio componenti degli script
     if (this.data.scripts && this.data.scripts.length > 0) {
       this.data.scripts.forEach((s: any) => {
         if (s.mysqlComponent || s.hasMysql) {
           if (s.selectedMysqlFiles && Array.isArray(s.selectedMysqlFiles)) {
             this.mysqlCount += s.selectedMysqlFiles.length;
-          } 
-          else {
+          } else {
             this.mysqlCount += 1;
           }
         }
         if (s.filesComponent || s.hasFiles) {
           if (s.selectedFiles && Array.isArray(s.selectedFiles)) {
             this.filesCount += s.selectedFiles.length;
-          } 
-          else {
+          } else {
             this.filesCount += 1;
           }
         }
       });
     }
 
-    // conta i logs globali e odierni
+    // Conteggio logs globali e del giorno corrente
     if (this.data.logs && this.data.logs.length > 0) {
       this.data.logs.forEach((l: any) => {
         const isError = l.level?.toLowerCase() === 'error' || l.message?.toLowerCase().includes('error');
@@ -134,7 +130,7 @@ export class GraphsComponent implements OnInit {
       });
     }
 
-    // calcola le altezze per le barre 
+    // Calcolo altezze delle barre basate sui massimi proporzionali
     const maxSteps = Math.max(this.mysqlCount, this.filesCount, 1);
     this.mysqlHeight = this.mysqlCount > 0 ? `${(this.mysqlCount / maxSteps) * 130}px` : '10px';
     this.filesHeight = this.filesCount > 0 ? `${(this.filesCount / maxSteps) * 130}px` : '10px';
@@ -147,22 +143,27 @@ export class GraphsComponent implements OnInit {
     this.todaySuccessHeight = this.todaySuccess > 0 ? `${(this.todaySuccess / maxToday) * 130}px` : '10px';
     this.todayErrorHeight = this.todayError > 0 ? `${(this.todayError / maxToday) * 130}px` : '10px';
 
-    //rigenera lo storico lineare 
+    // Generazione geometrica del piano cartesiano storico
     this.generateHistorySvg();
   }
    
-
   generateHistorySvg() {
     const points: string[] = [];
-    this.historyLabels = [];
+    this.chartPoints = [];
     
-    const totalWidth = 400;
-    const totalHeight = 110; 
-    const dayStepX = totalWidth / 9;
+    // Assi SVG impostati: X va da 40 a 400. Altezza base asse X a Y=130.
+    const startX = 40;
+    const endX = 400;
+    const totalHeight = 130; 
+    const topMargin = 20;    
+    const usableHeight = totalHeight - topMargin; 
+    
+    const dayStepX = (endX - startX) / 9; 
 
     let maxDayLogs = 1;
     const last10DaysDates: string[] = [];
 
+    // Recupero date e scansione del picco massimo log per ridimensionamento dinamico Y
     for (let i = 9; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -173,19 +174,29 @@ export class GraphsComponent implements OnInit {
       if (dayLogsCount > maxDayLogs) maxDayLogs = dayLogsCount;
     }
 
+    // Costruzione delle coordinate cartesiane finali
     for (let i = 0; i < 10; i++) {
       const dateStr = last10DaysDates[i];
-      const x = i * dayStepX;
+      const x = startX + (i * dayStepX);
       
       const dayLogsCount = this.data.logs ? this.data.logs.filter((l: any) => l.createdAt && l.createdAt.substring(0, 10) === dateStr).length : 0;
-      const y = totalHeight - ((dayLogsCount / maxDayLogs) * totalHeight);
+      const y = totalHeight - ((dayLogsCount / maxDayLogs) * usableHeight);
       points.push(`${x},${y}`);
 
-      if (i === 0 || i === 5 || i === 9) {
+      let labelText = '';
+      if (i === 9) {
+        labelText = 'Oggi';
+      } else {
         const d = new Date(dateStr);
-        const labelText = d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
-        this.historyLabels.push({ x: x === totalWidth ? x - 35 : x, text: labelText });
+        labelText = d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }).replace('.', '');
       }
+
+      this.chartPoints.push({
+        x,
+        y,
+        count: dayLogsCount,
+        label: labelText
+      });
     }
 
     this.svgPoints = points.join(' ');
