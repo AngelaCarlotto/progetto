@@ -13,7 +13,7 @@
       (changePage)="setPage($event)">
     </app-sidebar>
     
-    <div class="main-content" style="flex: 1; height: 100vh; overflow-y: auto;">
+    <div class="main-content">
       @if (currentPage === 'dashboard') {
         <app-dashboard></app-dashboard>
       }

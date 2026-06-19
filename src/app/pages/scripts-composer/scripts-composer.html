@@ -1,22 +1,24 @@
 <div class="scripts-wrapper" (click)="closeKebab()">
 
-  <div class="topbar">
-    <div>
-      <div class="topbar-title">Scripts</div>
-      <div class="topbar-sub">Crea e gestisci script</div>
+  <div class="fixed-header">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Scripts</div>
+        <div class="topbar-sub">Crea e gestisci script</div>
+      </div>
     </div>
-  </div>
 
-  <div class="topbar-actions-container">
-    <input
-      type="text"
-      placeholder="Search Script ID..."
-      [(ngModel)]="searchId"
-      class="search-input"
-    />
-    <button class="btn-primary btn-green" (click)="openCreate()">
-      + Create Script
-    </button>
+    <div class="topbar-actions-container">
+      <input
+        type="text"
+        placeholder="Search Script ID..."
+        [(ngModel)]="searchId"
+        class="search-input"
+      />
+      <button class="btn-primary btn-green" (click)="openCreate()">
+        + Create Script
+      </button>
+    </div>
   </div>
 
   <div class="page-body">
@@ -337,13 +339,13 @@
                 <div class="grid-2 mb-12">
                   <div>
                     <input type="file" multiple (change)="onFilesSelected($event)" class="file-input-hidden" id="editGenericInput">
-                    <label for="editGenericInput" class="file-input-trigger" style="margin: 0; text-align: center; display: block;">
+                    <label for="editGenericInput" class="file-input-trigger text-center block m-0">
                       ➕ Seleziona Altri File
                     </label>
                   </div>
                   <div>
                     <input type="file" multiple webkitdirectory directory (change)="onFilesSelected($event)" class="file-input-hidden" id="editDirectoryInput">
-                    <label for="editDirectoryInput" class="file-input-trigger btn-directory-trigger" style="margin: 0; text-align: center; display: block;">
+                    <label for="editDirectoryInput" class="file-input-trigger btn-directory-trigger text-center block m-0">
                       📁 Seleziona Cartella
                     </label>
                   </div>
