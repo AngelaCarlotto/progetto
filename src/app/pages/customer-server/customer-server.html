@@ -4,6 +4,7 @@
     <div class="topbar">
       <div class="topbar-title">Customer / Server</div>
     </div>
+
     <div class="pulsanti-destra">
       <button class="btn-primary" (click)="openCustomerModal()">+ Customer</button>
       <button class="btn-primary btn-green" (click)="openServerModal()">+ Server</button>
@@ -26,7 +27,9 @@
         <tbody>
           @for (c of data.customers; track c.id) {
             <tr class="customer-row" [class.row-expanded]="isExpanded(c.id)">
-              <td class="expand-trigger" (click)="toggleExpand(c.id)">{{ isExpanded(c.id) ? '▼' : '▶' }}</td>
+              <td class="expand-trigger" (click)="toggleExpand(c.id)">
+                {{ isExpanded(c.id) ? '▼' : '▶' }}
+              </td>
               <td class="customer-name-cell" (click)="toggleExpand(c.id)">
                 <strong>{{ c.name }}</strong> 
                 <span class="server-count-badge">({{ getServersByCustomer(c.id).length }} server)</span>
@@ -36,12 +39,17 @@
               
               <td class="text-center cell-overflow-visible">
                 <div class="kebab-menu-container">
-                  <button class="btn-kebab" (click)="toggleCustomerDropdown(c.id, $event)" title="Opzioni">
-                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><path d="M2 4C3.1 4 4 3.1 4 2C4 0.9 3.1 0 2 0C0.9 0 0 0.9 0 2C0 3.1 0.9 4 2 4ZM2 6C0.9 6 0 6.9 0 8C0 9.1 0.9 10 2 10C3.1 10 4 9.1 4 8C4 6.9 3.1 6 2 6ZM2 12C0.9 12 0 12.9 0 14C0 15.1 0.9 16 2 16C3.1 16 4 15.1 4 14C4 12.9 3.1 12 2 12Z"/></svg>
+                  <button class="btn-kebab" (click)="toggleCustomerDropdown(c.id, $event); $event.stopPropagation()" title="Opzioni">
+                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M2 4C3.1 4 4 3.1 4 2C4 0.9 3.1 0 2 0C0.9 0 0 0.9 0 2C0 3.1 0.9 4 2 4ZM2 6C0.9 6 0 6.9 0 8C0 9.1 0.9 10 2 10C3.1 10 4 9.1 4 8C4 6.9 3.1 6 2 6ZM2 12C0.9 12 0 12.9 0 14C0 15.1 0.9 16 2 16C3.1 16 4 15.1 4 14C4 12.9 3.1 12 2 12Z"/>
+                    </svg>
                   </button>
+
                   @if (activeDropdownCustomerId === c.id) {
                     <div class="kebab-dropdown" (click)="$event.stopPropagation()">
-                      <button class="dropdown-item delete-item" (click)="deleteCustomer(c.id)"><span>🗑️ Elimina Cliente</span></button>
+                      <button class="dropdown-item delete-item" (click)="deleteCustomer(c.id)">
+                        <span>🗑️ Elimina Cliente</span>
+                      </button>
                     </div>
                   }
                 </div>
@@ -54,7 +62,9 @@
                   <div class="nested-server-box">
                     
                     @if (getServersByCustomer(c.id).length === 0) {
-                      <div class="no-servers-placeholder">Nessun server associato. Clicca su "+ Server" in alto per aggiungerne uno.</div>
+                      <div class="no-servers-placeholder">
+                        Nessun server associato a questo cliente. Clicca su "+ Server" in alto per aggiungerne uno.
+                      </div>
                     } @else {
                       <table class="nested-server-table">
                         <thead>
@@ -69,15 +79,23 @@
                             <tr>
                               <td><code>{{ s.id }}</code></td>
                               <td>{{ s.name }}</td>
+                              
                               <td class="text-center cell-overflow-visible">
                                 <div class="kebab-menu-container">
-                                  <button class="btn-kebab" (click)="toggleDropdown(s.id, $event)" title="Opzioni">
-                                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><path d="M2 4C3.1 4 4 3.1 4 2C4 0.9 3.1 0 2 0C0.9 0 0 0.9 0 2C0 3.1 0.9 4 2 4ZM2 6C0.9 6 0 6.9 0 8C0 9.1 0.9 10 2 10C3.1 10 4 9.1 4 8C4 6.9 3.1 6 2 6ZM2 12C0.9 12 0 12.9 0 14C0 15.1 0.9 16 2 16C3.1 16 4 15.1 4 14C4 12.9 3.1 12 2 12Z"/></svg>
+                                  <button class="btn-kebab" (click)="toggleDropdown(s.id, $event); $event.stopPropagation()" title="Opzioni">
+                                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M2 4C3.1 4 4 3.1 4 2C4 0.9 3.1 0 2 0C0.9 0 0 0.9 0 2C0 3.1 0.9 4 2 4ZM2 6C0.9 6 0 6.9 0 8C0 9.1 0.9 10 2 10C3.1 10 4 9.1 4 8C4 6.9 3.1 6 2 6ZM2 12C0.9 12 0 12.9 0 14C0 15.1 0.9 16 2 16C3.1 16 4 15.1 4 14C4 12.9 3.1 12 2 12Z"/>
+                                    </svg>
                                   </button>
+
                                   @if (activeDropdownServerId === s.id) {
                                     <div class="kebab-dropdown" (click)="$event.stopPropagation()">
-                                      <button class="dropdown-item keys-item" (click)="regenerateCredentials(s.id)"><span>🔄 Rigenera Chiavi</span></button>
-                                      <button class="dropdown-item delete-item" (click)="deleteServer(s.id)"><span>🗑️ Elimina Server</span></button>
+                                      <button class="dropdown-item keys-item" (click)="regenerateCredentials(s.id)">
+                                        <span>🔄 Rigenera Chiavi</span>
+                                      </button>
+                                      <button class="dropdown-item delete-item" (click)="deleteServer(s.id)">
+                                        <span>🗑️ Elimina Server</span>
+                                      </button>
                                     </div>
                                   }
                                 </div>
@@ -106,8 +124,65 @@
           <button class="close-x" (click)="showCustomerModal = false">✕</button>
         </div>
         <div class="modal-section">
-          <input [(ngModel)]="customerForm.name" placeholder="Customer Name">
-          <button (click)="createCustomer()" class="btn-modal-green" [disabled]="!customerForm.name">CREA</button>
+          <label class="modal-label">Nome Cliente</label>
+          <input [(ngModel)]="customerForm.name" placeholder="Inserisci nome cliente...">
+          <button (click)="createCustomer()" class="btn-modal-green" [disabled]="!customerForm.name">
+            CREA CLIENTE
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showServerModal) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Create Server</h3>
+          <button class="close-x" (click)="showServerModal = false">✕</button>
+        </div>
+        <div class="modal-section">
+          <label class="modal-label">Nome Server</label>
+          <input [(ngModel)]="serverForm.name" placeholder="Inserisci nome server...">
+          
+          <label class="modal-label">Assegna a Cliente</label>
+          <select [(ngModel)]="serverForm.customerId">
+            <option [ngValue]="null" disabled selected>Seleziona un Cliente</option>
+            @for (c of data.customers; track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}</option>
+            }
+          </select>
+          
+          <button (click)="createServer()" class="btn-modal-green" [disabled]="!serverForm.name || !serverForm.customerId">
+            CREA SERVER
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showSecretModal) {
+    <div class="modal-overlay">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>🔑 Credenziali Server</h3>
+          <button class="close-x" (click)="closeSecretModal()">✕</button>
+        </div>
+        <div class="modal-section">
+          <div class="credentials-warning-box">
+            <span class="warning-icon">⚠️</span>
+            <p class="credentials-warning">Sicurezza: Copia queste credenziali adesso. Non potrai più visualizzarle in seguito!</p>
+          </div>
+          
+          <label class="modal-label">Client ID</label>
+          <div class="credentials-box">{{ credentials.clientId }}</div>
+          
+          <label class="modal-label">Client Secret</label>
+          <div class="credentials-box">{{ credentials.clientSecret }}</div>
+          
+          <button (click)="closeSecretModal()" class="btn-modal-green">
+            HO COPIATO LE CHIAVI
+          </button>
         </div>
       </div>
     </div>
