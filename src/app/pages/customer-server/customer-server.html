@@ -5,9 +5,30 @@
       <div class="topbar-title">Customer / Server</div>
     </div>
 
-    <div class="pulsanti-destra">
-      <button class="btn-primary" (click)="openCustomerModal()">+ Customer</button>
-      <button class="btn-primary btn-green" (click)="openServerModal()">+ Server</button>
+    <div class="pulsanti-destra" (click)="$event.stopPropagation()">
+      
+      <div class="search-container" [class.expanded]="isSearchOpen">
+        <button class="btn-search-trigger" (click)="toggleSearch($event)" title="Cerca">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+        
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          placeholder="Cerca cliente o server..." 
+          class="search-input"
+        />
+        
+        @if (searchQuery) {
+          <button class="clear-search" (click)="searchQuery = ''; $event.stopPropagation()">✕</button>
+        }
+      </div>
+
+      <button class="btn-primary" (click)="openCustomerModal(); $event.stopPropagation()">+ Customer</button>
+      <button class="btn-primary btn-green" (click)="openServerModal(); $event.stopPropagation()">+ Server</button>
     </div>
   </div>
 
@@ -25,12 +46,12 @@
         </thead>
 
         <tbody>
-          @for (c of data.customers; track c.id) {
+          @for (c of filteredCustomers; track c.id) {
             <tr class="customer-row" [class.row-expanded]="isExpanded(c.id)">
-              <td class="expand-trigger" (click)="toggleExpand(c.id)">
+              <td class="expand-trigger" (click)="toggleExpand(c.id); $event.stopPropagation()">
                 {{ isExpanded(c.id) ? '▼' : '▶' }}
               </td>
-              <td class="customer-name-cell" (click)="toggleExpand(c.id)">
+              <td class="customer-name-cell" (click)="toggleExpand(c.id); $event.stopPropagation()">
                 <strong>{{ c.name }}</strong> 
                 <span class="server-count-badge">({{ getServersByCustomer(c.id).length }} server)</span>
               </td>
@@ -39,8 +60,8 @@
               
               <td class="text-center cell-overflow-visible">
                 <div class="kebab-menu-container">
-                  <button class="btn-kebab" (click)="toggleCustomerDropdown(c.id, $event); $event.stopPropagation()" title="Opzioni">
-                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <button class="btn-kebab" (click)="toggleCustomerDropdown(c.id, $event); $event.stopPropagation()">
+                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor">
                       <path d="M2 4C3.1 4 4 3.1 4 2C4 0.9 3.1 0 2 0C0.9 0 0 0.9 0 2C0 3.1 0.9 4 2 4ZM2 6C0.9 6 0 6.9 0 8C0 9.1 0.9 10 2 10C3.1 10 4 9.1 4 8C4 6.9 3.1 6 2 6ZM2 12C0.9 12 0 12.9 0 14C0 15.1 0.9 16 2 16C3.1 16 4 15.1 4 14C4 12.9 3.1 12 2 12Z"/>
                     </svg>
                   </button>
@@ -58,58 +79,65 @@
 
             @if (isExpanded(c.id)) {
               <tr class="expanded-row">
-                <td colspan="5" class="nested-server-container">
+                <td colspan="5" class="nested-server-container" (click)="$event.stopPropagation()">
                   <div class="nested-server-box">
                     
                     @if (getServersByCustomer(c.id).length === 0) {
                       <div class="no-servers-placeholder">
-                        Nessun server associato a questo cliente. Clicca su "+ Server" in alto per aggiungerne uno.
+                        Nessun server associato a questo cliente.
                       </div>
                     } @else {
                       <table class="nested-server-table">
                         <thead>
                           <tr>
-                            <th>Server ID</th>
-                            <th>Server Name</th>
+                            <th>Server ID</th> <th>Server Name</th>
                             <th class="text-center col-actions">Azioni</th>
                           </tr>
                         </thead>
                         <tbody>
                           @for (s of getServersByCustomer(c.id); track s.id) {
-                            <tr>
-                              <td><code>{{ s.id }}</code></td>
-                              <td>{{ s.name }}</td>
-                              
-                              <td class="text-center cell-overflow-visible">
-                                <div class="kebab-menu-container">
-                                  <button class="btn-kebab" (click)="toggleDropdown(s.id, $event); $event.stopPropagation()" title="Opzioni">
-                                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                      <path d="M2 4C3.1 4 4 3.1 4 2C4 0.9 3.1 0 2 0C0.9 0 0 0.9 0 2C0 3.1 0.9 4 2 4ZM2 6C0.9 6 0 6.9 0 8C0 9.1 0.9 10 2 10C3.1 10 4 9.1 4 8C4 6.9 3.1 6 2 6ZM2 12C0.9 12 0 12.9 0 14C0 15.1 0.9 16 2 16C3.1 16 4 15.1 4 14C4 12.9 3.1 12 2 12Z"/>
-                                    </svg>
-                                  </button>
+                            @if (!searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+                              <tr>
+                                <td><code>{{ s.id }}</code></td> 
+                                <td>{{ s.name }}</td>
+                                
+                                <td class="text-center cell-overflow-visible">
+                                  <div class="kebab-menu-container">
+                                    <button class="btn-kebab" (click)="toggleDropdown(s.id, $event); $event.stopPropagation()">
+                                      <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor">
+                                        <path d="M2 4C3.1 4 4 3.1 4 2C4 0.9 3.1 0 2 0C0.9 0 0 0.9 0 2C0 3.1 0.9 4 2 4ZM2 6C0.9 6 0 6.9 0 8C0 9.1 0.9 10 2 10C3.1 10 4 9.1 4 8C4 6.9 3.1 6 2 6ZM2 12C0.9 12 0 12.9 0 14C0 15.1 0.9 16 2 16C3.1 16 4 15.1 4 14C4 12.9 3.1 12 2 12Z"/>
+                                      </svg>
+                                    </button>
 
-                                  @if (activeDropdownServerId === s.id) {
-                                    <div class="kebab-dropdown" (click)="$event.stopPropagation()">
-                                      <button class="dropdown-item keys-item" (click)="regenerateCredentials(s.id)">
-                                        <span>🔄 Rigenera Chiavi</span>
-                                      </button>
-                                      <button class="dropdown-item delete-item" (click)="deleteServer(s.id)">
-                                        <span>🗑️ Elimina Server</span>
-                                      </button>
-                                    </div>
-                                  }
-                                </div>
-                              </td>
-                            </tr>
+                                    @if (activeDropdownServerId === s.id) {
+                                      <div class="kebab-dropdown" (click)="$event.stopPropagation()">
+                                        <button class="dropdown-item keys-item" (click)="regenerateCredentials(s.id)">
+                                          <span>🔄 Rigenera Client Secret</span>
+                                        </button>
+                                        <button class="dropdown-item delete-item" (click)="deleteServer(s.id)">
+                                          <span>🗑️ Elimina Server</span>
+                                        </button>
+                                      </div>
+                                    }
+                                  </div>
+                                </td>
+                              </tr>
+                            }
                           }
                         </tbody>
-                      </table>
+                    </table>
                     }
 
                   </div>
                 </td>
               </tr>
             }
+          } @empty {
+            <tr>
+              <td colspan="5" class="no-results-placeholder">
+                Nessun cliente o server corrisponde ai criteri di ricerca.
+              </td>
+            </tr>
           }
         </tbody>
       </table>
@@ -117,72 +145,72 @@
   </div>
 
   @if (showCustomerModal) {
-    <div class="modal-overlay">
-      <div class="modal-card">
+    <div class="modal-overlay" (click)="showCustomerModal = false">
+      <div class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h3>Create Customer</h3>
+          <h3>Aggiungi Nuovo Cliente</h3>
           <button class="close-x" (click)="showCustomerModal = false">✕</button>
         </div>
         <div class="modal-section">
-          <label class="modal-label">Nome Cliente</label>
-          <input [(ngModel)]="customerForm.name" placeholder="Inserisci nome cliente...">
-          <button (click)="createCustomer()" class="btn-modal-green" [disabled]="!customerForm.name">
-            CREA CLIENTE
-          </button>
+          <div>
+            <label class="modal-label">Nome Cliente</label>
+            <input type="text" [(ngModel)]="customerForm.name" placeholder="Es. Acme Corporation" (keyup.enter)="createCustomer()" />
+          </div>
+          <button class="btn-modal-green" (click)="createCustomer()">Salva Cliente</button>
         </div>
       </div>
     </div>
   }
 
   @if (showServerModal) {
-    <div class="modal-overlay">
-      <div class="modal-card">
+    <div class="modal-overlay" (click)="showServerModal = false">
+      <div class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h3>Create Server</h3>
+          <h3>Aggiungi Nuovo Server</h3>
           <button class="close-x" (click)="showServerModal = false">✕</button>
         </div>
         <div class="modal-section">
-          <label class="modal-label">Nome Server</label>
-          <input [(ngModel)]="serverForm.name" placeholder="Inserisci nome server...">
-          
-          <label class="modal-label">Assegna a Cliente</label>
-          <select [(ngModel)]="serverForm.customerId">
-            <option [ngValue]="null" disabled selected>Seleziona un Cliente</option>
-            @for (c of data.customers; track c.id) {
-              <option [ngValue]="c.id">{{ c.name }}</option>
-            }
-          </select>
-          
-          <button (click)="createServer()" class="btn-modal-green" [disabled]="!serverForm.name || !serverForm.customerId">
-            CREA SERVER
-          </button>
+          <div>
+            <label class="modal-label">Associa a Cliente</label>
+            <select [(ngModel)]="serverForm.customerId">
+              <option [ngValue]="null" disabled selected>Seleziona un cliente...</option>
+              @for (c of data.customers; track c.id) {
+                <option [value]="c.id">{{ c.name }} ({{ c.id }})</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="modal-label">Nome Server</label>
+            <input type="text" [(ngModel)]="serverForm.name" placeholder="Es. Production-Web-01" (keyup.enter)="createServer()" />
+          </div>
+          <button class="btn-modal-green" (click)="createServer()">Genera Server & Credenziali</button>
         </div>
       </div>
     </div>
   }
 
   @if (showSecretModal) {
-    <div class="modal-overlay">
-      <div class="modal-card">
+    <div class="modal-overlay" (click)="closeSecretModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h3>🔑 Credenziali Server</h3>
+          <h3>Credenziali Generate</h3>
           <button class="close-x" (click)="closeSecretModal()">✕</button>
         </div>
         <div class="modal-section">
           <div class="credentials-warning-box">
-            <span class="warning-icon">⚠️</span>
-            <p class="credentials-warning">Sicurezza: Copia queste credenziali adesso. Non potrai più visualizzarle in seguito!</p>
+            <p class="credentials-warning">
+              <strong>⚠️ Attenzione:</strong> Salva subito queste chiavi. Per motivi di sicurezza non sarai più in grado di visualizzarle in seguito!
+            </p>
           </div>
-          
-          <label class="modal-label">Client ID</label>
-          <div class="credentials-box">{{ credentials.clientId }}</div>
-          
-          <label class="modal-label">Client Secret</label>
-          <div class="credentials-box">{{ credentials.clientSecret }}</div>
-          
-          <button (click)="closeSecretModal()" class="btn-modal-green">
-            HO COPIATO LE CHIAVI
-          </button>
+          <div>
+            <label class="modal-label">Client ID</label>
+            <div class="credentials-box" style="color: #10b981;">{{ credentials.clientId }}</div>
+          </div>
+          <div>
+            <label class="modal-label">Client Secret</label>
+            <div class="credentials-box">{{ credentials.clientSecret }}</div>
+          </div>
+          <button class="btn-modal-green" style="background: #2563eb;" (click)="closeSecretModal()">Ho memorizzato le chiavi</button>
         </div>
       </div>
     </div>

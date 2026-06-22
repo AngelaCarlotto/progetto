@@ -233,7 +233,6 @@ svg.chart {
 }
 
 /* DARK */
-
 :host-context(body.dark-theme) .graphs-wrapper {
   background-color: #070d19; 
 }

@@ -1,3 +1,4 @@
+<ng-container *ngIf="triggerStatsUpdate"></ng-container>
 <div class="graphs-wrapper" id="page-graphs">
 
   <div class="topbar">
@@ -90,20 +91,20 @@
                       [attr.points]="svgPoints"
                       style="transition: points 0.4s ease-in-out;" />
 
-            <circle *ngFor="let pt of chartPoints" 
-                    [attr.cx]="pt.x" 
-                    [attr.cy]="pt.y" 
-                    r="4" 
-                    fill="#10b981" />
+            @for (pt of chartPoints; track pt.x) {
+              <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="4" fill="#10b981" />
+            }
           </svg>
         </div>
 
         <div class="chart-data-table-10">
-          <div *ngFor="let pt of chartPoints" class="chart-data-column-10">
-            <span class="data-date-10">{{ pt.label }}</span>
-            <div class="data-arrow-10">↑</div>
-            <span class="data-count-10">{{ pt.count }}</span>
-          </div>
+          @for (pt of chartPoints; track pt.label) {
+            <div class="chart-data-column-10">
+              <span class="data-date-10">{{ pt.label }}</span>
+              <div class="data-arrow-10">↑</div>
+              <span class="data-count-10">{{ pt.count }}</span>
+            </div>
+          }
         </div>
       </div>
 

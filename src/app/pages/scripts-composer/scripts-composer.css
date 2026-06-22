@@ -1,4 +1,6 @@
-/* LIGHT  */
+/* ==========================================================================
+   1. STRUTTURA GENERALE DELLA PAGINA & LIGHT THEME
+   ========================================================================== */
 .scripts-wrapper {
   width: 100%;
   height: 100vh;            
@@ -6,7 +8,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;          
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .fixed-header {
@@ -24,7 +26,7 @@
   border-bottom: 1px solid #e2e8f0;
   height: 70px;
   box-sizing: border-box;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .topbar-title {
@@ -32,11 +34,13 @@
   font-weight: 800;
   color: #1e293b;
   margin-bottom: 4px;
+  transition: color 0.3s ease;
 }
 
 .topbar-sub {
   font-size: 13px;
   color: #64748b;
+  transition: color 0.3s ease;
 }
 
 .topbar-actions-container {
@@ -63,9 +67,12 @@
   font-size: 13px;
   width: 260px;
   background: #ffffff;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
+/* ==========================================================================
+   2. BOTTONI GENERALI
+   ========================================================================== */
 .btn-primary {
   background: #2563eb;
   color: white;
@@ -75,7 +82,7 @@
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
-  transition: opacity 0.2s;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, opacity 0.2s;
 }
 
 .btn-green {
@@ -86,15 +93,18 @@
   opacity: 0.9;
 }
 
+/* ==========================================================================
+   3. TABELLA DATI & KEBAB MENU
+   ========================================================================== */
 .table-card {
   background: white;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
   height: auto;
   max-height: calc(100vh - 175px); 
   overflow-y: auto;          
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .data-table {
@@ -113,6 +123,7 @@
   color: #64748b;
   border-bottom: 1px solid #e2e8f0;
   font-weight: 700;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .data-table td {
@@ -121,7 +132,15 @@
   border-bottom: 1px solid #f1f5f9;
   font-size: 13px;
   color: #334155;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.data-table tbody tr {
+  transition: background-color 0.3s ease;
+}
+
+.data-table tbody tr:hover {
+  background: #f8fafc;
 }
 
 .data-table code {
@@ -130,6 +149,7 @@
   padding: 3px 6px;
   border-radius: 4px;
   font-weight: 600;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .schedule-badge {
@@ -138,6 +158,7 @@
   border-radius: 6px;
   font-family: monospace;
   color: #475569;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .kebab-menu-container {
@@ -152,7 +173,7 @@
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 6px;
-  transition: all 0.2s;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .btn-kebab:hover {
@@ -172,6 +193,7 @@
   min-width: 140px;
   padding: 4px 0;
   animation: fadeInKebab 0.15s ease-out;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .dropdown-item {
@@ -186,6 +208,7 @@
   align-items: center;
   gap: 8px;
   color: #334155;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .dropdown-item:hover {
@@ -197,6 +220,9 @@
   color: #ef4444;
 }
 
+/* ==========================================================================
+   4. MODAL COMPONENTI COMUNI (OVERLAY, INPUTS, WIZARD)
+   ========================================================================== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -209,7 +235,7 @@
 }
 
 .modal-card {
-  width: 460px;
+  width: 520px; 
   background: white;
   border-radius: 14px;
   padding: 24px;
@@ -217,6 +243,8 @@
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .modal-card input,
@@ -228,6 +256,7 @@
   width: 100%;
   box-sizing: border-box;
   background: #ffffff;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .wizard-header {
@@ -241,10 +270,12 @@
   font-size: 18px;
   color: #1e293b;
   font-weight: 700;
+  transition: color 0.3s ease;
 }
 
 .edit-id-highlight {
   color: #2563eb;
+  transition: color 0.3s ease;
 }
 
 .step-indicator {
@@ -254,12 +285,14 @@
   background: #eff6ff;
   padding: 4px 10px;
   border-radius: 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .step-description {
   font-size: 13px;
   color: #64748b;
   margin: -4px 0 4px 0;
+  transition: color 0.3s ease;
 }
 
 .progress-bar-container {
@@ -269,6 +302,7 @@
   border-radius: 3px;
   overflow: hidden;
   margin-bottom: 4px;
+  transition: background-color 0.3s ease;
 }
 
 .progress-bar-fill {
@@ -287,8 +321,12 @@
   font-size: 12px;
   font-weight: 600;
   color: #475569;
+  transition: color 0.3s ease;
 }
 
+/* ==========================================================================
+   5. BOX ISTANZE DINAMICHE (DATABASE & FILE UPLOADS)
+   ========================================================================== */
 .components-selection {
   display: grid;
   grid-template-columns: 1fr 1fr; 
@@ -297,6 +335,7 @@
   background: #f8fafc;           
   border-radius: 8px;
   border: 1px solid #e2e8f0;    
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .checkbox-container {
@@ -318,6 +357,7 @@
   font-size: 14px;
   font-weight: 600;
   color: #1e293b;
+  transition: color 0.3s ease;
 }
 
 .file-upload-box {
@@ -328,6 +368,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .file-upload-box.mysql-box {
@@ -339,6 +380,7 @@
   font-size: 12px;
   font-weight: 700;
   color: #1e293b;
+  transition: color 0.3s ease;
 }
 
 .file-input-hidden {
@@ -355,6 +397,7 @@
   cursor: pointer;
   font-weight: 600;
   font-size: 12px;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .btn-mysql-trigger {
@@ -381,11 +424,13 @@
   padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid #e2e8f0;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .file-name {
   font-size: 12px;
   color: #334155;
+  transition: color 0.3s ease;
 }
 
 .btn-remove-file {
@@ -396,12 +441,34 @@
   font-weight: bold;
 }
 
+/* ==========================================================================
+   6. ARCHITETTURA DI NAVIGAZIONE E FIX DEL MODAL EDIT RIFATTO
+   ========================================================================== */
+.edit-modal-fixed {
+  width: 550px !important;            
+  height: 640px !important;           
+  max-height: 85vh !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;        
+  padding: 0 !important;              
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.edit-modal-fixed .wizard-header {
+  padding: 20px 24px 10px 24px;
+  flex-shrink: 0;
+}
+
 .edit-tabs-nav {
   display: flex;
   background: #f1f5f9;
   padding: 4px;
+  margin: 0 24px 10px 24px;
   border-radius: 8px;
   gap: 4px;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease;
 }
 
 .edit-tabs-nav button {
@@ -414,6 +481,7 @@
   color: #64748b;
   cursor: pointer;
   border-radius: 6px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .edit-tabs-nav button.active {
@@ -422,30 +490,57 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.edit-tabs-content {
-  min-height: 240px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .tab-error-badge {
   color: #ef4444;
   font-size: 12px;
+  margin-left: 2px;
 }
 
-.edit-warning-box {
+.edit-tabs-content-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 24px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.edit-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 14px 24px 20px 24px;
+  border-top: 1px solid #f1f5f9;
+  background: #ffffff;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.edit-modal-actions .buttons-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.edit-warning-inline {
   background-color: #fff5f5;
   border-left: 4px solid #ef4444;
-  padding: 10px;
+  padding: 8px 12px;
   border-radius: 6px;
+  max-width: 55%;
+  text-align: left;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-.warning-text {
+.edit-warning-inline span {
   color: #cd2c2c;
   font-size: 12px;
   font-weight: 500;
-  margin: 0;
+  line-height: 1.4;
+  display: block;
+  transition: color 0.3s ease;
 }
 
 .wizard-actions {
@@ -454,6 +549,7 @@
   align-items: center;
   border-top: 1px solid #f1f5f9;
   padding-top: 14px;
+  transition: border-color 0.3s ease;
 }
 
 .btn-modal-green {
@@ -464,6 +560,7 @@
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 .btn-modal-green:disabled {
   background: #cbd5e1 !important;
@@ -480,11 +577,13 @@
   color: #64748b;
   font-weight: 600;
   cursor: pointer;
+  transition: color 0.3s ease;
 }
 
 .bg-disabled {
   background: #f1f5f9;
   color: #94a3b8;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .no-bg-border {
@@ -494,9 +593,10 @@
   font-weight: 600;
 }
 
-.btn-text-mod { color: #2563eb; }
-.btn-text-elimina { color: #ef4444; }
+.btn-text-mod { color: #2563eb; transition: color 0.3s ease; }
+.btn-text-elimina { color: #ef4444; transition: color 0.3s ease; }
 
+/* Grids & utilities standard */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .grid-3-1 { display: grid; grid-template-columns: 3fr 1fr; gap: 8px; }
 .flex-gap-10-center { display: flex; gap: 10px; align-items: center; }
@@ -511,30 +611,9 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-
-
-/* TRANSIZIONI  */
-.script-wrapper, 
-.script-card, 
-.script-table-card, 
-.script-topbar,
-.script-table th, 
-.script-table td,
-.btn-script-action {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
-}
-
-:host-context(body.dark-theme) .script-wrapper,
-:host-context(body.dark-theme) .script-card,
-:host-context(body.dark-theme) .script-table-card,
-:host-context(body.dark-theme) .script-topbar,
-:host-context(body.dark-theme) .script-table th,
-:host-context(body.dark-theme) .script-table td,
-:host-context(body.dark-theme) .btn-script-action {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
-}
-
-
+/* ==========================================================================
+   7. DARK THEME CONFIGURATIONS (INTEGRATO & CORRETTO)
+   ========================================================================== */
 :host-context(body.dark-theme) .scripts-wrapper {
   background-color: #070d19; 
 }
@@ -614,8 +693,17 @@
 
 :host-context(body.dark-theme) .modal-card {
   background: #111c2e;
-  border: 1px solid #38bdf8; 
+  border: 1px solid #243754; 
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+}
+
+:host-context(body.dark-theme) .edit-modal-fixed {
+  border: 1px solid #38bdf8 !important;
+}
+
+:host-context(body.dark-theme) .edit-modal-actions {
+  background: #111c2e;
+  border-top: 1px solid #243754;
 }
 
 :host-context(body.dark-theme) .wizard-header h3 {
@@ -714,12 +802,14 @@
   color: #ffffff;
 }
 
-:host-context(body.dark-theme) .edit-warning-box {
+:host-context(body.dark-theme) .edit-warning-box,
+:host-context(body.dark-theme) .edit-warning-inline {
   background-color: #5c1d1d;
   border-left: 4px solid #ef4444;
 }
 
-:host-context(body.dark-theme) .warning-text {
+:host-context(body.dark-theme) .warning-text,
+:host-context(body.dark-theme) .edit-warning-inline span {
   color: #fca5a5;
 }
 

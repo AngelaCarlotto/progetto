@@ -9,15 +9,8 @@
     </div>
 
     <div class="topbar-actions-container">
-      <input
-        type="text"
-        placeholder="Search Script ID..."
-        [(ngModel)]="searchId"
-        class="search-input"
-      />
-      <button class="btn-primary btn-green" (click)="openCreate()">
-        + Create Script
-      </button>
+      <input type="text" placeholder="Search Script ID..." [(ngModel)]="searchId" class="search-input" />
+      <button class="btn-primary btn-green" (click)="openCreate()">+ Create Script</button>
     </div>
   </div>
 
@@ -27,7 +20,7 @@
         <thead>
           <tr>
             <th>Script ID</th>
-            <th>Path</th>
+            <th>Path Base</th>
             <th>Schedule</th>
             <th>Server</th>
             <th>Customer</th>
@@ -35,7 +28,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (s of filteredScripts(); track s.id) {
+          @for (s of filteredScripts; track s.id) {
             <tr>
               <td><code>{{ s.id }}</code></td>
               <td>{{ s.path }}</td>
@@ -45,19 +38,14 @@
               <td>
                 <div class="kebab-menu-container">
                   <button class="btn-kebab" (click)="toggleKebab(s.id, $event)" title="Opzioni">
-                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor">
                       <path d="M2 4C3.1 4 4 3.1 4 2C4 0.9 3.1 0 2 0C0.9 0 0 0.9 0 2C0 3.1 0.9 4 2 4ZM2 6C0.9 6 0 6.9 0 8C0 9.1 0.9 10 2 10C3.1 10 4 9.1 4 8C4 6.9 3.1 6 2 6ZM2 12C0.9 12 0 12.9 0 14C0 15.1 0.9 16 2 16C3.1 16 4 15.1 4 14C4 12.9 3.1 12 2 12Z"/>
                     </svg>
                   </button>
-                  
                   @if (activeKebabId === s.id) {
                     <div class="kebab-dropdown" (click)="$event.stopPropagation()">
-                      <button class="dropdown-item edit-item" (click)="openEdit(s)">
-                        <span>✏️ Modifica</span>
-                      </button>
-                      <button class="dropdown-item delete-item" (click)="deleteScript(s.id)">
-                        <span>🗑️ Elimina</span>
-                      </button>
+                      <button class="dropdown-item edit-item" (click)="openEdit(s)"><span>✏️ Modifica</span></button>
+                      <button class="dropdown-item delete-item" (click)="deleteScript(s.id)"><span>🗑️ Elimina</span></button>
                     </div>
                   }
                 </div>
@@ -71,7 +59,7 @@
 
   @if (showCreate) {
     <div class="modal-overlay">
-      <div class="modal-card">
+      <div class="modal-card" style="max-height: 85vh; overflow-y: auto;">
         
         <div class="wizard-header">
           <h3>Create Backup Script</h3>
@@ -84,56 +72,39 @@
 
         @if (currentStep === 1) {
           <p class="step-description">Inserisci le informazioni di base richieste.</p>
-          
-          <div class="form-group">
-            <label>Path *</label>
-            <input [(ngModel)]="scriptForm.path" placeholder="/var/www/backup/example">
-          </div>
-
-          <div class="form-group">
-            <label>Schedule *</label>
-            <input [(ngModel)]="scriptForm.schedule" placeholder="0 0 * * *">
-          </div>
-
+          <div class="form-group"><label>Path Base *</label><input [(ngModel)]="scriptForm.path" placeholder="/var/www/backup/example"></div>
+          <div class="form-group"><label>Schedule *</label><input [(ngModel)]="scriptForm.schedule" placeholder="0 0 * * *"></div>
           <div class="form-group">
             <label>Customer *</label>
             <select [(ngModel)]="scriptForm.customerId" (change)="onCustomerChange()">
               <option value="" disabled selected>Select Customer</option>
               @for (c of data.customers; track c.id) {
-                <option [ngValue]="c.id">
-                  {{ c.name }} &nbsp; — &nbsp; [ID: {{ c.id }}]
-                </option>
+                <option [ngValue]="c.id">{{ c.name }} &nbsp;—&nbsp; [ID: {{ c.id }}]</option>
               }
             </select>
           </div>
-
           <div class="form-group">
             <label>Server *</label>
             <select [(ngModel)]="scriptForm.serverId" [disabled]="!scriptForm.customerId">
               <option value="" disabled selected>Select Server</option>
               @for (s of getFilteredServers(); track s.id) {
-                <option [ngValue]="s.id">{{ s.name }} &nbsp; — &nbsp; [ID: {{ s.id }}]</option>
+                <option [ngValue]="s.id">{{ s.name }} &nbsp;—&nbsp; [ID: {{ s.id }}]</option>
               }
             </select>
           </div>
-
-          <div class="wizard-actions">
-            <button class="btn-modal-link" (click)="showCreate = false">Annulla</button>
-            <button class="btn-modal-green" [disabled]="!isStep1Valid()" (click)="nextStep()">
-              Avanti →
-            </button>
+          <div class="wizard-actions" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+            <button type="button" class="btn-modal-link" (click)="showCreate = false">Annulla</button>
+            <button type="button" class="btn-modal-green" [disabled]="!isStep1Valid()" (click)="nextStep()">Avanti →</button>
           </div>
         }
 
         @if (currentStep === 2) {
-          <p class="step-description">Seleziona cosa vuoi includere e carica i relativi file.</p>
-          
+          <p class="step-description">Seleziona cosa vuoi includere e configura le istanze.</p>
           <div class="components-selection">
             <label class="checkbox-container">
               <input type="checkbox" [(ngModel)]="scriptForm.mysqlComponent" (change)="toggleComponent('mysql')">
               <span class="checkbox-label">Database MySQL</span>
             </label>
-
             <label class="checkbox-container">
               <input type="checkbox" [(ngModel)]="scriptForm.filesComponent" (change)="toggleComponent('files')">
               <span class="checkbox-label">Files fisici</span>
@@ -141,140 +112,123 @@
           </div>
 
           @if (scriptForm.mysqlComponent) {
-            <div class="file-upload-box mysql-box">
-              <label class="box-title">🗄️ Parametri e Configurazione MySQL</label>
-              <div class="grid-3-1">
-                <input [(ngModel)]="scriptForm.mysqlHost" placeholder="Host IP (es. 127.0.0.1)">
-                <input [(ngModel)]="scriptForm.mysqlPort" placeholder="Porta (3306)">
-              </div>
-              <div class="grid-2">
-                <input [(ngModel)]="scriptForm.mysqlUser" placeholder="Username DB">
-                <input [(ngModel)]="scriptForm.mysqlPassword" type="password" placeholder="Password DB">
-              </div>
-              <input [(ngModel)]="scriptForm.mysqlDatabase" placeholder="Nome Database" class="mb-12">
-
-              <input type="file" multiple accept=".sql" (change)="onMysqlFilesSelected($event)" class="file-input-hidden" id="mysqlFileInput">
-              <label for="mysqlFileInput" class="file-input-trigger btn-mysql-trigger">
-                📂 Seleziona file Dump (.sql)
-              </label>
-
-              @if (scriptForm.selectedMysqlFiles.length > 0) {
-                <div class="selected-files-list">
-                  @for (file of scriptForm.selectedMysqlFiles; track file.name; let i = $index) {
-                    <div class="file-item">
-                      <span class="file-name">⚙️ {{ file.name }}</span>
-                      <button class="btn-remove-file" (click)="removeMysqlFile(i)">✕</button>
-                    </div>
-                  }
-                </div>
-              }
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 15px;">
+              <h4 style="margin:0; color:#475569; font-size: 14px;">Istanze Database MySQL</h4>
+              <button type="button" class="btn-primary" style="padding:4px 10px; height:auto; font-size:11px;" (click)="addMysqlInstance()">➕ Aggiungi DB</button>
             </div>
+
+            @for (instance of scriptForm.mysqlInstances; track $index; let idx = $index) {
+              <div class="file-upload-box mysql-box" style="margin-bottom:14px; position:relative; margin-top: 10px;">
+                @if (scriptForm.mysqlInstances.length > 1) {
+                  <button type="button" (click)="removeMysqlInstance(idx)" 
+                          style="position:absolute; right:12px; top:12px; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size: 12px;">🗑️ Rimuovi</button>
+                }
+                <label class="box-title">🗄️ Configurazione Config #{{ idx + 1 }}</label>
+                <div class="grid-3-1">
+                  <input [(ngModel)]="instance.host" placeholder="Host IP (es. 127.0.0.1)">
+                  <input [(ngModel)]="instance.port" placeholder="Porta (3306)">
+                </div>
+                <div class="grid-2">
+                  <input [(ngModel)]="instance.user" placeholder="Username DB">
+                  <input [(ngModel)]="instance.password" type="password" placeholder="Password DB">
+                </div>
+                <input [(ngModel)]="instance.database" placeholder="Nome Database" class="mb-12">
+
+                <input type="file" multiple accept=".sql" (change)="onMysqlFilesSelected($event, idx)" class="file-input-hidden" [id]="'mysqlFileInput' + idx">
+                <label [for]="'mysqlFileInput' + idx" class="file-input-trigger btn-mysql-trigger">📂 Carica File Dump (.sql)</label>
+
+                @if (instance.selectedMysqlFiles.length > 0) {
+                  <div class="selected-files-list">
+                    @for (file of instance.selectedMysqlFiles; track file.name; let fIdx = $index) {
+                      <div class="file-item">
+                        <span class="file-name">⚙️ {{ file.name }}</span>
+                        <button type="button" class="btn-remove-file" (click)="removeMysqlFile(idx, fIdx)">✕</button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
           }
 
           @if (scriptForm.filesComponent) {
-            <div class="file-upload-box files-generic-box">
-              <label class="box-title">📄 File sorgenti e cartelle</label>
-              <input [(ngModel)]="scriptForm.filesSourcePath" placeholder="Path di origine" class="mb-12">
-
-              <div class="grid-2 mb-12">
-                <div>
-                  <input type="file" multiple (change)="onFilesSelected($event)" class="file-input-hidden" id="multiFileInput">
-                  <label for="multiFileInput" class="file-input-trigger m-0 text-center block">
-                    📄 Seleziona File
-                  </label>
-                </div>
-                <div>
-                  <input type="file" multiple webkitdirectory directory (change)="onFilesSelected($event)" class="file-input-hidden" id="directoryInput">
-                  <label for="directoryInput" class="file-input-trigger btn-directory-trigger m-0 text-center block">
-                    📁 Seleziona Cartella
-                  </label>
-                </div>
-              </div>
-
-              @if (scriptForm.selectedFiles.length > 0) {
-                <div class="selected-files-list">
-                  @for (file of scriptForm.selectedFiles; track file.name; let i = $index) {
-                    <div class="file-item">
-                      <span class="file-name">📁 {{ file.name }}</span>
-                      <button class="btn-remove-file" (click)="removeFile(i)">✕</button>
-                    </div>
-                  }
-                </div>
-              }
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 20px;">
+              <h4 style="margin:0; color:#475569; font-size: 14px;">Sorgenti File e Cartelle</h4>
+              <button type="button" class="btn-primary" style="padding:4px 10px; height:auto; font-size:11px;" (click)="addFileInstance()">➕ Aggiungi Path</button>
             </div>
+
+            @for (instance of scriptForm.fileInstances; track $index; let idx = $index) {
+              <div class="file-upload-box files-generic-box" style="margin-bottom:14px; position:relative; margin-top: 10px;">
+                @if (scriptForm.fileInstances.length > 1) {
+                  <button type="button" (click)="removeFileInstance(idx)" 
+                          style="position:absolute; right:12px; top:12px; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size: 12px;">🗑️ Rimuovi</button>
+                }
+                <label class="box-title">📄 Set di Origine #{{ idx + 1 }}</label>
+                <input [(ngModel)]="instance.sourcePath" placeholder="Path di origine" class="mb-12">
+
+                <div class="grid-2 mb-12">
+                  <div>
+                    <input type="file" multiple (change)="onFilesSelected($event, idx)" class="file-input-hidden" [id]="'multiFileInput' + idx">
+                    <label [for]="'multiFileInput' + idx" class="file-input-trigger m-0 text-center block">📄 Seleziona File</label>
+                  </div>
+                  <div>
+                    <input type="file" multiple webkitdirectory directory (change)="onFilesSelected($event, idx)" class="file-input-hidden" [id]="'directoryInput' + idx">
+                    <label [for]="'directoryInput' + idx" class="file-input-trigger btn-directory-trigger m-0 text-center block">📁 Seleziona Cartella</label>
+                  </div>
+                </div>
+
+                @if (instance.selectedFiles.length > 0) {
+                  <div class="selected-files-list">
+                    @for (file of instance.selectedFiles; track file.name; let fIdx = $index) {
+                      <div class="file-item">
+                        <span class="file-name">📁 {{ file.name }}</span>
+                        <button type="button" class="btn-remove-file" (click)="removeFile(idx, fIdx)">✕</button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
           }
 
-          <div class="wizard-actions">
-            <button class="btn-modal-link" (click)="prevStep()">← Indietro</button>
-            <button class="btn-modal-green" [disabled]="!isStep2Valid()" (click)="nextStep()">
-              Avanti →
-            </button>
+          <div class="wizard-actions" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+            <button type="button" class="btn-modal-link" (click)="prevStep()">← Indietro</button>
+            <button type="button" class="btn-modal-green" [disabled]="!isStep2Valid()" (click)="nextStep()">Avanti →</button>
           </div>
         }
 
         @if (currentStep === 3) {
           <p class="step-description">Fornisci le credenziali di rete per il server FTP.</p>
-
-          <div class="form-group">
-            <label>FTP Host *</label>
-            <input [(ngModel)]="scriptForm.ftpHost" placeholder="ftp.myhost.com" />
-          </div>
-
-          <div class="form-group">
-            <label>FTP Username *</label>
-            <input [(ngModel)]="scriptForm.ftpUser" placeholder="admin" />
-          </div>
-
-          <div class="form-group">
-            <label>FTP Password *</label>
-            <input [(ngModel)]="scriptForm.ftpPassword" type="password" placeholder="••••••••" />
-          </div>
-
-          <div class="wizard-actions">
-            <button class="btn-modal-link" (click)="prevStep()">← Indietro</button>
-            <button class="btn-modal-green finalize" [disabled]="!isStep3Valid()" (click)="createScript()">
-              🚀 CREA SCRIPT
-            </button>
+          <div class="form-group"><label>FTP Host *</label><input [(ngModel)]="scriptForm.ftpHost" placeholder="ftp.myhost.com" /></div>
+          <div class="form-group"><label>FTP Username *</label><input [(ngModel)]="scriptForm.ftpUser" placeholder="admin" /></div>
+          <div class="form-group"><label>FTP Password *</label><input [(ngModel)]="scriptForm.ftpPassword" type="password" placeholder="••••••••" /></div>
+          <div class="wizard-actions" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+            <button type="button" class="btn-modal-link" (click)="prevStep()">← Indietro</button>
+            <button type="button" class="btn-modal-green finalize" [disabled]="!isStep3Valid()" (click)="createScript()">🚀 CREA SCRIPT</button>
           </div>
         }
-
       </div>
     </div>
   }
 
   @if (showEdit) {
     <div class="modal-overlay">
-      <div class="modal-card">
+      <div class="modal-card edit-modal-fixed">
+        
         <div class="wizard-header">
           <h3>Modifica Script: <span class="edit-id-highlight">{{ scriptForm.id }}</span></h3>
         </div>
 
         <div class="edit-tabs-nav">
-          <button type="button" [class.active]="activeEditTab === 1" (click)="activeEditTab = 1">
-            ℹ️ Info 
-            @if (!isTab1Valid()) { <span class="tab-error-badge">⚠️</span> }
-          </button>
-          <button type="button" [class.active]="activeEditTab === 2" (click)="activeEditTab = 2">
-            📂 Componenti 
-            @if (!isTab2Valid()) { <span class="tab-error-badge">⚠️</span> }
-          </button>
-          <button type="button" [class.active]="activeEditTab === 3" (click)="activeEditTab = 3">
-            🌐 FTP 
-            @if (!isTab3Valid()) { <span class="tab-error-badge">⚠️</span> }
-          </button>
+          <button type="button" [class.active]="activeEditTab === 1" (click)="activeEditTab = 1">ℹ️ Info @if (!isTab1Valid()) { <span class="tab-error-badge">⚠️</span> }</button>
+          <button type="button" [class.active]="activeEditTab === 2" (click)="activeEditTab = 2">📂 Componenti @if (!isTab2Valid()) { <span class="tab-error-badge">⚠️</span> }</button>
+          <button type="button" [class.active]="activeEditTab === 3" (click)="activeEditTab = 3">🌐 FTP @if (!isTab3Valid()) { <span class="tab-error-badge">⚠️</span> }</button>
         </div>
 
-        <div class="edit-tabs-content">
-          
+        <div class="edit-tabs-content-scrollable">
           @if (activeEditTab === 1) {
-            <div class="form-group">
-              <label>Path *</label>
-              <input [(ngModel)]="scriptForm.path">
-            </div>
-            <div class="form-group">
-              <label>Schedule *</label>
-              <input [(ngModel)]="scriptForm.schedule">
-            </div>
+            <div class="form-group"><label>Path Base *</label><input [(ngModel)]="scriptForm.path"></div>
+            <div class="form-group"><label>Schedule *</label><input [(ngModel)]="scriptForm.schedule"></div>
             <div class="form-group">
               <label>Customer *</label>
               <select [(ngModel)]="scriptForm.customerId" (change)="onCustomerChange()">
@@ -295,113 +249,100 @@
 
           @if (activeEditTab === 2) {
             <div class="components-selection">
-              <label class="checkbox-container">
-                <input type="checkbox" [(ngModel)]="scriptForm.mysqlComponent" (change)="toggleComponent('mysql')">
-                <span class="checkbox-label">Database MySQL</span>
-              </label>
-              <label class="checkbox-container">
-                <input type="checkbox" [(ngModel)]="scriptForm.filesComponent" (change)="toggleComponent('files')">
-                <span class="checkbox-label">Files fisici</span>
-              </label>
+              <label class="checkbox-container"><input type="checkbox" [(ngModel)]="scriptForm.mysqlComponent" (change)="toggleComponent('mysql')"><span class="checkbox-label">Database MySQL</span></label>
+              <label class="checkbox-container"><input type="checkbox" [(ngModel)]="scriptForm.filesComponent" (change)="toggleComponent('files')"><span class="checkbox-label">Files fisici</span></label>
             </div>
 
             @if (scriptForm.mysqlComponent) {
-              <div class="file-upload-box mysql-box">
-                <label class="box-title">🗄️ Parametri e File Dump MySQL</label>
-                <div class="grid-3-1">
-                  <input [(ngModel)]="scriptForm.mysqlHost" placeholder="Host IP">
-                  <input [(ngModel)]="scriptForm.mysqlPort" placeholder="Porta">
-                </div>
-                <div class="grid-2">
-                  <input [(ngModel)]="scriptForm.mysqlUser" placeholder="Username DB">
-                  <input [(ngModel)]="scriptForm.mysqlPassword" type="password" placeholder="Password DB">
-                </div>
-                <input [(ngModel)]="scriptForm.mysqlDatabase" placeholder="Nome Database" class="mb-12">
-
-                <input type="file" multiple accept=".sql" (change)="onMysqlFilesSelected($event)" class="file-input-hidden" id="editMysqlInput">
-                <label for="editMysqlInput" class="file-input-trigger btn-mysql-trigger">➕ Carica Altri File DB</label>
-                <div class="selected-files-list">
-                  @for (file of scriptForm.selectedMysqlFiles; track file.name; let i = $index) {
-                    <div class="file-item">
-                      <span class="file-name">⚙️ {{ file.name }}</span>
-                      <button class="btn-remove-file" (click)="removeMysqlFile(i)">✕</button>
-                    </div>
-                  }
-                </div>
+              <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 15px;">
+                <h4 style="margin:0; color:#475569; font-size: 14px;">Istanze Database MySQL</h4>
+                <button type="button" class="btn-primary" style="padding:4px 10px; height:auto; font-size:11px;" (click)="addMysqlInstance()">➕ Aggiungi DB</button>
               </div>
+              @for (instance of scriptForm.mysqlInstances; track $index; let idx = $index) {
+                <div class="file-upload-box mysql-box" style="margin-bottom:14px; position:relative; margin-top: 10px;">
+                  @if (scriptForm.mysqlInstances.length > 1) {
+                    <button type="button" (click)="removeMysqlInstance(idx)" style="position:absolute; right:12px; top:12px; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size: 12px;">🗑️ Rimuovi</button>
+                  }
+                  <label class="box-title">🗄️ Configurazione DB #{{ idx + 1 }}</label>
+                  <div class="grid-3-1"><input [(ngModel)]="instance.host" placeholder="Host IP"><input [(ngModel)]="instance.port" placeholder="Porta"></div>
+                  <div class="grid-2"><input [(ngModel)]="instance.user" placeholder="Username DB"><input [(ngModel)]="instance.password" type="password" placeholder="Password DB"></div>
+                  <input [(ngModel)]="instance.database" placeholder="Nome Database" class="mb-12">
+                  <input type="file" multiple accept=".sql" (change)="onMysqlFilesSelected($event, idx)" class="file-input-hidden" [id]="'editMysqlInput' + idx">
+                  <label [for]="'editMysqlInput' + idx" class="file-input-trigger btn-mysql-trigger">➕ Carica File DB</label>
+                  <div class="selected-files-list">
+                    @for (file of instance.selectedMysqlFiles; track file.name; let fIdx = $index) {
+                      <div class="file-item"><span class="file-name">⚙️ {{ file.name }}</span><button type="button" class="btn-remove-file" (click)="removeMysqlFile(idx, fIdx)">✕</button></div>
+                    }
+                  </div>
+                </div>
+              }
             }
 
             @if (scriptForm.filesComponent) {
-              <div class="file-upload-box files-generic-box">
-                <label class="box-title">📄 File Sorgenti e Cartelle</label>
-                <input [(ngModel)]="scriptForm.filesSourcePath" placeholder="Path di origine" class="mb-12">
-
-                <div class="grid-2 mb-12">
-                  <div>
-                    <input type="file" multiple (change)="onFilesSelected($event)" class="file-input-hidden" id="editGenericInput">
-                    <label for="editGenericInput" class="file-input-trigger text-center block m-0">
-                      ➕ Seleziona Altri File
-                    </label>
-                  </div>
-                  <div>
-                    <input type="file" multiple webkitdirectory directory (change)="onFilesSelected($event)" class="file-input-hidden" id="editDirectoryInput">
-                    <label for="editDirectoryInput" class="file-input-trigger btn-directory-trigger text-center block m-0">
-                      📁 Seleziona Cartella
-                    </label>
-                  </div>
-                </div>
-
-                <div class="selected-files-list">
-                  @for (file of scriptForm.selectedFiles; track file.name; let i = $index) {
-                    <div class="file-item">
-                      <span class="file-name">📁 {{ file.name }}</span>
-                      <button class="btn-remove-file" (click)="removeFile(i)">✕</button>
-                    </div>
-                  }
-                </div>
+              <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 20px;">
+                <h4 style="margin:0; color:#475569; font-size: 14px;">Sorgenti File e Cartelle</h4>
+                <button type="button" class="btn-primary" style="padding:4px 10px; height:auto; font-size:11px;" (click)="addFileInstance()">➕ Aggiungi Path</button>
               </div>
+              @for (instance of scriptForm.fileInstances; track $index; let idx = $index) {
+                <div class="file-upload-box files-generic-box" style="margin-bottom:14px; position:relative; margin-top: 10px;">
+                  @if (scriptForm.fileInstances.length > 1) {
+                    <button type="button" (click)="removeFileInstance(idx)" style="position:absolute; right:12px; top:12px; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size: 12px;">🗑️ Rimuovi</button>
+                  }
+                  <label class="box-title">📄 Set di Origine #{{ idx + 1 }}</label>
+                  <input [(ngModel)]="instance.sourcePath" placeholder="Path di origine" class="mb-12">
+                  <div class="grid-2 mb-12">
+                    <div>
+                      <input type="file" multiple (change)="onFilesSelected($event, idx)" class="file-input-hidden" [id]="'editGenericInput' + idx">
+                      <label [for]="'editGenericInput' + idx" class="file-input-trigger text-center block m-0">➕ Seleziona File</label>
+                    </div>
+                    <div>
+                      <input type="file" multiple webkitdirectory directory (change)="onFilesSelected($event, idx)" class="file-input-hidden" [id]="'editDirectoryInput' + idx">
+                      <label [for]="'editDirectoryInput' + idx" class="file-input-trigger btn-directory-trigger text-center block m-0">📁 Seleziona Cartella</label>
+                    </div>
+                  </div>
+                  <div class="selected-files-list">
+                    @for (file of instance.selectedFiles; track file.name; let fIdx = $index) {
+                      <div class="file-item"><span class="file-name">📁 {{ file.name }}</span><button type="button" class="btn-remove-file" (click)="removeFile(idx, fIdx)">✕</button></div>
+                    }
+                  </div>
+                </div>
+              }
             }
           }
 
           @if (activeEditTab === 3) {
-            <div class="form-group">
-              <label>FTP Host *</label>
-              <input [(ngModel)]="scriptForm.ftpHost">
-            </div>
-            <div class="form-group">
-              <label>FTP Username *</label>
-              <input [(ngModel)]="scriptForm.ftpUser">
-            </div>
+            <div class="form-group"><label>FTP Host *</label><input [(ngModel)]="scriptForm.ftpHost"></div>
+            <div class="form-group"><label>FTP Username *</label><input [(ngModel)]="scriptForm.ftpUser"></div>
             <div class="form-group">
               <label>FTP Password *</label>
-              
               @if (!isChangingFtpPassword) {
-                <div class="flex-gap-10-center">
-                  <input type="text" value="••••••••" disabled class="bg-disabled w-100">
-                  <button type="button" class="btn-text-mod no-bg-border" (click)="isChangingFtpPassword = true">✏️ Cambia</button>
-                </div>
+                <div class="flex-gap-10-center"><input type="text" value="••••••••" disabled class="bg-disabled w-100"><button type="button" class="btn-text-mod no-bg-border" (click)="isChangingFtpPassword = true">✏️ Cambia</button></div>
               } @else {
-                <div class="flex-gap-10-center">
-                  <input [(ngModel)]="scriptForm.ftpPassword" type="password" placeholder="Nuova password FTP" class="w-100">
-                  <button type="button" class="btn-text-elimina no-bg-border" (click)="isChangingFtpPassword = false">Annulla</button>
-                </div>
+                <div class="flex-gap-10-center"><input [(ngModel)]="scriptForm.ftpPassword" type="password" placeholder="Nuova password FTP" class="w-100"><button type="button" class="btn-text-elimina no-bg-border" (click)="isChangingFtpPassword = false">Annulla</button></div>
               }
             </div>
           }
-          
         </div>
 
-        @if (!isFormValid()) {
-          <div class="edit-warning-box">
-            <p class="warning-text">⚠️ Verifica che tutti i campi obbligatori contrassegnati con l'asterisco (*) siano compilati correttamente in ciascuna scheda.</p>
-          </div>
-        }
+        <div class="edit-modal-actions">
+          @if (!isFormValid()) {
+            <div class="edit-warning-inline">
+              <span>⚠️ Campi obbligatori (*) incompleti.</span>
+            </div>
+          } @else if (!hasChanges()) {
+            <div class="edit-warning-inline" style="background-color: #f8fafc; border-left-color: #94a3b8;">
+              <span style="color: #64748b;">Nessuna modifica rilevata.</span>
+            </div>
+          } @else {
+            <div></div>
+          }
 
-        <div class="wizard-actions">
-          <button class="btn-modal-link" (click)="showEdit = false">Annulla</button>
-          <button class="btn-modal-green" [disabled]="!isFormValid()" (click)="saveEdit()"> 
-            SALVA MODIFICHE
-          </button>
+          <div class="buttons-group">
+            <button type="button" class="btn-modal-link" (click)="showEdit = false">Annulla</button>
+            <button type="button" class="btn-modal-green" [disabled]="!isFormValid() || !hasChanges()" (click)="saveEdit()">
+              SALVA MODIFICHE
+            </button>
+          </div>
         </div>
 
       </div>
