@@ -73,7 +73,20 @@
         @if (currentStep === 1) {
           <p class="step-description">Inserisci le informazioni di base richieste.</p>
           <div class="form-group"><label>Path Base *</label><input [(ngModel)]="scriptForm.path" placeholder="/var/www/backup/example"></div>
-          <div class="form-group"><label>Schedule *</label><input [(ngModel)]="scriptForm.schedule" placeholder="0 0 * * *"></div>
+          
+          <div class="form-group">
+            <label>Schedule (CRON automatico) *</label>
+            <input 
+              [(ngModel)]="scriptForm.schedule" 
+              (input)="onScheduleInput($event)" 
+              placeholder="Minuti Ore * * * (Es: 30 22 * * *)"
+              autocomplete="off"
+            >
+            <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+              Separa i numeri con uno spazio. Gli asterischi finali si imposteranno da soli.
+            </small>
+          </div>
+
           <div class="form-group">
             <label>Customer *</label>
             <select [(ngModel)]="scriptForm.customerId" (change)="onCustomerChange()">
@@ -226,7 +239,16 @@
         <div class="edit-tabs-content-scrollable">
           @if (activeEditTab === 1) {
             <div class="form-group"><label>Path Base *</label><input [(ngModel)]="scriptForm.path"></div>
-            <div class="form-group"><label>Schedule *</label><input [(ngModel)]="scriptForm.schedule"></div>
+            
+            <div class="form-group">
+              <label>Schedule (CRON automatico) *</label>
+              <input 
+                [(ngModel)]="scriptForm.schedule" 
+                (input)="onScheduleInput($event)"
+                autocomplete="off"
+              >
+            </div>
+
             <div class="form-group">
               <label>Customer *</label>
               <select [(ngModel)]="scriptForm.customerId" (change)="onCustomerChange()">

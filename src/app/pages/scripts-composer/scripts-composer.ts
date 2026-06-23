@@ -40,6 +40,45 @@ export class ScriptsComposer implements OnInit {
     this.loadInitialData();
   }
 
+  onScheduleInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value;
+
+    // Sostituisce caratteri non validi
+    let cleanValue = value.replace(/[^0-9\s*]/g, '');
+    cleanValue = cleanValue.replace(/\s+/g, ' ');
+
+    const blocchiUtente = cleanValue.split(' ').filter(b => b.length > 0);
+    const terminaConSpazio = cleanValue.endsWith(' ');
+    let elementiPronti = blocchiUtente.length;
+    
+    let cronCampi: string[] = [];
+    for (let i = 0; i < 5; i++) {
+      if (i < elementiPronti) {
+        cronCampi.push(blocchiUtente[i]);
+      } else {
+        cronCampi.push('*');
+      }
+    }
+
+    let formattedValue = cronCampi.join(' ');
+    const posizioneCursore = input.selectionStart;
+
+    this.scriptForm.schedule = formattedValue;
+    input.value = formattedValue;
+
+    if (posizioneCursore !== null && value.length !== formattedValue.length) {
+      if (terminaConSpazio && elementiPronti < 5) {
+        const testoFinoAElemento = cronCampi.slice(0, elementiPronti).join(' ') + ' ';
+        input.setSelectionRange(testoFinoAElemento.length, testoFinoAElemento.length);
+      } else {
+        input.setSelectionRange(posizioneCursore, posizioneCursore);
+      }
+    }
+
+    this.refreshUI();
+  }
+
   // MODIFICATO: Evita il sovraccarico di chiamate se la memoria locale è già popolata
   loadInitialData() {
     if (this.data.scripts && this.data.scripts.length > 0) {
