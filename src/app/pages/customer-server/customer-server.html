@@ -18,12 +18,13 @@
         <input 
           type="text" 
           [(ngModel)]="searchQuery" 
+          (input)="onSearchChange()"
           placeholder="Cerca cliente o server..." 
           class="search-input"
         />
         
         @if (searchQuery) {
-          <button class="clear-search" (click)="searchQuery = ''; $event.stopPropagation()">✕</button>
+          <button class="clear-search" (click)="searchQuery = ''; onSearchChange(); $event.stopPropagation()">✕</button>
         }
       </div>
 

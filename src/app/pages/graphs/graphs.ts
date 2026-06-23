@@ -44,39 +44,73 @@ export class GraphsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Scarica i dati freschi da Mockoon all'avvio, ma i grafici si aggiorneranno 
-    // anche se i dati cambiano da altre pagine grazie al ciclo di controllo.
-    this.syncDataFromServer();
+    // MODIFICATO: Scarica da Mockoon solo se la memoria locale è vuota, 
+    // preservando inserimenti ed eliminazioni fatti in locale
+    if (this.data.scripts && this.data.scripts.length > 0 && this.data.logs && this.data.logs.length > 0) {
+      this.calculateAllStats();
+      this.refreshUI();
+    } else {
+      this.syncDataFromServer();
+    }
   }
 
-  syncDataFromServer() {
-    this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe(scripts => {
-      // Invertiamo l'ordine qui se vogliamo che siano coerenti con la tabella composer
+  syncDataFromServer(callback?: () => void) {
+  this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe({
+    next: (scripts) => {
+      // Sovrascriviamo l'array locale solo ORA che i dati sono arrivati
       this.data.scripts = Array.isArray(scripts) ? [...scripts].reverse() : [];
       
-      this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe(logs => {
-        this.data.logs = logs;
-        this.calculateAllStats();
+      this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe({
+        next: (logs) => {
+          this.data.logs = logs;
+          this.calculateAllStats();
+          
+          // Se c'è una funzione di callback (es. spegnere il loading), eseguila ora
+          if (callback) callback();
+          this.refreshUI();
+        },
+        error: (err) => {
+          console.error("Errore caricamento LOGS:", err);
+          if (callback) callback();
+        }
       });
-    });
-  }
+    },
+    error: (err) => {
+      console.error("Errore caricamento SCRIPTS:", err);
+      if (callback) callback();
+    }
+  });
+}
 
-  ricalcola() {
-    this.loading = true;
-    this.refreshUI();
+ricalcola() {
+  this.loading = true;
+  this.refreshUI();
 
-    setTimeout(() => {
-      this.syncDataFromServer();
+  // NON svuotiamo più i dati qui! Lasciamo i vecchi visibili finché non arrivano i nuovi.
+  // Passiamo una callback a syncDataFromServer per spegnere il loading solo alla fine.
+  setTimeout(() => {
+    this.syncDataFromServer(() => {
       this.loading = false;
-      this.refreshUI();
-    }, 600); 
-  } 
+      // Mostriamo un piccolo toast o log per conferma
+      console.log('Grafici aggiornati con successo da Mockoon!');
+    });
+  }, 600); // Manteniamo l'effetto flessibile del caricamento per l'utente
+}
 
-  // MODIFICATO: Diventa un getter per l'HTML. Ricalcola le statistiche 
-  // in tempo reale ogni volta che Angular avvia il Change Detection!
   get triggerStatsUpdate(): boolean {
     this.calculateAllStats();
     return true;
+  }
+
+  // Funzione helper interna per capire se il log appartiene a uno script (allineata alla Dashboard)
+  private isScriptLog(log: any): boolean {
+    if (!log) return false;
+    const hasScriptId = log.scriptId && String(log.scriptId).startsWith('SCR-');
+    const isBackupMessage = log.message && (
+      log.message.toLowerCase().includes('script') || 
+      log.message.toLowerCase().includes('backup')
+    );
+    return !!(hasScriptId || isBackupMessage);
   }
 
   calculateAllStats() {
@@ -86,7 +120,6 @@ export class GraphsComponent implements OnInit {
 
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // Lettura sicura tramite i tuoi getter del DataService
     const currentScripts = this.data.scripts || [];
     const currentLogs = this.data.logs || [];
 
@@ -96,11 +129,16 @@ export class GraphsComponent implements OnInit {
     });
 
     currentLogs.forEach((l: any) => {
-      const isError = l.level?.toLowerCase() === 'error' || l.level?.toLowerCase() === 'warning';
+      // MODIFICATO: Rimosso il 'warning' dagli errori. Ora conta solo 'error'
+      const isError = l.level?.toLowerCase() === 'error';
       const logDateStr = l.createdAt ? l.createdAt.substring(0, 10) : '';
-      if (isError) this.globalError++; else this.globalSuccess++;
-      if (logDateStr === todayStr) {
-        if (isError) this.todayError++; else this.todaySuccess++;
+      
+      // Filtro di sicurezza per considerare solo i log relativi agli script
+      if (this.isScriptLog(l)) {
+        if (isError) this.globalError++; else this.globalSuccess++;
+        if (logDateStr === todayStr) {
+          if (isError) this.todayError++; else this.todaySuccess++;
+        }
       }
     });
 
@@ -132,14 +170,23 @@ export class GraphsComponent implements OnInit {
       const d = new Date(); d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
       last10DaysDates.push(dateStr);
-      const dayLogsCount = currentLogs.filter((l: any) => l.createdAt?.substring(0, 10) === dateStr).length;
+      
+      // MODIFICATO: Anche lo storico dei punti conta solo i log validi degli script
+      const dayLogsCount = currentLogs.filter((l: any) => 
+        l.createdAt?.substring(0, 10) === dateStr && this.isScriptLog(l)
+      ).length;
+      
       if (dayLogsCount > maxDayLogs) maxDayLogs = dayLogsCount;
     }
 
     for (let i = 0; i < 10; i++) {
       const dateStr = last10DaysDates[i];
       const x = startX + (i * dayStepX);
-      const dayLogsCount = currentLogs.filter((l: any) => l.createdAt?.substring(0, 10) === dateStr).length;
+      
+      const dayLogsCount = currentLogs.filter((l: any) => 
+        l.createdAt?.substring(0, 10) === dateStr && this.isScriptLog(l)
+      ).length;
+      
       const y = totalHeight - ((dayLogsCount / maxDayLogs) * usableHeight);
       points.push(`${x},${y}`);
 

@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data'; 
-import { HttpClient } from '@angular/common/http'; // <-- AGGIUNTO
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-logs',
@@ -13,79 +13,178 @@ import { HttpClient } from '@angular/common/http'; // <-- AGGIUNTO
 })
 export class Logs implements OnInit {
 
-  private apiUrl = 'http://localhost:3000/api'; // <-- AGGIUNTO
-
-  constructor(public data: DataService, private http: HttpClient) {} // <-- MODIFICATO
-
-  ngOnInit() {
-    this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe(res => this.data.logs = res);
-  }
-
+  private apiUrl = 'http://localhost:3000/api';
+  
   search = '';
   itemsPerPage = 10;
   currentPage = 1;
   dropdownAperto = false;
+  loading = false;
 
-  toggleDropdown() { this.dropdownAperto = !this.dropdownAperto; }
+  // Array locale per gestire i log unici arricchiti con le date formattate
+  enrichedLogs: any[] = [];
 
+  constructor(
+    public data: DataService, 
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef 
+  ) {}
+
+  ngOnInit() {
+    // Carica ed elabora i log già presenti nel DataService (scaricati al login)
+    this.prepareLogs();
+  }
+
+  // Prepara i log calcolando le date una volta sola per velocizzare il filtro
+  prepareLogs() {
+    const rawLogs = this.data.logs || [];
+    
+    this.enrichedLogs = rawLogs.map(log => {
+      const dateObj = this.parseDataInvalida(log.createdAt);
+      let dataIT = '';
+      let dataITAlt = '';
+      
+      if (dateObj) {
+        const giorno = String(dateObj.getDate()).padStart(2, '0');
+        const mese = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const anno = dateObj.getFullYear();
+        dataIT = `${giorno}/${mese}/${anno}`; // Permette di cercare "23/06"
+        dataITAlt = `${giorno}-${mese}-${anno}`; // Permette di cercare "23-06"
+      }
+
+      return {
+        ...log,
+        createdAtObj: dateObj,
+        stringDataIT: dataIT,
+        stringDataITAlt: dataITAlt
+      };
+    });
+
+    this.refreshUI();
+  }
+
+  private parseDataInvalida(dateStr: any): Date | null {
+    if (!dateStr || typeof dateStr !== 'string') return null;
+    let stringaNormalizzata = dateStr.trim().replace(/\//g, '-');
+
+    if (stringaNormalizzata.includes('T')) {
+      const d = new Date(stringaNormalizzata);
+      return !isNaN(d.getTime()) ? d : null;
+    }
+
+    const dataPulita = stringaNormalizzata.split(' ')[0];
+    const parti = dataPulita.split('-');
+    
+    if (parti.length === 3) {
+      if (parti[0].length === 4) {
+        return new Date(Number(parti[0]), Number(parti[1]) - 1, Number(parti[2]));
+      }
+      return new Date(Number(parti[2]), Number(parti[1]) - 1, Number(parti[0]));
+    }
+    
+    const d = new Date(stringaNormalizzata);
+    return !isNaN(d.getTime()) ? d : null;
+  }
+
+  // Eseguito ad ogni carattere digitato o alla pulizia con la "✕"
+  onSearchChange() {
+    this.currentPage = 1; // Riporta sempre alla prima pagina
+    this.enrichedLogs = [...this.enrichedLogs]; // Forziamo la reattività di Angular
+    this.refreshUI();
+  }
+
+  toggleDropdown() { 
+    this.dropdownAperto = !this.dropdownAperto; 
+    this.refreshUI();
+  }
+
+  clearAllLogs() {
+    this.dropdownAperto = false; 
+    if (confirm('Sei sicuro di voler svuotare tutti i log visualizzati?')) {
+      this.http.delete(`${this.apiUrl}/logs`).subscribe({
+        next: () => {
+          this.data.logs = []; 
+          this.enrichedLogs = [];
+          this.currentPage = 1; 
+          this.refreshUI(); 
+        },
+        error: (err) => console.error("Errore svuotamento log:", err)
+      });
+    }
+  }
+
+  // Restituisce l'array filtrato e paginato da mostrare nella tabella HTML
   filteredLogs() {
-    let result = this.data.logs || [];
+    let result = [...this.enrichedLogs];
 
-    if (this.search) {
-      const searchTerm = this.search.toLowerCase();
+    if (this.search && this.search.trim()) {
+      const searchTerm = this.search.toLowerCase().trim();
       result = result.filter(log => {
-        let dataItaliana = '';
-        if (log.createdAt) {
-          const d = new Date(log.createdAt);
-          if (!isNaN(d.getTime())) {
-            const giorno = String(d.getDate()).padStart(2, '0');
-            const mese = String(d.getMonth() + 1).padStart(2, '0');
-            const anno = d.getFullYear();
-            dataItaliana = `${giorno}/${mese}/${anno}`; 
-          }
-        }
+        const execId = log.executionId || log.execution_id || '';
+
         return (
           (log.id && String(log.id).toLowerCase().includes(searchTerm)) ||
           (log.level && log.level.toLowerCase().includes(searchTerm)) ||
           (log.message && log.message.toLowerCase().includes(searchTerm)) ||
-          (dataItaliana && dataItaliana.includes(searchTerm)) || 
-          (log.scriptId && String(log.scriptId).toLowerCase().includes(searchTerm))
+          (log.stringDataIT && log.stringDataIT.includes(searchTerm)) || 
+          (log.stringDataITAlt && log.stringDataITAlt.includes(searchTerm)) || 
+          (log.scriptId && String(log.scriptId).toLowerCase().includes(searchTerm)) ||
+          (execId && String(execId).toLowerCase().includes(searchTerm))
         );
       });
     }
 
-    const getTimestamp = (dataString: string | undefined): number => {
-      if (!dataString) return 0;
-      if (dataString.includes('T') || dataString.includes('-')) return new Date(dataString).getTime() || 0;
-      const parti = dataString.split('/');
-      if (parti.length === 3) {
-        const dataFormattata = `${parti[2]}-${parti[1]}-${parti[0]}`;
-        return new Date(dataFormattata).getTime() || 0;
-      }
-      return 0;
-    };
+    // Ordinamento cronologico decrescente (dal log più recente)
+    result.sort((a, b) => {
+      if (!a.createdAtObj) return 1;
+      if (!b.createdAtObj) return -1;
+      return b.createdAtObj.getTime() - a.createdAtObj.getTime();
+    });
 
-    result = [...result].sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt));
+    // Paginazione locale
     const start = (this.currentPage - 1) * this.itemsPerPage;
     return result.slice(start, start + this.itemsPerPage);
   }
-  
-  clearAllLogs() {
-    this.dropdownAperto = false; 
-    if (confirm('Sei sicuro di voler svuotare tutti i log visualizzati?')) {
-      // Chiamata DELETE per pulire i log su Mockoon
-      this.http.delete(`${this.apiUrl}/logs`).subscribe(() => {
-        this.data.logs = []; 
-        this.currentPage = 1; 
-      });
-    }
-  }
 
-  totalPages() {
-    const totalItems = this.data.logs ? this.data.logs.length : 0;
+  totalPages(): number {
+    const totalItems = this.getFilteredCount();
     return Math.ceil(totalItems / this.itemsPerPage) || 1;
   }
 
-  nextPage() { if (this.currentPage < this.totalPages()) this.currentPage++; }
-  previousPage() { if (this.currentPage > 1) this.currentPage--; }
+  private getFilteredCount(): number {
+    if (!this.search || !this.search.trim()) return this.enrichedLogs.length;
+    
+    const searchTerm = this.search.toLowerCase().trim();
+    return this.enrichedLogs.filter(log => {
+      const execId = log.executionId || log.execution_id || '';
+      return (
+        (log.id && String(log.id).toLowerCase().includes(searchTerm)) ||
+        (log.level && log.level.toLowerCase().includes(searchTerm)) ||
+        (log.message && log.message.toLowerCase().includes(searchTerm)) ||
+        (log.stringDataIT && log.stringDataIT.includes(searchTerm)) || 
+        (log.stringDataITAlt && log.stringDataITAlt.includes(searchTerm)) || 
+        (log.scriptId && String(log.scriptId).toLowerCase().includes(searchTerm)) ||
+        (execId && String(execId).toLowerCase().includes(searchTerm))
+      );
+    }).length;
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages()) {
+      this.currentPage++;
+      this.refreshUI();
+    }
+  }
+  
+  previousPage() { 
+    if (this.currentPage > 1) {
+      this.currentPage--; 
+      this.refreshUI();
+    }
+  }
+
+  private refreshUI() {
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+  }
 }

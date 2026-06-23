@@ -2,7 +2,8 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http'; // Aggiunto HttpParams
+
 
 interface MysqlInstance {
   host: string;
@@ -39,8 +40,13 @@ export class ScriptsComposer implements OnInit {
     this.loadInitialData();
   }
 
+  // MODIFICATO: Evita il sovraccarico di chiamate se la memoria locale è già popolata
   loadInitialData() {
-    // MODIFICATO: Ordiniamo i dati storici al contrario appena arrivano da Mockoon
+    if (this.data.scripts && this.data.scripts.length > 0) {
+      this.refreshUI();
+      return;
+    }
+
     this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe(res => {
       this.data.scripts = Array.isArray(res) ? [...res].reverse() : [];
       this.refreshUI();
@@ -100,6 +106,52 @@ export class ScriptsComposer implements OnInit {
   closeKebab() {
     this.activeKebabId = null;
     this.refreshUI();
+  }
+
+  // MODIFICATO: Gestisce correttamente la chiusura della barra e resetta la lista da Mockoon
+  isSearchOpen = false;
+  toggleSearch(event: Event): void {
+    event.stopPropagation();
+    this.isSearchOpen = !this.isSearchOpen;
+    if (this.isSearchOpen) {
+      setTimeout(() => {
+        const input = document.querySelector('.search-input') as HTMLInputElement;
+        if (input) input.focus();
+      }, 100);
+    } else {
+      this.searchId = ''; 
+      this.resetSearch();
+    }
+    this.refreshUI();
+  }
+
+  // NUOVO METODO: Intercetta l'evento (input) dell'HTML e invia l'ID cercato a Mockoon
+  onSearchChange(): void {
+    const testoCercato = this.searchId.trim();
+
+    if (!testoCercato) {
+      this.resetSearch();
+      return;
+    }
+
+    // Configura i parametri passandoli come ?search=SCR-XXX o ?id=SCR-XXX
+    const params = new HttpParams().set('search', testoCercato);
+
+    this.http.get<any[]>(`${this.apiUrl}/scripts`, { params }).subscribe({
+      next: () => {
+        // La chiamata registra il log su Mockoon. Il getter filteredScripts si occupa del rendering visivo.
+        this.refreshUI();
+      },
+      error: (err) => console.error("Errore durante la ricerca script su Mockoon:", err)
+    });
+  }
+
+  // NUOVO METODO HELPER: Ricarica tutti gli script ordinati quando la ricerca si svuota
+  private resetSearch(): void {
+    this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe(res => {
+      this.data.scripts = Array.isArray(res) ? [...res].reverse() : [];
+      this.refreshUI();
+    });
   }
 
   openCreate() {
@@ -256,11 +308,12 @@ export class ScriptsComposer implements OnInit {
     return this.originalScriptBackup !== JSON.stringify(currentCompareState);
   }
 
-  // 1. CREAZIONE SCRIPT: Inserimento forzato IN CIMA
-  createScript() {
-    const id = 'SCR-' + Math.floor(Math.random() * 99999);
+ createScript() {
+    const idUnivoco = 'SCR-' + Math.floor(100000 + Math.random() * 900000);
+    const dataOdierna = new Date().toISOString(); 
+
     const newScript = {
-      id,
+      id: idUnivoco, 
       path: this.scriptForm.path,
       schedule: this.scriptForm.schedule,
       serverId: this.scriptForm.serverId,
@@ -272,28 +325,32 @@ export class ScriptsComposer implements OnInit {
       fileInstances: this.scriptForm.fileInstances,
       ftpHost: this.scriptForm.ftpHost,
       ftpUser: this.scriptForm.ftpUser,
-      ftpPassword: this.scriptForm.ftpPassword
+      ftpPassword: this.scriptForm.ftpPassword,
+      createdAt: dataOdierna 
     };
 
-    this.http.post(`${this.apiUrl}/scripts`, newScript).subscribe(() => {
-      // CORRETTO: Mettiamo lo script in cima esplicitamente all'array del servizio
-      this.data.scripts = [newScript, ...this.data.scripts];
-      
-      const newLog = {
-        id: 'LOG-' + Math.floor(Math.random() * 99999),
-        level: 'SUCCESS',
-        message: 'Script configurato con sorgenti multiple creato con successo',
-        scriptId: id,
-        executionId: 'EXE-' + Math.floor(Math.random() * 99999),
-        createdAt: new Date().toISOString()
-      };
-
-      this.http.post(`${this.apiUrl}/logs`, newLog).subscribe(() => {
-        this.data.logs = [newLog, ...this.data.logs];
-        this.refreshUI();
-      });
-
-      this.refreshUI();
+    this.http.post(`${this.apiUrl}/scripts`, newScript).subscribe({
+      next: () => {
+        this.data.scripts = [newScript, ...this.data.scripts];
+        
+        const newLog = {
+          id: 'LOG-' + Math.floor(100000 + Math.random() * 900000),
+          level: 'success', 
+          message: `Nuovo script di backup creato con successo`,
+          scriptId: idUnivoco, 
+          executionId: 'EXE-' + Math.floor(Math.random() * 99999),
+          createdAt: dataOdierna
+        };
+        this.http.post(`${this.apiUrl}/logs`, newLog).subscribe({
+          next: () => {
+            if (!Array.isArray(this.data.logs)) this.data.logs = [];
+            this.data.logs = [newLog, ...this.data.logs];
+            this.refreshUI();
+          },
+          error: (err) => console.error("Errore durante il salvataggio del LOG su Mockoon:", err)
+        });
+      },
+      error: (err) => console.error("Errore durante il salvataggio dello SCRIPT su Mockoon:", err)
     });
 
     this.showCreate = false;
@@ -386,7 +443,7 @@ export class ScriptsComposer implements OnInit {
         const newLog = {
           id: 'LOG-' + Math.floor(Math.random() * 99999),
           scriptId: this.scriptForm.id,
-          level: 'INFO',
+          level: 'info', 
           message: `Script modificato. Campi aggiornati: [${fieldsList}].`,
           createdAt: new Date().toISOString(), 
           executionId: 'N/A'
@@ -416,9 +473,9 @@ export class ScriptsComposer implements OnInit {
           scriptId: id,
           customerId: scriptDaEliminare?.customerId || '',
           serverId: scriptDaEliminare?.serverId || '',
-          level: 'WARNING',
+          level: 'warning', 
           createdAt: new Date().toISOString(), 
-          message: `Lo script con ID ${id} è stato rimosso.`,
+          message: `Lo script con ID ${id} è stato rimosso dal sistema.`,
           executionId: 'N/A'
         };
 
@@ -432,7 +489,6 @@ export class ScriptsComposer implements OnInit {
     }
   }
 
-  // 4. GETTER DI FILTRO: Mantiene i dati così come sono memorizzati, applicando solo la barra di ricerca
   get filteredScripts(): any[] {
     if (!this.data.scripts) return [];
     if (!this.searchId.trim()) return this.data.scripts;

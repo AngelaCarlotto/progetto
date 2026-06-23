@@ -9,7 +9,7 @@
     </div>
 
     <div class="topbar-actions-container">
-      <input type="text" placeholder="Search Script ID..." [(ngModel)]="searchId" class="search-input" />
+        <input type="text" placeholder="Search Script ID..." [(ngModel)]="searchId" (input)="onSearchChange()" class="search-input" />
       <button class="btn-primary btn-green" (click)="openCreate()">+ Create Script</button>
     </div>
   </div>
@@ -59,7 +59,7 @@
 
   @if (showCreate) {
     <div class="modal-overlay">
-      <div class="modal-card" style="max-height: 85vh; overflow-y: auto;">
+      <div class="modal-card modal-scrollable">
         
         <div class="wizard-header">
           <h3>Create Backup Script</h3>
@@ -92,7 +92,7 @@
               }
             </select>
           </div>
-          <div class="wizard-actions" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+          <div class="wizard-actions wizard-actions-bordered">
             <button type="button" class="btn-modal-link" (click)="showCreate = false">Annulla</button>
             <button type="button" class="btn-modal-green" [disabled]="!isStep1Valid()" (click)="nextStep()">Avanti →</button>
           </div>
@@ -112,16 +112,15 @@
           </div>
 
           @if (scriptForm.mysqlComponent) {
-            <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 15px;">
-              <h4 style="margin:0; color:#475569; font-size: 14px;">Istanze Database MySQL</h4>
-              <button type="button" class="btn-primary" style="padding:4px 10px; height:auto; font-size:11px;" (click)="addMysqlInstance()">➕ Aggiungi DB</button>
+            <div class="section-header-inline">
+              <h4>Istanze Database MySQL</h4>
+              <button type="button" class="btn-primary btn-add-small" (click)="addMysqlInstance()">➕ Aggiungi DB</button>
             </div>
 
             @for (instance of scriptForm.mysqlInstances; track $index; let idx = $index) {
-              <div class="file-upload-box mysql-box" style="margin-bottom:14px; position:relative; margin-top: 10px;">
+              <div class="file-upload-box mysql-box dynamic-box">
                 @if (scriptForm.mysqlInstances.length > 1) {
-                  <button type="button" (click)="removeMysqlInstance(idx)" 
-                          style="position:absolute; right:12px; top:12px; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size: 12px;">🗑️ Rimuovi</button>
+                  <button type="button" (click)="removeMysqlInstance(idx)" class="btn-remove-box-floating">🗑️ Rimuovi</button>
                 }
                 <label class="box-title">🗄️ Configurazione Config #{{ idx + 1 }}</label>
                 <div class="grid-3-1">
@@ -152,16 +151,15 @@
           }
 
           @if (scriptForm.filesComponent) {
-            <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 20px;">
-              <h4 style="margin:0; color:#475569; font-size: 14px;">Sorgenti File e Cartelle</h4>
-              <button type="button" class="btn-primary" style="padding:4px 10px; height:auto; font-size:11px;" (click)="addFileInstance()">➕ Aggiungi Path</button>
+            <div class="section-header-inline mt-20">
+              <h4>Sorgenti File e Cartelle</h4>
+              <button type="button" class="btn-primary btn-add-small" (click)="addFileInstance()">➕ Aggiungi Path</button>
             </div>
 
             @for (instance of scriptForm.fileInstances; track $index; let idx = $index) {
-              <div class="file-upload-box files-generic-box" style="margin-bottom:14px; position:relative; margin-top: 10px;">
+              <div class="file-upload-box files-generic-box dynamic-box">
                 @if (scriptForm.fileInstances.length > 1) {
-                  <button type="button" (click)="removeFileInstance(idx)" 
-                          style="position:absolute; right:12px; top:12px; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size: 12px;">🗑️ Rimuovi</button>
+                  <button type="button" (click)="removeFileInstance(idx)" class="btn-remove-box-floating">🗑️ Rimuovi</button>
                 }
                 <label class="box-title">📄 Set di Origine #{{ idx + 1 }}</label>
                 <input [(ngModel)]="instance.sourcePath" placeholder="Path di origine" class="mb-12">
@@ -191,7 +189,7 @@
             }
           }
 
-          <div class="wizard-actions" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+          <div class="wizard-actions wizard-actions-bordered">
             <button type="button" class="btn-modal-link" (click)="prevStep()">← Indietro</button>
             <button type="button" class="btn-modal-green" [disabled]="!isStep2Valid()" (click)="nextStep()">Avanti →</button>
           </div>
@@ -202,7 +200,7 @@
           <div class="form-group"><label>FTP Host *</label><input [(ngModel)]="scriptForm.ftpHost" placeholder="ftp.myhost.com" /></div>
           <div class="form-group"><label>FTP Username *</label><input [(ngModel)]="scriptForm.ftpUser" placeholder="admin" /></div>
           <div class="form-group"><label>FTP Password *</label><input [(ngModel)]="scriptForm.ftpPassword" type="password" placeholder="••••••••" /></div>
-          <div class="wizard-actions" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+          <div class="wizard-actions wizard-actions-bordered">
             <button type="button" class="btn-modal-link" (click)="prevStep()">← Indietro</button>
             <button type="button" class="btn-modal-green finalize" [disabled]="!isStep3Valid()" (click)="createScript()">🚀 CREA SCRIPT</button>
           </div>
@@ -254,14 +252,14 @@
             </div>
 
             @if (scriptForm.mysqlComponent) {
-              <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 15px;">
-                <h4 style="margin:0; color:#475569; font-size: 14px;">Istanze Database MySQL</h4>
-                <button type="button" class="btn-primary" style="padding:4px 10px; height:auto; font-size:11px;" (click)="addMysqlInstance()">➕ Aggiungi DB</button>
+              <div class="section-header-inline">
+                <h4>Istanze Database MySQL</h4>
+                <button type="button" class="btn-primary btn-add-small" (click)="addMysqlInstance()">➕ Aggiungi DB</button>
               </div>
               @for (instance of scriptForm.mysqlInstances; track $index; let idx = $index) {
-                <div class="file-upload-box mysql-box" style="margin-bottom:14px; position:relative; margin-top: 10px;">
+                <div class="file-upload-box mysql-box dynamic-box">
                   @if (scriptForm.mysqlInstances.length > 1) {
-                    <button type="button" (click)="removeMysqlInstance(idx)" style="position:absolute; right:12px; top:12px; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size: 12px;">🗑️ Rimuovi</button>
+                    <button type="button" (click)="removeMysqlInstance(idx)" class="btn-remove-box-floating">🗑️ Rimuovi</button>
                   }
                   <label class="box-title">🗄️ Configurazione DB #{{ idx + 1 }}</label>
                   <div class="grid-3-1"><input [(ngModel)]="instance.host" placeholder="Host IP"><input [(ngModel)]="instance.port" placeholder="Porta"></div>
@@ -279,14 +277,14 @@
             }
 
             @if (scriptForm.filesComponent) {
-              <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 20px;">
-                <h4 style="margin:0; color:#475569; font-size: 14px;">Sorgenti File e Cartelle</h4>
-                <button type="button" class="btn-primary" style="padding:4px 10px; height:auto; font-size:11px;" (click)="addFileInstance()">➕ Aggiungi Path</button>
+              <div class="section-header-inline mt-20">
+                <h4>Sorgenti File e Cartelle</h4>
+                <button type="button" class="btn-primary btn-add-small" (click)="addFileInstance()">➕ Aggiungi Path</button>
               </div>
               @for (instance of scriptForm.fileInstances; track $index; let idx = $index) {
-                <div class="file-upload-box files-generic-box" style="margin-bottom:14px; position:relative; margin-top: 10px;">
+                <div class="file-upload-box files-generic-box dynamic-box">
                   @if (scriptForm.fileInstances.length > 1) {
-                    <button type="button" (click)="removeFileInstance(idx)" style="position:absolute; right:12px; top:12px; background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size: 12px;">🗑️ Rimuovi</button>
+                    <button type="button" (click)="removeFileInstance(idx)" class="btn-remove-box-floating">🗑️ Rimuovi</button>
                   }
                   <label class="box-title">📄 Set di Origine #{{ idx + 1 }}</label>
                   <input [(ngModel)]="instance.sourcePath" placeholder="Path di origine" class="mb-12">
@@ -330,8 +328,8 @@
               <span>⚠️ Campi obbligatori (*) incompleti.</span>
             </div>
           } @else if (!hasChanges()) {
-            <div class="edit-warning-inline" style="background-color: #f8fafc; border-left-color: #94a3b8;">
-              <span style="color: #64748b;">Nessuna modifica rilevata.</span>
+            <div class="edit-warning-inline edit-warning-no-changes">
+              <span>Nessuna modifica rilevata.</span>
             </div>
           } @else {
             <div></div>

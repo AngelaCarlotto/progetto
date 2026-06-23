@@ -1,8 +1,8 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; // <-- Ritorniamo a ChangeDetectorRef
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http'; // Aggiunto HttpParams
 
 @Component({
   selector: 'app-customer-server',
@@ -18,14 +18,20 @@ export class CustomerServerComponent implements OnInit {
   constructor(
     public data: DataService, 
     private http: HttpClient,
-    private cdr: ChangeDetectorRef // <-- Iniettato correttamente
+    private cdr: ChangeDetectorRef 
   ) {}
 
   ngOnInit() {
     this.loadData();
   }
 
+  // MODIFICATO: Evita di sovrascrivere la memoria locale se ci sono già dati aggiornati in Angular
   loadData() {
+    if (this.data.customers && this.data.customers.length > 0) {
+      this.refreshUI();
+      return;
+    }
+
     this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe(res => {
       this.data.customers = res;
       this.refreshUI();
@@ -63,20 +69,44 @@ export class CustomerServerComponent implements OnInit {
 
   expandedCustomerIds: (string | number)[] = [];
 
+  // Il getter filteredCustomers rimane attivo per ordinare e filtrare in locale in totale sicurezza
   get filteredCustomers() {
-    const query = this.searchQuery.trim().toLowerCase();
-    if (!query) return this.data.customers;
+    const getTimestamp = (dateStr: any): number => {
+      if (!dateStr) return 0;
+      if (dateStr instanceof Date) return dateStr.getTime();
+      
+      let normalized = String(dateStr).trim().replace(/\//g, '-');
+      let d = new Date(normalized);
+      if (!isNaN(d.getTime())) return d.getTime();
+      
+      const dataPulita = normalized.split(' ')[0];
+      const parti = dataPulita.split('-');
+      if (parti.length === 3) {
+        if (parti[0].length === 4) {
+          return new Date(Number(parti[0]), Number(parti[1]) - 1, Number(parti[2])).getTime();
+        } else {
+          return new Date(Number(parti[2]), Number(parti[1]) - 1, Number(parti[0])).getTime();
+        }
+      }
+      return 0;
+    };
 
-    return this.data.customers.filter(c => {
-      const matchCustomer = c.name.toLowerCase().includes(query);
-      const matchServer = this.getServersByCustomer(c.id).some(s => 
-        s.name.toLowerCase().includes(query)
-      );
-      return matchCustomer || matchServer;
-    });
+    let result = Array.isArray(this.data.customers) ? [...this.data.customers] : [];
+
+    const query = this.searchQuery.trim().toLowerCase();
+    if (query) {
+      result = result.filter(c => {
+        const matchCustomer = c.name && c.name.toLowerCase().includes(query);
+        const matchServer = this.getServersByCustomer(c.id).some(s => 
+          s.name && s.name.toLowerCase().includes(query)
+        );
+        return matchCustomer || matchServer;
+      });
+    }
+
+    return result.sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt));
   }
 
-  // Funzione helper centralizzata per forzare il refresh immediato dello schermo
   private refreshUI() {
     setTimeout(() => {
       this.cdr.markForCheck();
@@ -84,6 +114,7 @@ export class CustomerServerComponent implements OnInit {
     }, 0);
   }
 
+  // MODIFICATO: Pulisce ed esegue il reset della ricerca quando si chiude la barra
   toggleSearch(event: Event): void {
     event.stopPropagation();
     this.isSearchOpen = !this.isSearchOpen;
@@ -94,9 +125,42 @@ export class CustomerServerComponent implements OnInit {
       }, 100);
     } else {
       this.searchQuery = ''; 
+      this.resetSearch(); 
     }
     this.refreshUI();
   }
+
+  onSearchChange(): void {
+  const testoCercato = this.searchQuery.trim();
+
+  if (!testoCercato) {
+    this.resetSearch();
+    return;
+  }
+
+  const params = new HttpParams().set('search', testoCercato);
+
+  // 1. Chiamata di tracciamento per i Clienti (Mockoon cercherà tra i clienti)
+  this.http.get<any[]>(`${this.apiUrl}/customers`, { params }).subscribe({
+    next: () => this.refreshUI(),
+    error: (err) => console.error(err)
+  });
+
+  // 2. NUOVA: Chiamata di tracciamento per i Server! 
+  // Quando cerchi "Production-Web", questa chiamata andrà nel secchiello dei server su Mockoon
+  // e nei Logs vedrai i dati reali del server invece dell'array vuoto!
+  this.http.get<any[]>(`${this.apiUrl}/servers`, { params }).subscribe({
+    next: () => this.refreshUI(),
+    error: (err) => console.error(err)
+  });
+}
+private resetSearch(): void {
+  // Quando si resetta, ricarichiamo tutto pulito
+  this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe(allData => {
+    this.data.customers = allData;
+    this.refreshUI();
+  });
+}
 
   closeAllDropdowns() {
     this.activeDropdownServerId = null;
@@ -160,7 +224,6 @@ export class CustomerServerComponent implements OnInit {
     this.refreshUI();
   }
 
-  // 1. Crea un nuovo cliente (POST)
   createCustomer() {
     if (!this.customerForm.name.trim()) return;
 
@@ -174,29 +237,22 @@ export class CustomerServerComponent implements OnInit {
       if (!Array.isArray(this.data.customers)) {
         this.data.customers = [];
       }
-      
-      // MODIFICATO: Mette il nuovo cliente in prima posizione
       this.data.customers = [newCustomer, ...this.data.customers];
-      
       this.showCustomerModal = false;
-      this.logAction('SUCCESS', `Creato nuovo cliente: ${newCustomer.name} (${newCustomer.id})`);
       this.refreshUI();
     });
   }
 
-  // 2. Elimina un cliente (DELETE)
   deleteCustomer(id: string) {
     if (confirm('Sei sicuro di voler eliminare questo cliente? I relativi server rimarranno orfani.')) {
       this.http.delete(`${this.apiUrl}/customers/${id}`).subscribe(() => {
         this.data.customers = this.data.customers.filter(c => c.id !== id);
         this.closeAllDropdowns();
-        this.logAction('WARNING', `Eliminato cliente con ID: ${id}`);
         this.refreshUI();
       });
     }
   }
 
-  // 3. Crea un nuovo server (POST)
   createServer() {
     if (!this.serverForm.name.trim() || !this.serverForm.customerId) return;
 
@@ -217,30 +273,23 @@ export class CustomerServerComponent implements OnInit {
       if (!Array.isArray(this.data.servers)) {
         this.data.servers = [];
       }
-      
-      // MODIFICATO: Mette il nuovo server in prima posizione
       this.data.servers = [newServer, ...this.data.servers];
-      
       this.showServerModal = false;
       this.showSecretModal = true; 
-      this.logAction('SUCCESS', `Creato server "${newServer.name}" associato al cliente ${newServer.customerId}`);
       this.refreshUI();
     });
   }
 
-  // 4. Elimina un singolo server (DELETE)
   deleteServer(id: string) {
     if (confirm('Sei sicuro di voler rimuovere questo server?')) {
       this.http.delete(`${this.apiUrl}/servers/${id}`).subscribe(() => {
         this.data.servers = this.data.servers.filter(s => s.id !== id);
         this.closeAllDropdowns();
-        this.logAction('WARNING', `Rimosso server con ID: ${id}`);
         this.refreshUI();
       });
     }
   }
 
-  // 5. Rigenera le credenziali di un server esistente (POST)
   regenerateCredentials(serverId: string) {
     if (confirm('Rigenerando le chiavi, le vecchie applicazioni collegate smetteranno di funzionare. Continuare?')) {
       this.http.post<any>(`${this.apiUrl}/servers/${serverId}/credentials`, {}).subscribe({
@@ -251,7 +300,6 @@ export class CustomerServerComponent implements OnInit {
           };
           this.closeAllDropdowns();
           this.showSecretModal = true; 
-          this.logAction('INFO', `Rigenerate credenziali API del server ${serverId}`);
           this.refreshUI();
         },
         error: () => {
@@ -261,31 +309,9 @@ export class CustomerServerComponent implements OnInit {
           };
           this.closeAllDropdowns();
           this.showSecretModal = true;
-          this.logAction('INFO', `Rigenerate credenziali API del server ${serverId}`);
           this.refreshUI();
         }
       });
     }
-  }
-
-  private logAction(level: 'SUCCESS' | 'INFO' | 'WARNING' | 'ERROR', message: string) {
-    const logItem = {
-      id: 'LOG-' + Math.floor(Math.random() * 99999),
-      level: level.toLowerCase(), 
-      message: message,
-      createdAt: new Date().toLocaleDateString('it-IT').replace(/\//g, '-'), 
-      scriptId: 'SCR-13432' 
-    };
-
-    this.http.post(`${this.apiUrl}/logs`, logItem).subscribe(() => {
-      if (!Array.isArray(this.data.logs)) {
-        this.data.logs = [];
-      }
-      
-      // MODIFICATO: Spinge il log più recente in cima a tutti
-      this.data.logs = [logItem, ...this.data.logs];
-      
-      this.refreshUI();
-    });
   }
 }

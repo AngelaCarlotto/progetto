@@ -93,6 +93,12 @@
   opacity: 0.9;
 }
 
+.btn-add-small {
+  padding: 4px 10px !important;
+  height: auto !important;
+  font-size: 11px !important;
+}
+
 /* ==========================================================================
    3. TABELLA DATI & KEBAB MENU
    ========================================================================== */
@@ -247,6 +253,11 @@
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
+.modal-scrollable {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
 .modal-card input,
 .modal-card select {
   padding: 10px 12px;
@@ -338,6 +349,37 @@
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
+.section-header-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.section-header-inline h4 {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+}
+
+.dynamic-box {
+  margin-bottom: 14px;
+  position: relative;
+  margin-top: 10px;
+}
+
+.btn-remove-box-floating {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+}
+
 .checkbox-container {
   display: flex;
   align-items: center;           
@@ -404,6 +446,7 @@
   border-color: #5eead4;
   color: #0d9488;
 }
+
 .btn-mysql-trigger:hover {
   background: #ccfbf1;
 }
@@ -534,6 +577,11 @@
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
+.edit-warning-inline.edit-warning-no-changes {
+  background-color: #f8fafc;
+  border-left-color: #94a3b8;
+}
+
 .edit-warning-inline span {
   color: #cd2c2c;
   font-size: 12px;
@@ -543,6 +591,10 @@
   transition: color 0.3s ease;
 }
 
+.edit-warning-inline.edit-warning-no-changes span {
+  color: #64748b;
+}
+
 .wizard-actions {
   display: flex;
   justify-content: space-between;
@@ -550,6 +602,12 @@
   border-top: 1px solid #f1f5f9;
   padding-top: 14px;
   transition: border-color 0.3s ease;
+}
+
+.wizard-actions-bordered {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
 }
 
 .btn-modal-green {
@@ -562,11 +620,13 @@
   cursor: pointer;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
 .btn-modal-green:disabled {
   background: #cbd5e1 !important;
   color: #64748b;
   cursor: not-allowed;
 }
+
 .btn-modal-green.finalize {
   background: #2563eb;
 }
@@ -602,6 +662,7 @@
 .flex-gap-10-center { display: flex; gap: 10px; align-items: center; }
 .mb-12 { margin-bottom: 12px; }
 .m-0 { margin: 0 !important; }
+.mt-20 { margin-top: 20px !important; }
 .w-100 { width: 100%; }
 .block { display: block; }
 .text-center { text-align: center; }
@@ -776,6 +837,7 @@
   border-color: #0d9488;
   color: #2dd4bf;
 }
+
 :host-context(body.dark-theme) .btn-mysql-trigger:hover {
   background: #092523;
 }
@@ -808,12 +870,25 @@
   border-left: 4px solid #ef4444;
 }
 
-:host-context(body.dark-theme) .warning-text,
+:host-context(body.dark-theme) .edit-warning-inline.edit-warning-no-changes {
+  background-color: #1e2f4d;
+  border-left-color: #64748b;
+}
+
+.warning-text,
 :host-context(body.dark-theme) .edit-warning-inline span {
   color: #fca5a5;
 }
 
+:host-context(body.dark-theme) .edit-warning-inline.edit-warning-no-changes span {
+  color: #94a3b8;
+}
+
 :host-context(body.dark-theme) .wizard-actions {
+  border-top: 1px solid #243754;
+}
+
+:host-context(body.dark-theme) .wizard-actions-bordered {
   border-top: 1px solid #243754;
 }
 
@@ -827,5 +902,13 @@
 }
 
 :host-context(body.dark-theme) .btn-text-elimina {
+  color: #f87171;
+}
+
+:host-context(body.dark-theme) .section-header-inline h4 {
+  color: #cbd5e1;
+}
+
+:host-context(body.dark-theme) .btn-remove-box-floating {
   color: #f87171;
 }

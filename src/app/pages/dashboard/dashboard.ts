@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data'; 
-import { HttpClient } from '@angular/common/http'; // <-- AGGIUNTO
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,61 +12,145 @@ import { HttpClient } from '@angular/common/http'; // <-- AGGIUNTO
 })
 export class DashboardComponent implements OnInit {
 
-  private apiUrl = 'http://localhost:3000/api'; // <-- AGGIUNTO
+  private apiUrl = 'http://localhost:3000/api'; 
   loading = false;
 
-  mysqlPercentage = 50;
-  filesPercentage = 50;
-  donutGradient = 'conic-gradient(#2563eb 0% 50%, #10b981 50% 100%)';
+  mysqlPercentage = 0;
+  filesPercentage = 0;
+  donutGradient = 'conic-gradient(#e2e8f0 0% 100%)';
   hasData = false;
 
   chartPoints: Array<{ x: number; y: number; count: number; label: string }> = [];
   lineChartPath: string = 'M 40 180 L 480 180'; 
 
-  constructor(public data: DataService, private cdr: ChangeDetectorRef, private http: HttpClient) {} // <-- MODIFICATO
+  constructor(
+    public data: DataService, 
+    private cdr: ChangeDetectorRef, 
+    private http: HttpClient
+  ) {}
 
   ngOnInit() {
     this.loadDashboardData();
   }
 
-  loadDashboardData() {
-    this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe(scripts => {
-      this.data.scripts = scripts;
-      this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe(logs => {
-        this.data.logs = logs;
-        this.calculatePercentagesAndCharts();
-      });
+  private normalizeDateToISOString(dateStr: any): string {
+    if (!dateStr || typeof dateStr !== 'string') return '';
+    let normalized = dateStr.trim().replace(/\//g, '-');
+    if (normalized.includes('T')) {
+      return normalized.split('T')[0];
+    }
+    const parti = normalized.split(' ')[0].split('-');
+    if (parti.length === 3 && parti[0].length !== 4) {
+      return `${parti[2]}-${parti[1]}-${parti[0]}`;
+    }
+    return normalized.substring(0, 10);
+  }
+
+  // MODIFICATO: Riconosce il log dello script dal prefisso 'SCR-', anche se lo script viene eliminato
+  private isScriptLog(log: any): boolean {
+    if (!log) return false;
+    
+    const hasScriptId = log.scriptId && String(log.scriptId).startsWith('SCR-');
+    const isBackupMessage = log.message && (
+      log.message.toLowerCase().includes('script') || 
+      log.message.toLowerCase().includes('backup')
+    );
+
+    return !!(hasScriptId || isBackupMessage);
+  }
+
+  // MODIFICATO: Accetta una callback facoltativa per spegnere il loading solo quando TUTTI i dati sono pronti
+  loadDashboardData(callback?: () => void) {
+    if (!callback && this.data.scripts && this.data.scripts.length > 0 && this.data.logs && this.data.logs.length > 0) {
+      this.calculatePercentagesAndCharts();
+      this.refreshUI();
+      return;
+    }
+
+    // Parte la catena di GET su Mockoon senza svuotare nulla prima
+    this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe({
+      next: (customers) => {
+        this.data.customers = customers;
+
+        this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe({
+          next: (scripts) => {
+            this.data.scripts = scripts;
+
+            this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe({
+              next: (logs) => {
+                // Sostituiamo i log solo ORA che tutto è completato
+                this.data.logs = Array.isArray(logs) ? [...logs] : [];
+                
+                // Ricalcoliamo i grafici con i dati freschi freschi
+                this.calculatePercentagesAndCharts();
+
+                // Eseguiamo la callback di chiusura (es. spegnere il loading)
+                if (callback) callback();
+                this.refreshUI();
+              },
+              error: (err) => {
+                console.error("Errore caricamento logs:", err);
+                if (callback) callback();
+              }
+            });
+          },
+          error: (err) => {
+            console.error("Errore caricamento scripts:", err);
+            if (callback) callback();
+          }
+        });
+      },
+      error: (err) => {
+        console.error("Errore caricamento customers:", err);
+        if (callback) callback();
+      }
     });
   }
 
+  // MODIFICATO: Non svuota più la memoria locale, eliminando lo sfarfallio
+  // MODIFICATO: Ora stampa anche il messaggio di successo in console!
   refreshDashboard() {
     this.loading = true;
-    this.cdr.detectChanges();
+    this.refreshUI();
+
     setTimeout(() => {
-      this.loadDashboardData();
-      this.loading = false;
-      this.cdr.detectChanges();
+      this.loadDashboardData(() => {
+        this.loading = false;
+        
+        // AGGIUNTO: Ecco il log che mancava!
+        console.log('Dashboard aggiornata con successo da Mockoon!');
+        
+        this.refreshUI();
+      });
     }, 600);
   }
 
   calculatePercentagesAndCharts() {
-    let mysqlSteps = 0; let filesSteps = 0;
+    let mysqlScriptsCount = 0; 
+    let filesScriptsCount = 0;
+    const todayStr = new Date().toISOString().split('T')[0];
 
-    if (this.data.scripts) {
+    if (this.data.scripts && this.data.scripts.length > 0) {
       this.data.scripts.forEach((s: any) => {
-        if (s.mysqlComponent) mysqlSteps += (s.selectedMysqlFiles?.length || 0);
-        if (s.filesComponent) filesSteps += (s.selectedFiles?.length || 0);
+        const scriptDate = this.normalizeDateToISOString(s.createdAt);
+        if (scriptDate === todayStr) {
+          if (s.mysqlComponent === true || String(s.mysqlComponent) === 'true') mysqlScriptsCount++;
+          if (s.filesComponent === true || String(s.filesComponent) === 'true') filesScriptsCount++;
+        }
       });
     }
 
-    const totalSteps = mysqlSteps + filesSteps;
-    if (totalSteps > 0) {
+    const totalScriptsToday = mysqlScriptsCount + filesScriptsCount;
+
+    if (totalScriptsToday > 0) {
       this.hasData = true;
-      this.mysqlPercentage = Math.round((mysqlSteps / totalSteps) * 100);
+      this.mysqlPercentage = Math.round((mysqlScriptsCount / totalScriptsToday) * 100);
       this.filesPercentage = 100 - this.mysqlPercentage;
       this.donutGradient = `conic-gradient(#2563eb 0% ${this.mysqlPercentage}%, #10b981 ${this.mysqlPercentage}% 100%)`;
     } else {
       this.hasData = false;
+      this.mysqlPercentage = 0;
+      this.filesPercentage = 0;
       this.donutGradient = 'conic-gradient(#e2e8f0 0% 100%)'; 
     }
     this.generateLineChart();
@@ -74,17 +158,34 @@ export class DashboardComponent implements OnInit {
 
   generateLineChart() {
     if (!this.data.logs || this.data.logs.length === 0) {
-      this.lineChartPath = 'M 40 180 L 480 180'; this.chartPoints = []; return;
+      this.lineChartPath = 'M 40 180 L 480 180'; 
+      this.chartPoints = []; 
+      return;
     }
-    const pointsStrings: string[] = []; this.chartPoints = [];
-    const startX = 40; const endX = 480; const widthStep = (endX - startX) / 4;
+    
+    const pointsStrings: string[] = []; 
+    this.chartPoints = [];
+    const startX = 40; 
+    const endX = 480; 
+    const widthStep = (endX - startX) / 4;
     const labels = ['-4 gg', '-3 gg', '-2 gg', '-1 gg', 'Oggi'];
 
     for (let i = 0; i < 5; i++) {
-      const d = new Date(); d.setDate(d.getDate() - (4 - i)); 
-      const dateStr = d.toISOString().split('T')[0];
-      const count = this.data.logs.filter((l: any) => l.createdAt?.substring(0, 10) === dateStr && l.level?.toLowerCase() === 'success').length;
-      const x = startX + (i * widthStep); const y = Math.max(20, 180 - (count * 20)); 
+      const d = new Date(); 
+      d.setDate(d.getDate() - (4 - i)); 
+      const targetDateStr = d.toISOString().split('T')[0];
+      
+      const count = this.data.logs.filter((l: any) => {
+        const logDateISO = this.normalizeDateToISOString(l.createdAt);
+        const currentLevel = String(l.level).toLowerCase();
+        return logDateISO === targetDateStr && 
+               (currentLevel === 'success' || currentLevel === 'info') && 
+               this.isScriptLog(l);
+      }).length;
+
+      const x = startX + (i * widthStep); 
+      const y = Math.max(20, 180 - (count * 20)); 
+      
       pointsStrings.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
       this.chartPoints.push({ x, y, count, label: labels[i] });
     }
@@ -93,10 +194,30 @@ export class DashboardComponent implements OnInit {
 
   getClientiTotali(): number { return this.data.customers ? this.data.customers.length : 0; }
   getScriptAttivi(): number { return this.data.scripts ? this.data.scripts.length : 0; }
+  
   getBackupOggi(): number {
     if (!this.data.logs) return 0;
     const todayStr = new Date().toISOString().split('T')[0];
-    return this.data.logs.filter(l => l.createdAt?.substring(0, 10) === todayStr && l.level?.toLowerCase() === 'success').length;
+    return this.data.logs.filter(l => {
+      const logDateISO = this.normalizeDateToISOString(l.createdAt);
+      const currentLevel = String(l.level).toLowerCase();
+      return logDateISO === todayStr && 
+             (currentLevel === 'success' || currentLevel === 'info') && 
+             this.isScriptLog(l);
+    }).length;
   }
-  getErroriRilevati(): number { return this.data.logs ? this.data.logs.filter(l => l.level?.toLowerCase() === 'error').length : 0; }
+  
+  getErroriRilevati(): number { 
+    if (!this.data.logs) return 0;
+    return this.data.logs.filter(l => {
+      const currentLevel = String(l.level).toLowerCase();
+      // RIMOSSO IL WARNING: Ora conta solo i blocchi critici 'error'
+      return currentLevel === 'error' && this.isScriptLog(l);
+    }).length; 
+  }
+
+  private refreshUI() {
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+  }
 }
