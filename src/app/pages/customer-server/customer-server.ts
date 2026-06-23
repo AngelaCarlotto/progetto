@@ -25,7 +25,6 @@ export class CustomerServerComponent implements OnInit {
     this.loadData();
   }
 
-  // MODIFICATO: Evita di sovrascrivere la memoria locale se ci sono già dati aggiornati in Angular
   loadData() {
     if (this.data.customers && this.data.customers.length > 0) {
       this.refreshUI();
@@ -69,7 +68,6 @@ export class CustomerServerComponent implements OnInit {
 
   expandedCustomerIds: (string | number)[] = [];
 
-  // Il getter filteredCustomers rimane attivo per ordinare e filtrare in locale in totale sicurezza
   get filteredCustomers() {
     const getTimestamp = (dateStr: any): number => {
       if (!dateStr) return 0;
@@ -114,7 +112,6 @@ export class CustomerServerComponent implements OnInit {
     }, 0);
   }
 
-  // MODIFICATO: Pulisce ed esegue il reset della ricerca quando si chiude la barra
   toggleSearch(event: Event): void {
     event.stopPropagation();
     this.isSearchOpen = !this.isSearchOpen;
@@ -140,22 +137,17 @@ export class CustomerServerComponent implements OnInit {
 
   const params = new HttpParams().set('search', testoCercato);
 
-  // 1. Chiamata di tracciamento per i Clienti (Mockoon cercherà tra i clienti)
   this.http.get<any[]>(`${this.apiUrl}/customers`, { params }).subscribe({
     next: () => this.refreshUI(),
     error: (err) => console.error(err)
   });
 
-  // 2. NUOVA: Chiamata di tracciamento per i Server! 
-  // Quando cerchi "Production-Web", questa chiamata andrà nel secchiello dei server su Mockoon
-  // e nei Logs vedrai i dati reali del server invece dell'array vuoto!
   this.http.get<any[]>(`${this.apiUrl}/servers`, { params }).subscribe({
     next: () => this.refreshUI(),
     error: (err) => console.error(err)
   });
 }
 private resetSearch(): void {
-  // Quando si resetta, ricarichiamo tutto pulito
   this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe(allData => {
     this.data.customers = allData;
     this.refreshUI();

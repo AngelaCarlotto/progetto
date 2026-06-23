@@ -59,7 +59,6 @@ export class AppComponent {
   login(username: string) {
     this.loggedUser = username;
 
-    // MODIFICATO: Aggiunto anche il caricamento preventivo degli scripts
     forkJoin({
       customers: this.http.get<any[]>(`${this.apiUrl}/customers`),
       servers: this.http.get<any[]>(`${this.apiUrl}/servers`),

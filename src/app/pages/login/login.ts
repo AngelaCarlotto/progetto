@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http'; // <-- AGGIUNTO
+import { HttpClient } from '@angular/common/http'; 
 
 @Component({
   selector: 'app-login',
@@ -13,13 +13,13 @@ import { HttpClient } from '@angular/common/http'; // <-- AGGIUNTO
 export class LoginComponent {
 
   @Output() logged = new EventEmitter<string>();
-  private apiUrl = 'http://localhost:3000/api'; // <-- AGGIUNTO
+  private apiUrl = 'http://localhost:3000/api'; 
 
   username = '';
   password = '';
   errorMessage = '';
 
-  constructor(private http: HttpClient) {} // <-- AGGIUNTO
+  constructor(private http: HttpClient) {} 
 
   onFormSubmit() {
     this.errorMessage = '';

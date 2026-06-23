@@ -44,8 +44,6 @@ export class GraphsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // MODIFICATO: Scarica da Mockoon solo se la memoria locale è vuota, 
-    // preservando inserimenti ed eliminazioni fatti in locale
     if (this.data.scripts && this.data.scripts.length > 0 && this.data.logs && this.data.logs.length > 0) {
       this.calculateAllStats();
       this.refreshUI();
@@ -57,7 +55,6 @@ export class GraphsComponent implements OnInit {
   syncDataFromServer(callback?: () => void) {
   this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe({
     next: (scripts) => {
-      // Sovrascriviamo l'array locale solo ORA che i dati sono arrivati
       this.data.scripts = Array.isArray(scripts) ? [...scripts].reverse() : [];
       
       this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe({
@@ -65,7 +62,6 @@ export class GraphsComponent implements OnInit {
           this.data.logs = logs;
           this.calculateAllStats();
           
-          // Se c'è una funzione di callback (es. spegnere il loading), eseguila ora
           if (callback) callback();
           this.refreshUI();
         },
@@ -86,15 +82,12 @@ ricalcola() {
   this.loading = true;
   this.refreshUI();
 
-  // NON svuotiamo più i dati qui! Lasciamo i vecchi visibili finché non arrivano i nuovi.
-  // Passiamo una callback a syncDataFromServer per spegnere il loading solo alla fine.
   setTimeout(() => {
     this.syncDataFromServer(() => {
       this.loading = false;
-      // Mostriamo un piccolo toast o log per conferma
       console.log('Grafici aggiornati con successo da Mockoon!');
     });
-  }, 600); // Manteniamo l'effetto flessibile del caricamento per l'utente
+  }, 600); 
 }
 
   get triggerStatsUpdate(): boolean {
@@ -102,7 +95,6 @@ ricalcola() {
     return true;
   }
 
-  // Funzione helper interna per capire se il log appartiene a uno script (allineata alla Dashboard)
   private isScriptLog(log: any): boolean {
     if (!log) return false;
     const hasScriptId = log.scriptId && String(log.scriptId).startsWith('SCR-');
@@ -129,11 +121,9 @@ ricalcola() {
     });
 
     currentLogs.forEach((l: any) => {
-      // MODIFICATO: Rimosso il 'warning' dagli errori. Ora conta solo 'error'
       const isError = l.level?.toLowerCase() === 'error';
       const logDateStr = l.createdAt ? l.createdAt.substring(0, 10) : '';
       
-      // Filtro di sicurezza per considerare solo i log relativi agli script
       if (this.isScriptLog(l)) {
         if (isError) this.globalError++; else this.globalSuccess++;
         if (logDateStr === todayStr) {
@@ -171,7 +161,6 @@ ricalcola() {
       const dateStr = d.toISOString().split('T')[0];
       last10DaysDates.push(dateStr);
       
-      // MODIFICATO: Anche lo storico dei punti conta solo i log validi degli script
       const dayLogsCount = currentLogs.filter((l: any) => 
         l.createdAt?.substring(0, 10) === dateStr && this.isScriptLog(l)
       ).length;

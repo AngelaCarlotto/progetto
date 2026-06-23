@@ -46,7 +46,6 @@ export class DashboardComponent implements OnInit {
     return normalized.substring(0, 10);
   }
 
-  // MODIFICATO: Riconosce il log dello script dal prefisso 'SCR-', anche se lo script viene eliminato
   private isScriptLog(log: any): boolean {
     if (!log) return false;
     
@@ -59,7 +58,6 @@ export class DashboardComponent implements OnInit {
     return !!(hasScriptId || isBackupMessage);
   }
 
-  // MODIFICATO: Accetta una callback facoltativa per spegnere il loading solo quando TUTTI i dati sono pronti
   loadDashboardData(callback?: () => void) {
     if (!callback && this.data.scripts && this.data.scripts.length > 0 && this.data.logs && this.data.logs.length > 0) {
       this.calculatePercentagesAndCharts();
@@ -67,7 +65,6 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    // Parte la catena di GET su Mockoon senza svuotare nulla prima
     this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe({
       next: (customers) => {
         this.data.customers = customers;
@@ -78,13 +75,10 @@ export class DashboardComponent implements OnInit {
 
             this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe({
               next: (logs) => {
-                // Sostituiamo i log solo ORA che tutto è completato
                 this.data.logs = Array.isArray(logs) ? [...logs] : [];
                 
-                // Ricalcoliamo i grafici con i dati freschi freschi
                 this.calculatePercentagesAndCharts();
 
-                // Eseguiamo la callback di chiusura (es. spegnere il loading)
                 if (callback) callback();
                 this.refreshUI();
               },
@@ -107,8 +101,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // MODIFICATO: Non svuota più la memoria locale, eliminando lo sfarfallio
-  // MODIFICATO: Ora stampa anche il messaggio di successo in console!
   refreshDashboard() {
     this.loading = true;
     this.refreshUI();
@@ -117,7 +109,6 @@ export class DashboardComponent implements OnInit {
       this.loadDashboardData(() => {
         this.loading = false;
         
-        // AGGIUNTO: Ecco il log che mancava!
         console.log('Dashboard aggiornata con successo da Mockoon!');
         
         this.refreshUI();
@@ -211,7 +202,6 @@ export class DashboardComponent implements OnInit {
     if (!this.data.logs) return 0;
     return this.data.logs.filter(l => {
       const currentLevel = String(l.level).toLowerCase();
-      // RIMOSSO IL WARNING: Ora conta solo i blocchi critici 'error'
       return currentLevel === 'error' && this.isScriptLog(l);
     }).length; 
   }
