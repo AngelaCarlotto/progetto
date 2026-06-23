@@ -44,7 +44,6 @@ export class ScriptsComposer implements OnInit {
     const input = event.target as HTMLInputElement;
     let value = input.value;
 
-    // Sostituisce caratteri non validi
     let cleanValue = value.replace(/[^0-9\s*]/g, '');
     cleanValue = cleanValue.replace(/\s+/g, ' ');
 
@@ -81,18 +80,33 @@ export class ScriptsComposer implements OnInit {
 
   loadInitialData() {
     if (this.data.scripts && this.data.scripts.length > 0) {
+      this.data.scripts.sort((a, b) => {
+        const dataA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dataB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dataB - dataA;
+      });
       this.refreshUI();
-      return;
+      return; 
     }
 
     this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe(res => {
-      this.data.scripts = Array.isArray(res) ? [...res].reverse() : [];
+      const rawScripts = Array.isArray(res) ? res : [];
+
+      rawScripts.sort((a, b) => {
+        const dataA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dataB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dataB - dataA;
+      });
+
+      this.data.scripts = rawScripts;
       this.refreshUI();
     });
+
     this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe(res => {
       this.data.customers = res;
       this.refreshUI();
     });
+
     this.http.get<any[]>(`${this.apiUrl}/servers`).subscribe(res => {
       this.data.servers = res;
       this.refreshUI();
