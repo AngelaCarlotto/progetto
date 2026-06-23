@@ -25,7 +25,6 @@ export class LoginComponent {
     this.errorMessage = '';
     const loginBody = { username: this.username, password: this.password };
 
-    // Effettua la POST reale verso Mockoon
     this.http.post<any>(`${this.apiUrl}/auth/login`, loginBody).subscribe({
       next: (response) => {
         if (response && response.success) {

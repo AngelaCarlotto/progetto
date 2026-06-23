@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data';
-import { HttpClient, HttpParams } from '@angular/common/http'; // Aggiunto HttpParams
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 
 interface MysqlInstance {
@@ -79,7 +79,6 @@ export class ScriptsComposer implements OnInit {
     this.refreshUI();
   }
 
-  // MODIFICATO: Evita il sovraccarico di chiamate se la memoria locale è già popolata
   loadInitialData() {
     if (this.data.scripts && this.data.scripts.length > 0) {
       this.refreshUI();
@@ -147,7 +146,6 @@ export class ScriptsComposer implements OnInit {
     this.refreshUI();
   }
 
-  // MODIFICATO: Gestisce correttamente la chiusura della barra e resetta la lista da Mockoon
   isSearchOpen = false;
   toggleSearch(event: Event): void {
     event.stopPropagation();
@@ -164,7 +162,6 @@ export class ScriptsComposer implements OnInit {
     this.refreshUI();
   }
 
-  // NUOVO METODO: Intercetta l'evento (input) dell'HTML e invia l'ID cercato a Mockoon
   onSearchChange(): void {
     const testoCercato = this.searchId.trim();
 
@@ -173,19 +170,16 @@ export class ScriptsComposer implements OnInit {
       return;
     }
 
-    // Configura i parametri passandoli come ?search=SCR-XXX o ?id=SCR-XXX
     const params = new HttpParams().set('search', testoCercato);
 
     this.http.get<any[]>(`${this.apiUrl}/scripts`, { params }).subscribe({
       next: () => {
-        // La chiamata registra il log su Mockoon. Il getter filteredScripts si occupa del rendering visivo.
         this.refreshUI();
       },
       error: (err) => console.error("Errore durante la ricerca script su Mockoon:", err)
     });
   }
 
-  // NUOVO METODO HELPER: Ricarica tutti gli script ordinati quando la ricerca si svuota
   private resetSearch(): void {
     this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe(res => {
       this.data.scripts = Array.isArray(res) ? [...res].reverse() : [];

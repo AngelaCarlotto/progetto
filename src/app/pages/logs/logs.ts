@@ -21,7 +21,6 @@ export class Logs implements OnInit {
   dropdownAperto = false;
   loading = false;
 
-  // Array locale per gestire i log unici arricchiti con le date formattate
   enrichedLogs: any[] = [];
 
   constructor(
@@ -31,11 +30,9 @@ export class Logs implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Carica ed elabora i log già presenti nel DataService (scaricati al login)
     this.prepareLogs();
   }
 
-  // Prepara i log calcolando le date una volta sola per velocizzare il filtro
   prepareLogs() {
     const rawLogs = this.data.logs || [];
     
@@ -48,8 +45,8 @@ export class Logs implements OnInit {
         const giorno = String(dateObj.getDate()).padStart(2, '0');
         const mese = String(dateObj.getMonth() + 1).padStart(2, '0');
         const anno = dateObj.getFullYear();
-        dataIT = `${giorno}/${mese}/${anno}`; // Permette di cercare "23/06"
-        dataITAlt = `${giorno}-${mese}-${anno}`; // Permette di cercare "23-06"
+        dataIT = `${giorno}/${mese}/${anno}`; 
+        dataITAlt = `${giorno}-${mese}-${anno}`; 
       }
 
       return {
@@ -86,10 +83,9 @@ export class Logs implements OnInit {
     return !isNaN(d.getTime()) ? d : null;
   }
 
-  // Eseguito ad ogni carattere digitato o alla pulizia con la "✕"
   onSearchChange() {
-    this.currentPage = 1; // Riporta sempre alla prima pagina
-    this.enrichedLogs = [...this.enrichedLogs]; // Forziamo la reattività di Angular
+    this.currentPage = 1; 
+    this.enrichedLogs = [...this.enrichedLogs]; 
     this.refreshUI();
   }
 
@@ -113,7 +109,6 @@ export class Logs implements OnInit {
     }
   }
 
-  // Restituisce l'array filtrato e paginato da mostrare nella tabella HTML
   filteredLogs() {
     let result = [...this.enrichedLogs];
 
@@ -134,14 +129,12 @@ export class Logs implements OnInit {
       });
     }
 
-    // Ordinamento cronologico decrescente (dal log più recente)
     result.sort((a, b) => {
       if (!a.createdAtObj) return 1;
       if (!b.createdAtObj) return -1;
       return b.createdAtObj.getTime() - a.createdAtObj.getTime();
     });
 
-    // Paginazione locale
     const start = (this.currentPage - 1) * this.itemsPerPage;
     return result.slice(start, start + this.itemsPerPage);
   }

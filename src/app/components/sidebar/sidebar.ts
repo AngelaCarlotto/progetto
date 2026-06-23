@@ -17,15 +17,13 @@ export class SidebarComponent implements OnInit {
   isDarkMode: boolean = false;
 
   ngOnInit() {
-    // Al caricamento, controlla se la pagina era stata impostata in Dark Mode
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
       this.isDarkMode = true;
       document.body.classList.add('dark-theme');
     }
   }
-
-  //per cambiare tema 
+ 
   toggleTheme() {
     this.isDarkMode = !this.isDarkMode;
     if (this.isDarkMode) {
