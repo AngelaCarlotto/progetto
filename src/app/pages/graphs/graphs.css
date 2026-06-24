@@ -1,5 +1,4 @@
 /* LIGHT */
-
 .graphs-wrapper {
   display: flex;
   flex-direction: column;
@@ -233,22 +232,13 @@ svg.chart {
 }
 
 /* DARK */
-:host-context(body.dark-theme) .graphs-wrapper {
-  background-color: #070d19; 
-}
+:host-context(body.dark-theme) .graphs-wrapper {background-color: #070d19; }
 
-:host-context(body.dark-theme) .topbar {
-  background: #111c2e;
-  border-bottom: 1px solid #243754;
-}
+:host-context(body.dark-theme) .topbar {background: #111c2e; border-bottom: 1px solid #243754;}
 
-:host-context(body.dark-theme) .topbar-title {
-  color: #ffffff;
-}
+:host-context(body.dark-theme) .topbar-title {color: #ffffff;}
 
-:host-context(body.dark-theme) .topbar-sub {
-  color: #94a3b8;
-}
+:host-context(body.dark-theme) .topbar-sub {color: #94a3b8;}
 
 :host-context(body.dark-theme) .graph-card {
   background-color: #111c2e;
@@ -256,48 +246,24 @@ svg.chart {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-:host-context(body.dark-theme) .graph-title {
-  color: #ffffff;
-}
+:host-context(body.dark-theme) .graph-title {color: #ffffff;}
 
-:host-context(body.dark-theme) .bar-val {
-  color: #ffffff;
-  font-weight: 800;
-}
+:host-context(body.dark-theme) .bar-val {color: #ffffff; font-weight: 800;}
 
-:host-context(body.dark-theme) .bar-label {
-  color: #9dd0ff; 
-}
+:host-context(body.dark-theme) .bar-label {color: #9dd0ff; }
 
-:host-context(body.dark-theme) .chart-line-path {
-  stroke: #34d399 !important; 
-}
+:host-context(body.dark-theme) .chart-line-path {stroke: #34d399 !important; }
 
-:host-context(body.dark-theme) .chart-grid-line {
-  stroke: #1c2b42;
-}
+:host-context(body.dark-theme) .chart-grid-line {stroke: #1c2b42;}
 
-:host-context(body.dark-theme) svg.chart line[stroke="#64748b"] {
-  stroke: #475569; 
-}
+:host-context(body.dark-theme) svg.chart line[stroke="#64748b"] {stroke: #475569; }
 
-:host-context(body.dark-theme) svg.chart polygon[fill="#64748b"] {
-  fill: #475569; 
-}
+:host-context(body.dark-theme) svg.chart polygon[fill="#64748b"] {fill: #475569; }
 
-:host-context(body.dark-theme) .chart-data-table-10 {
-  border-top: 1px dashed #243754;
-}
+:host-context(body.dark-theme) .chart-data-table-10 {border-top: 1px dashed #243754;}
 
-:host-context(body.dark-theme) .data-date-10 {
-  color: #94a3b8; 
-}
+:host-context(body.dark-theme) .data-date-10 {color: #94a3b8; }
 
-:host-context(body.dark-theme) .data-arrow-10 {
-  color: #64748b;
-}
+:host-context(body.dark-theme) .data-arrow-10 {color: #64748b;}
 
-:host-context(body.dark-theme) .data-count-10 {
-  color: #ffffff;
-  background: #1e293b;
-}
+:host-context(body.dark-theme) .data-count-10 {color: #ffffff; background: #1e293b;}

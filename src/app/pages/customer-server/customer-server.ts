@@ -1,8 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; 
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data';
-import { HttpClient, HttpParams } from '@angular/common/http'; // Aggiunto HttpParams
+import { HttpClient } from '@angular/common/http';
+import { Subject, Subscription, of } from 'rxjs';
+import { debounceTime, switchMap, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-customer-server',
@@ -11,9 +13,12 @@ import { HttpClient, HttpParams } from '@angular/common/http'; // Aggiunto HttpP
   templateUrl: './customer-server.html',
   styleUrl: './customer-server.css'
 })
-export class CustomerServerComponent implements OnInit {
+export class CustomerServerComponent implements OnInit, OnDestroy {
 
   private apiUrl = 'http://localhost:3000/api';
+
+  private searchSubject = new Subject<string>();
+  private searchSubscription!: Subscription;
 
   constructor(
     public data: DataService, 
@@ -21,10 +26,54 @@ export class CustomerServerComponent implements OnInit {
     private cdr: ChangeDetectorRef 
   ) {}
 
+  // Inizializza i dati e configura la pipeline RxJS con debounce per inviare i report di ricerca anagrafica al server.
   ngOnInit() {
     this.loadData();
+
+    this.searchSubscription = this.searchSubject.pipe(
+      debounceTime(1500),
+      switchMap(query => {
+        if (!query) {
+          return of(null);
+        }
+
+        const queryLower = query.toLowerCase();
+
+        const clientiTrovati = (this.data.customers || []).filter((c: any) => 
+          c.name && c.name.toLowerCase().includes(queryLower)
+        ).length;
+
+        const serverTrovati = (this.data.servers || []).filter((s: any) => 
+          s.name && s.name.toLowerCase().includes(queryLower)
+        ).length;
+
+        console.log(
+          `%c[SEARCH CONSOLE]  Cercato: "${query}" | Risultati nel client -> Clienti: ${clientiTrovati}, Server: ${serverTrovati}`, 
+          "color: #0ea5e9; font-weight: bold;"
+        );
+
+        const bodyPayload = {
+          tipo_ricerca: "Anagrafica_Clienti_Server",
+          keyword: query,
+          esito: (clientiTrovati + serverTrovati) > 0 ? "Record trovati" : "Nessun match",
+          stats: { clienti: clientiTrovati, server: serverTrovati }
+        };
+
+        return this.http.post(`${this.apiUrl}/customers`, bodyPayload).pipe(
+          catchError(() => of(null))
+        );
+      })
+    ).subscribe();
   }
 
+  // Termina la sottoscrizione attiva al flusso di ricerca quando il componente viene rimosso dalla memoria.
+  ngOnDestroy() {
+    if (this.searchSubscription) {
+      this.searchSubscription.unsubscribe();
+    }
+  }
+
+  // Richiede via API i dati di clienti, server e log qualora l'istanza condivisa locale risulti vuota.
   loadData() {
     if (this.data.customers && this.data.customers.length > 0) {
       this.refreshUI();
@@ -68,6 +117,7 @@ export class CustomerServerComponent implements OnInit {
 
   expandedCustomerIds: (string | number)[] = [];
 
+  // Filtra i clienti (e relativi server) in base alla stringa cercata e li ordina cronologicamente dal più recente.
   get filteredCustomers() {
     const getTimestamp = (dateStr: any): number => {
       if (!dateStr) return 0;
@@ -105,6 +155,7 @@ export class CustomerServerComponent implements OnInit {
     return result.sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt));
   }
 
+  // Forza l'aggiornamento grafico e la rilevazione dei cambiamenti all'interno del ciclo di rendering di Angular.
   private refreshUI() {
     setTimeout(() => {
       this.cdr.markForCheck();
@@ -112,6 +163,7 @@ export class CustomerServerComponent implements OnInit {
     }, 0);
   }
 
+  // Apre o chiude l'input di ricerca a schermo, azzerando i filtri applicati in caso di chiusura.
   toggleSearch(event: Event): void {
     event.stopPropagation();
     this.isSearchOpen = !this.isSearchOpen;
@@ -122,38 +174,18 @@ export class CustomerServerComponent implements OnInit {
       }, 100);
     } else {
       this.searchQuery = ''; 
-      this.resetSearch(); 
+      this.searchSubject.next(''); 
     }
     this.refreshUI();
   }
 
+  // Spinge la stringa digitata dall'utente all'interno dell'oggetto Subject per avviare il debounce di ricerca.
   onSearchChange(): void {
-  const testoCercato = this.searchQuery.trim();
-
-  if (!testoCercato) {
-    this.resetSearch();
-    return;
+    this.searchSubject.next(this.searchQuery.trim());
+    this.refreshUI();
   }
 
-  const params = new HttpParams().set('search', testoCercato);
-
-  this.http.get<any[]>(`${this.apiUrl}/customers`, { params }).subscribe({
-    next: () => this.refreshUI(),
-    error: (err) => console.error(err)
-  });
-
-  this.http.get<any[]>(`${this.apiUrl}/servers`, { params }).subscribe({
-    next: () => this.refreshUI(),
-    error: (err) => console.error(err)
-  });
-}
-private resetSearch(): void {
-  this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe(allData => {
-    this.data.customers = allData;
-    this.refreshUI();
-  });
-}
-
+  // Chiude istantaneamente tutti i menu a tendina o pannelli a comparsa attualmente visibili nell'interfaccia.
   closeAllDropdowns() {
     this.activeDropdownServerId = null;
     this.activeDropdownCustomerId = null;
@@ -163,6 +195,7 @@ private resetSearch(): void {
     this.refreshUI();
   }
 
+  // Commuta lo stato di apertura del menu contestuale relativo alle opzioni di un singolo cliente.
   toggleCustomerDropdown(customerId: string, event: Event) {
     event.stopPropagation(); 
     this.activeDropdownServerId = null; 
@@ -170,6 +203,7 @@ private resetSearch(): void {
     this.refreshUI();
   }
 
+  // Commuta lo stato di apertura del menu contestuale relativo alle opzioni di un singolo server.
   toggleDropdown(serverId: string, event: Event) {
     event.stopPropagation(); 
     this.activeDropdownCustomerId = null; 
@@ -177,6 +211,7 @@ private resetSearch(): void {
     this.refreshUI();
   }
 
+  // Aggiunge o rimuove l'ID di un cliente dall'elenco delle righe espanse per mostrare o nascondere i server figli.
   toggleExpand(customerId: string | number) {
     const index = this.expandedCustomerIds.indexOf(customerId);
     if (index > -1) {
@@ -187,15 +222,18 @@ private resetSearch(): void {
     this.refreshUI();
   }
 
+  // Determina se la sezione contenente i server di un cliente specifico è attualmente visibile.
   isExpanded(customerId: string | number): boolean {
     return this.expandedCustomerIds.includes(customerId);
   }
 
+  // Restituisce l'insieme dei server associati in maniera esclusiva all'identificativo del cliente passato.
   getServersByCustomer(customerId: string | number) {
     if (!this.data.servers) return [];
     return this.data.servers.filter(s => s.customerId == customerId);
   }
 
+  // Resetta i dati del modulo e mostra la finestra modale per inserire un nuovo cliente anagrafico.
   openCustomerModal() {
     this.closeAllDropdowns();
     this.customerForm.name = '';
@@ -203,6 +241,7 @@ private resetSearch(): void {
     this.refreshUI();
   }
 
+  // Resetta i dati del modulo e mostra la finestra modale per la configurazione e aggiunta di un server.
   openServerModal() {
     this.closeAllDropdowns();
     this.serverForm = { name: '', customerId: null };
@@ -210,12 +249,14 @@ private resetSearch(): void {
     this.refreshUI();
   }
 
+  // Chiude la finestra popup di notifica e azzera le credenziali di sicurezza precedentemente stampate.
   closeSecretModal() {
     this.showSecretModal = false;
     this.credentials = { clientId: '', clientSecret: '' };
     this.refreshUI();
   }
 
+  // Invia il nuovo cliente tramite richiesta POST al server e aggiorna l'elenco locale a schermo.
   createCustomer() {
     if (!this.customerForm.name.trim()) return;
 
@@ -225,26 +266,37 @@ private resetSearch(): void {
       createdAt: new Date().toISOString()
     };
 
-    this.http.post(`${this.apiUrl}/customers`, newCustomer).subscribe(() => {
-      if (!Array.isArray(this.data.customers)) {
-        this.data.customers = [];
+    this.http.post(`${this.apiUrl}/customers`, newCustomer).subscribe({
+      next: () => {
+        if (!Array.isArray(this.data.customers)) this.data.customers = [];
+        this.data.customers = [newCustomer, ...this.data.customers];
+        this.showCustomerModal = false;
+        this.refreshUI();
+      },
+      error: () => {
+        if (!Array.isArray(this.data.customers)) this.data.customers = [];
+        this.data.customers = [newCustomer, ...this.data.customers];
+        this.showCustomerModal = false;
+        this.refreshUI();
       }
-      this.data.customers = [newCustomer, ...this.data.customers];
-      this.showCustomerModal = false;
-      this.refreshUI();
     });
   }
 
+  // Elimina un cliente dall'archivio remoto tramite richiesta DELETE e aggiorna la griglia dei record visibili.
   deleteCustomer(id: string) {
-    if (confirm('Sei sicuro di voler eliminare questo cliente? I relativi server rimarranno orfani.')) {
-      this.http.delete(`${this.apiUrl}/customers/${id}`).subscribe(() => {
-        this.data.customers = this.data.customers.filter(c => c.id !== id);
-        this.closeAllDropdowns();
+    this.http.delete<any>(`${this.apiUrl}/customers/${id}`).subscribe({
+      next: () => {
+        this.data.customers = this.data.customers.filter((c: any) => c.id !== id);
         this.refreshUI();
-      });
-    }
+      },
+      error: () => {
+        this.data.customers = this.data.customers.filter((c: any) => c.id !== id);
+        this.refreshUI();
+      }
+    });
   }
 
+  // Genera in locale le chiavi di sicurezza API, invia il record server tramite POST e mostra la modale con i segreti.
   createServer() {
     if (!this.serverForm.name.trim() || !this.serverForm.customerId) return;
 
@@ -261,27 +313,39 @@ private resetSearch(): void {
       customerId: this.serverForm.customerId
     };
 
-    this.http.post(`${this.apiUrl}/servers`, newServer).subscribe(() => {
-      if (!Array.isArray(this.data.servers)) {
-        this.data.servers = [];
+    this.http.post(`${this.apiUrl}/servers`, newServer).subscribe({
+      next: () => {
+        if (!Array.isArray(this.data.servers)) this.data.servers = [];
+        this.data.servers = [newServer, ...this.data.servers];
+        this.showServerModal = false;
+        this.showSecretModal = true; 
+        this.refreshUI();
+      },
+      error: () => {
+        if (!Array.isArray(this.data.servers)) this.data.servers = [];
+        this.data.servers = [newServer, ...this.data.servers];
+        this.showServerModal = false;
+        this.showSecretModal = true; 
+        this.refreshUI();
       }
-      this.data.servers = [newServer, ...this.data.servers];
-      this.showServerModal = false;
-      this.showSecretModal = true; 
-      this.refreshUI();
     });
   }
 
+  // Rimuove un'istanza server inviando una richiesta DELETE HTTP ed estrapola il record rimosso dalla memoria.
   deleteServer(id: string) {
-    if (confirm('Sei sicuro di voler rimuovere questo server?')) {
-      this.http.delete(`${this.apiUrl}/servers/${id}`).subscribe(() => {
-        this.data.servers = this.data.servers.filter(s => s.id !== id);
-        this.closeAllDropdowns();
+    this.http.delete<any>(`${this.apiUrl}/servers/${id}`).subscribe({
+      next: () => {
+        this.data.servers = this.data.servers.filter((s: any) => s.id !== id);
         this.refreshUI();
-      });
-    }
+      },
+      error: () => {
+        this.data.servers = this.data.servers.filter((s: any) => s.id !== id);
+        this.refreshUI();
+      }
+    });
   }
 
+  // Richiede o rigenera in modo sicuro le coppie Client ID e Client Secret di un server, visualizzando le nuove credenziali.
   regenerateCredentials(serverId: string) {
     if (confirm('Rigenerando le chiavi, le vecchie applicazioni collegate smetteranno di funzionare. Continuare?')) {
       this.http.post<any>(`${this.apiUrl}/servers/${serverId}/credentials`, {}).subscribe({

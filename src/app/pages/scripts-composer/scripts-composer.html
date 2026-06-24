@@ -9,7 +9,14 @@
     </div>
 
     <div class="topbar-actions-container">
-        <input type="text" placeholder="Search Script ID..." [(ngModel)]="searchId" (input)="onSearchChange()" class="search-input" />
+      <input 
+        type="text" 
+        placeholder="Search Script ID..." 
+        [(ngModel)]="searchId" 
+        (input)="onSearchChange()" 
+        (focus)="onSearchFocus()"
+        class="search-input" 
+      />
       <button class="btn-primary btn-green" (click)="openCreate()">+ Create Script</button>
     </div>
   </div>

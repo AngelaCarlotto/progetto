@@ -24,7 +24,7 @@
       <div class="stat-card">
         <div class="stat-info">
           <div class="stat-label">Client Totali</div>
-          <div class="stat-value">{{ getClientiTotali() }}</div>
+          <div class="stat-value">{{ totalCustomers }}</div>
         </div>
         <div class="stat-icon">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -36,7 +36,7 @@
       <div class="stat-card">
         <div class="stat-info">
           <div class="stat-label">Script attivi</div>
-          <div class="stat-value">{{ getScriptAttivi() }}</div>
+          <div class="stat-value">{{ activeScripts }}</div>
         </div>
         <div class="stat-icon">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -48,7 +48,7 @@
       <div class="stat-card">
         <div class="stat-info">
           <div class="stat-label">Backup oggi</div>
-          <div class="stat-value">{{ getBackupOggi() }}</div>
+          <div class="stat-value">{{ todayBackup }}</div>
         </div>
         <div class="stat-icon">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -57,10 +57,10 @@
         </div>
       </div>
 
-      <div class="stat-card card-error-control" [class.has-errors]="getErroriRilevati() > 0">
+      <div class="stat-card card-error-control" [class.has-errors]="globalErrorRate !== '0%' && globalErrorRate !== '0.0%'">
         <div class="stat-info">
-          <div class="stat-label label-error-target">Errori rilevati</div>
-          <div class="stat-value value-error-target">{{ getErroriRilevati() }}</div>
+          <div class="stat-label label-error-target">Errori</div>
+          <div class="stat-value value-error-target">{{ globalErrorRate }}</div>
         </div>
         <div class="stat-icon icon-error-target">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">

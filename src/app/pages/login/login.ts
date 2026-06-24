@@ -21,6 +21,7 @@ export class LoginComponent {
 
   constructor(private http: HttpClient) {} 
 
+  // Invia le credenziali via POST al server e, in caso di successo, notifica il login riuscito.
   onFormSubmit() {
     this.errorMessage = '';
     const loginBody = { username: this.username, password: this.password };
@@ -39,6 +40,7 @@ export class LoginComponent {
     });
   }
 
+  // Simula l'autenticazione OAuth tramite GitHub mostrando un avviso e forzando l'accesso come utente amministratore.
   loginConGitHub() {
     this.errorMessage = '';
     alert("Simulazione: Accesso tramite GitHub eseguito con successo!");

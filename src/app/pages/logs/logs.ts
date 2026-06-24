@@ -1,8 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; 
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data'; 
 import { HttpClient } from '@angular/common/http';
+import { Subject, Subscription, of } from 'rxjs';
+import { debounceTime, switchMap, catchError, timeout } from 'rxjs/operators';
 
 @Component({
   selector: 'app-logs',
@@ -11,7 +13,7 @@ import { HttpClient } from '@angular/common/http';
   templateUrl: './logs.html',
   styleUrl: './logs.css'
 })
-export class Logs implements OnInit {
+export class Logs implements OnInit, OnDestroy {
 
   private apiUrl = 'http://localhost:3000/api';
   
@@ -23,160 +25,182 @@ export class Logs implements OnInit {
 
   enrichedLogs: any[] = [];
 
+  private searchSubject = new Subject<string>();
+  private searchSubscription!: Subscription;
+
   constructor(
     public data: DataService, 
     private http: HttpClient,
-    private cdr: ChangeDetectorRef 
+    private cdr: ChangeDetectorRef
   ) {}
 
+  // Avvia il caricamento iniziale dei log e configura il flusso RxJS con debounce per i report di ricerca.
   ngOnInit() {
-    this.prepareLogs();
+    this.loadInitialLogs();
+
+    this.searchSubscription = this.searchSubject.pipe(
+      debounceTime(1500), 
+      switchMap(query => {
+        if (!query) {
+          return of(null);
+        }
+
+        const queryLower = query.toLowerCase();
+        
+        const conteggio = this.enrichedLogs.filter(log => {
+          return String(log.id || '').toLowerCase().includes(queryLower) ||
+                 String(log.level || '').toLowerCase().includes(queryLower) ||
+                 String(log.message || '').toLowerCase().includes(queryLower) ||
+                 String(log.scriptId || '').toLowerCase().includes(queryLower) ||
+                 String(log.formattedDateStr || '').includes(queryLower);
+        }).length;
+
+        console.log(`%c[CONSOLE LOG] Sono state trovate corrispondenze per: "${query}"`, "color: #10b981; font-weight: bold;");
+
+        const bodyPayload = {
+          keyword: query,
+          esito_ricerca: conteggio > 0 ? 'Dato trovato' : 'Nessun risultato',
+          totale_corrispondenze: conteggio
+        };
+
+        return this.http.post<any>(`${this.apiUrl}/logs`, bodyPayload).pipe(
+          catchError(() => of(null))
+        );
+      })
+    ).subscribe();
   }
 
-  prepareLogs() {
-    const rawLogs = this.data.logs || [];
-    
-    this.enrichedLogs = rawLogs.map(log => {
-      const dateObj = this.parseDataInvalida(log.createdAt);
-      let dataIT = '';
-      let dataITAlt = '';
+  // Cancella la sottoscrizione al flusso di ricerca per evitare perdite di memoria alla distruzione del componente.
+  ngOnDestroy() {
+    if (this.searchSubscription) {
+      this.searchSubscription.unsubscribe();
+    }
+  }
+
+  // Scarica i log via API, formatta le date in formato leggibile e ordina i risultati dal più recente.
+  loadInitialLogs() {
+    this.loading = true;
+    this.refreshUI();
+
+    this.http.get<any[]>(`${this.apiUrl}/logs`).pipe(
+      timeout(3000),
+      catchError(err => {
+        console.error("[HTTP ERROR] Errore inizializzazione:", err);
+        this.loading = false;
+        this.refreshUI();
+        return of([]);
+      })
+    ).subscribe((res) => {
+      const rawLogs = Array.isArray(res) ? res : [];
       
-      if (dateObj) {
-        const giorno = String(dateObj.getDate()).padStart(2, '0');
-        const mese = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const anno = dateObj.getFullYear();
-        dataIT = `${giorno}/${mese}/${anno}`; 
-        dataITAlt = `${giorno}-${mese}-${anno}`; 
-      }
+      this.enrichedLogs = rawLogs.map(log => {
+        const rawDate = log.createdAt || log.created_at || log.CreatedAt;
+        const dateObj = rawDate ? new Date(rawDate) : null;
+        
+        let dataFormattataTabella = '';
+        if (dateObj && !isNaN(dateObj.getTime())) {
+          const giorno = String(dateObj.getDate()).padStart(2, '0');
+          const mese = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const anno = dateObj.getFullYear();
+          const ore = String(dateObj.getHours()).padStart(2, '0');
+          const minuti = String(dateObj.getMinutes()).padStart(2, '0');
+          const secondi = String(dateObj.getSeconds()).padStart(2, '0');
+          
+          dataFormattataTabella = `${giorno}/${mese}/${anno} - ${ore}:${minuti}:${secondi}`;
+        }
 
-      return {
-        ...log,
-        createdAtObj: dateObj,
-        stringDataIT: dataIT,
-        stringDataITAlt: dataITAlt
-      };
+        return {
+          ...log,
+          createdAtObj: dateObj,
+          formattedDateStr: dataFormattataTabella ? dataFormattataTabella.toLowerCase() : ''
+        };
+      });
+
+      this.enrichedLogs.sort((a, b) => {
+        if (!a.createdAtObj) return 1;
+        if (!b.createdAtObj) return -1;
+        return b.createdAtObj.getTime() - a.createdAtObj.getTime();
+      });
+
+      this.loading = false;
+      this.refreshUI();
     });
-
-    this.refreshUI();
   }
 
-  private parseDataInvalida(dateStr: any): Date | null {
-    if (!dateStr || typeof dateStr !== 'string') return null;
-    let stringaNormalizzata = dateStr.trim().replace(/\//g, '-');
+  // Ritorna l'elenco dei log filtrati in base alla ricerca dell'utente e ne estrae la porzione per la pagina corrente.
+  filteredLogs() {
+    const query = this.search ? this.search.trim().toLowerCase() : '';
+    let logsFiltrati = [...this.enrichedLogs];
 
-    if (stringaNormalizzata.includes('T')) {
-      const d = new Date(stringaNormalizzata);
-      return !isNaN(d.getTime()) ? d : null;
+    if (query) {
+      logsFiltrati = logsFiltrati.filter(log => {
+        return String(log.id || '').toLowerCase().includes(query) ||
+               String(log.level || '').toLowerCase().includes(query) ||
+               String(log.message || '').toLowerCase().includes(query) ||
+               String(log.scriptId || '').toLowerCase().includes(query) ||
+               String(log.executionId || log.execution_id || '').toLowerCase().includes(query) ||
+               (log.formattedDateStr ? log.formattedDateStr.includes(query) : false);
+      });
     }
 
-    const dataPulita = stringaNormalizzata.split(' ')[0];
-    const parti = dataPulita.split('-');
-    
-    if (parti.length === 3) {
-      if (parti[0].length === 4) {
-        return new Date(Number(parti[0]), Number(parti[1]) - 1, Number(parti[2]));
-      }
-      return new Date(Number(parti[2]), Number(parti[1]) - 1, Number(parti[0]));
-    }
-    
-    const d = new Date(stringaNormalizzata);
-    return !isNaN(d.getTime()) ? d : null;
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    return logsFiltrati.slice(start, start + this.itemsPerPage);
   }
 
+  // Calcola il numero totale di pagine necessarie per la paginazione, tenendo conto di eventuali filtri di ricerca.
+  totalPages(): number {
+    const query = this.search ? this.search.trim().toLowerCase() : '';
+    if (!query) return Math.ceil(this.enrichedLogs.length / this.itemsPerPage) || 1;
+
+    const totaleFiltrati = this.enrichedLogs.filter(log => {
+      return String(log.id || '').toLowerCase().includes(query) ||
+             String(log.level || '').toLowerCase().includes(query) ||
+             String(log.message || '').toLowerCase().includes(query) ||
+             String(log.scriptId || '').toLowerCase().includes(query) ||
+             (log.formattedDateStr ? log.formattedDateStr.includes(query) : false);
+    }).length;
+
+    return Math.ceil(totaleFiltrati / this.itemsPerPage) || 1;
+  }
+
+  // Resetta la paginazione e invia il testo digitato al flusso di ricerca RxJS.
   onSearchChange() {
-    this.currentPage = 1; 
-    this.enrichedLogs = [...this.enrichedLogs]; 
+    this.currentPage = 1;
+    this.searchSubject.next(this.search.trim());
     this.refreshUI();
   }
 
+  // Apre o chiude il menu a tendina delle opzioni.
   toggleDropdown() { 
     this.dropdownAperto = !this.dropdownAperto; 
     this.refreshUI();
   }
 
+  // Chiede conferma all'utente ed invia una richiesta HTTP DELETE per svuotare l'intero archivio dei log.
   clearAllLogs() {
     this.dropdownAperto = false; 
-    if (confirm('Sei sicuro di voler svuotare tutti i log visualizzati?')) {
+    if (confirm('Sei sicuro di voler svuotare tutti i log?')) {
+      this.loading = true;
       this.http.delete(`${this.apiUrl}/logs`).subscribe({
         next: () => {
-          this.data.logs = []; 
           this.enrichedLogs = [];
           this.currentPage = 1; 
+          this.loading = false;
           this.refreshUI(); 
         },
-        error: (err) => console.error("Errore svuotamento log:", err)
+        error: () => { this.loading = false; this.refreshUI(); }
       });
     }
   }
 
-  filteredLogs() {
-    let result = [...this.enrichedLogs];
+  // Incrementa di uno la pagina corrente all'interno dei limiti massimi disponibili.
+  nextPage() { if (this.currentPage < this.totalPages()) { this.currentPage++; this.refreshUI(); } }
 
-    if (this.search && this.search.trim()) {
-      const searchTerm = this.search.toLowerCase().trim();
-      result = result.filter(log => {
-        const execId = log.executionId || log.execution_id || '';
+  // Decrementa di uno la pagina corrente impedendo di scendere sotto la prima pagina.
+  previousPage() { if (this.currentPage > 1) { this.currentPage--; this.refreshUI(); } }
 
-        return (
-          (log.id && String(log.id).toLowerCase().includes(searchTerm)) ||
-          (log.level && log.level.toLowerCase().includes(searchTerm)) ||
-          (log.message && log.message.toLowerCase().includes(searchTerm)) ||
-          (log.stringDataIT && log.stringDataIT.includes(searchTerm)) || 
-          (log.stringDataITAlt && log.stringDataITAlt.includes(searchTerm)) || 
-          (log.scriptId && String(log.scriptId).toLowerCase().includes(searchTerm)) ||
-          (execId && String(execId).toLowerCase().includes(searchTerm))
-        );
-      });
-    }
-
-    result.sort((a, b) => {
-      if (!a.createdAtObj) return 1;
-      if (!b.createdAtObj) return -1;
-      return b.createdAtObj.getTime() - a.createdAtObj.getTime();
-    });
-
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    return result.slice(start, start + this.itemsPerPage);
-  }
-
-  totalPages(): number {
-    const totalItems = this.getFilteredCount();
-    return Math.ceil(totalItems / this.itemsPerPage) || 1;
-  }
-
-  private getFilteredCount(): number {
-    if (!this.search || !this.search.trim()) return this.enrichedLogs.length;
-    
-    const searchTerm = this.search.toLowerCase().trim();
-    return this.enrichedLogs.filter(log => {
-      const execId = log.executionId || log.execution_id || '';
-      return (
-        (log.id && String(log.id).toLowerCase().includes(searchTerm)) ||
-        (log.level && log.level.toLowerCase().includes(searchTerm)) ||
-        (log.message && log.message.toLowerCase().includes(searchTerm)) ||
-        (log.stringDataIT && log.stringDataIT.includes(searchTerm)) || 
-        (log.stringDataITAlt && log.stringDataITAlt.includes(searchTerm)) || 
-        (log.scriptId && String(log.scriptId).toLowerCase().includes(searchTerm)) ||
-        (execId && String(execId).toLowerCase().includes(searchTerm))
-      );
-    }).length;
-  }
-
-  nextPage() {
-    if (this.currentPage < this.totalPages()) {
-      this.currentPage++;
-      this.refreshUI();
-    }
-  }
-  
-  previousPage() { 
-    if (this.currentPage > 1) {
-      this.currentPage--; 
-      this.refreshUI();
-    }
-  }
-
-  private refreshUI() {
+  // Comunica manualmente ad Angular di aggiornare l'interfaccia utente a schermo.
+  refreshUI() {
     this.cdr.markForCheck();
     this.cdr.detectChanges();
   }

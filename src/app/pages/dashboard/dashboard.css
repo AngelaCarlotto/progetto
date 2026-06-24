@@ -1,5 +1,4 @@
 /* LIGHT */
-
 .dashboard-wrapper {
   width: 100%;
   height: 100vh;            
@@ -322,6 +321,14 @@
   transition: color 0.3s ease;
 }
 
+.no-data-legend-text{
+  color: #94a3b8;;
+  text-align: center;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: small;
+}
+
 .dot {
   width: 10px;
   height: 10px;
@@ -332,96 +339,47 @@
 
 
 /* DARK THEME */
+:host-context(body.dark-theme) .dashboard-wrapper {background-color: #070d19;}
 
-:host-context(body.dark-theme) .dashboard-wrapper {
-  background-color: #070d19;
-}
+:host-context(body.dark-theme) .topbar {background: #111c2e; border-bottom: 1px solid #243754;}
 
-:host-context(body.dark-theme) .topbar {
-  background: #111c2e;
-  border-bottom: 1px solid #243754;
-}
+:host-context(body.dark-theme) .topbar-title {color: #ffffff;}
 
-:host-context(body.dark-theme) .topbar-title {
-  color: #ffffff;
-}
+:host-context(body.dark-theme) .stat-card {background: #111c2e; border: 1px solid #243754; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);}
 
-:host-context(body.dark-theme) .stat-card {
-  background: #111c2e;
-  border: 1px solid #243754;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
+:host-context(body.dark-theme) .stat-label {color: #9dd0ff;}
 
-:host-context(body.dark-theme) .stat-label {
-  color: #9dd0ff;
-}
+:host-context(body.dark-theme) .stat-value {color: #ffffff;}
 
-:host-context(body.dark-theme) .stat-value {
-  color: #ffffff;
-}
+:host-context(body.dark-theme) .stat-icon {background-color: rgba(37, 99, 235, 0.18) !important; color: #3b82f6 !important;}
 
-:host-context(body.dark-theme) .stat-icon {
-  background-color: rgba(37, 99, 235, 0.18) !important;
-  color: #3b82f6 !important;
-}
+:host-context(body.dark-theme) .stat-card.has-errors .icon-error-target {background-color: rgba(239, 68, 68, 0.2) !important;color: #f87171 !important;}
 
-:host-context(body.dark-theme) .stat-card.has-errors .icon-error-target {
-  background-color: rgba(239, 68, 68, 0.2) !important;
-  color: #f87171 !important;
-}
-
-:host-context(body.dark-theme) .chart-card {
-  background: #111c2e;
-  border: 1px solid #243754;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
+:host-context(body.dark-theme) .chart-card {background: #111c2e; border: 1px solid #243754; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);}
 
 :host-context(body.dark-theme) .chart-title,
-:host-context(body.dark-theme) .chart-title-top {
-  color: #ffffff;
-}
+:host-context(body.dark-theme) .chart-title-top {color: #ffffff;}
 
-:host-context(body.dark-theme) .chart-grid-line {
-  stroke: #1c2b42;
-}
+:host-context(body.dark-theme) .chart-grid-line {stroke: #1c2b42;}
 
-:host-context(body.dark-theme) .chart-grid-line.line-main {
-  stroke: #243754;
-}
+:host-context(body.dark-theme) .chart-grid-line.line-main {stroke: #243754;}
 
-:host-context(body.dark-theme) .chart-svg line[stroke="#64748b"] {
-  stroke: #475569; 
-}
+:host-context(body.dark-theme) .chart-svg line[stroke="#64748b"] {stroke: #475569; }
 
-:host-context(body.dark-theme) .chart-svg polygon[fill="#64748b"] {
-  fill: #475569; 
-}
+:host-context(body.dark-theme) .chart-svg polygon[fill="#64748b"] {fill: #475569; }
 
-:host-context(body.dark-theme) .chart-data-table {
-  border-top: 1px dashed #243754;
-}
+:host-context(body.dark-theme) .chart-data-table {border-top: 1px dashed #243754;}
 
-:host-context(body.dark-theme) .data-date {
-  color: #94a3b8;
-}
+:host-context(body.dark-theme) .data-date {color: #94a3b8;}
 
-:host-context(body.dark-theme) .data-arrow {
-  color: #64748b;
-}
+:host-context(body.dark-theme) .data-arrow {color: #64748b;}
 
-:host-context(body.dark-theme) .data-count {
-  color: #ffffff;
-  background: #1e293b; 
-}
+:host-context(body.dark-theme) .data-count {color: #ffffff; background: #1e293b; }
 
-:host-context(body.dark-theme) .chart-dates {
-  color: #94a3b8;
-}
+:host-context(body.dark-theme) .chart-dates {color: #94a3b8;}
 
-:host-context(body.dark-theme) .donut-graphic::before {
-  background: #111c2e; 
-}
+:host-context(body.dark-theme) .donut-graphic::before {background: #111c2e; }
 
-:host-context(body.dark-theme) .legend-item {
-  color: #ffffff;
-}
+:host-context(body.dark-theme) .legend-item {color: #ffffff;}
+
+:host-context(body.dark-theme) .no-data-legend-text{text-align: center; color: white;}

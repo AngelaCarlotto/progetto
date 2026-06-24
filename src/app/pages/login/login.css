@@ -197,17 +197,11 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
-:host-context(body.dark-theme) .login-title {
-  color: #ffffff;
-}
+:host-context(body.dark-theme) .login-title {color: #ffffff;}
 
-:host-context(body.dark-theme) .login-sub {
-  color: #6b7280;
-}
+:host-context(body.dark-theme) .login-sub {color: #6b7280;}
 
-:host-context(body.dark-theme) .form-label {
-  color: #9ca3af;
-}
+:host-context(body.dark-theme) .form-label {color: #9ca3af;}
 
 :host-context(body.dark-theme) .form-input {
   background: #1f293d;
@@ -215,22 +209,14 @@
   color: #ffffff;
 }
 
-:host-context(body.dark-theme) .form-input:focus {
-  background: #161f30;
-}
+:host-context(body.dark-theme) .form-input:focus {background: #161f30;}
 
-:host-context(body.dark-theme) .form-input::placeholder {
-  color: #6b7280; 
-}
+:host-context(body.dark-theme) .form-input::placeholder {color: #6b7280; }
 
-:host-context(body.dark-theme) .divider {
-  color: #4b5563;
-}
+:host-context(body.dark-theme) .divider {color: #4b5563;}
 
 :host-context(body.dark-theme) .divider::before, 
-:host-context(body.dark-theme) .divider::after {
-  border-bottom: 1px solid #1f293d;
-}
+:host-context(body.dark-theme) .divider::after {border-bottom: 1px solid #1f293d;}
 
 :host-context(body.dark-theme) .btn-github {
   background: #24292e;
@@ -243,9 +229,7 @@
   border-color: #8b949e;
 }
 
-:host-context(body.dark-theme) .github-icon {
-  color: #e6edf3;
-}
+:host-context(body.dark-theme) .github-icon {color: #e6edf3;}
 
 :host-context(body.dark-theme) .login-error-box {
   background-color: rgba(239, 68, 68, 0.15);

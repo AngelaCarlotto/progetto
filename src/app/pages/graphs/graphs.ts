@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Component({
   selector: 'app-graphs',
@@ -43,6 +43,7 @@ export class GraphsComponent implements OnInit {
     private http: HttpClient
   ) {}
 
+  // Controlla la presenza locale dei dati: se disponibili calcola le statistiche, altrimenti li scarica dal server.
   ngOnInit() {
     if (this.data.scripts && this.data.scripts.length > 0 && this.data.logs && this.data.logs.length > 0) {
       this.calculateAllStats();
@@ -52,49 +53,91 @@ export class GraphsComponent implements OnInit {
     }
   }
 
+  // Scarica in sequenza tramite API sia gli script che i log, salvandoli nel DataService condiviso.
   syncDataFromServer(callback?: () => void) {
-  this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe({
-    next: (scripts) => {
-      this.data.scripts = Array.isArray(scripts) ? [...scripts].reverse() : [];
-      
-      this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe({
-        next: (logs) => {
-          this.data.logs = logs;
-          this.calculateAllStats();
-          
-          if (callback) callback();
-          this.refreshUI();
-        },
-        error: (err) => {
-          console.error("Errore caricamento LOGS:", err);
-          if (callback) callback();
-        }
-      });
-    },
-    error: (err) => {
-      console.error("Errore caricamento SCRIPTS:", err);
-      if (callback) callback();
-    }
-  });
-}
-
-ricalcola() {
-  this.loading = true;
-  this.refreshUI();
-
-  setTimeout(() => {
-    this.syncDataFromServer(() => {
-      this.loading = false;
-      console.log('Grafici aggiornati con successo da Mockoon!');
+    this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe({
+      next: (scripts) => {
+        this.data.scripts = Array.isArray(scripts) ? [...scripts].reverse() : [];
+        
+        this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe({
+          next: (logs) => {
+            this.data.logs = logs;
+            this.calculateAllStats();
+            
+            if (callback) callback();
+            this.refreshUI();
+          },
+          error: (err) => {
+            console.error("Errore caricamento LOGS:", err);
+            if (callback) callback();
+          }
+        });
+      },
+      error: (err) => {
+        console.error("Errore caricamento SCRIPTS:", err);
+        if (callback) callback();
+      }
     });
-  }, 600); 
-}
+  }
 
+  // Sincronizza i dati dal database, genera il payload completo e invia le statistiche aggiornate all'endpoint di Mockoon.
+  ricalcola() {
+    this.loading = true;
+    this.refreshUI();
+
+    setTimeout(() => {
+      this.syncDataFromServer(() => {
+        
+        const payloadGraphs = {
+          timestamp: new Date().toISOString(),
+          components: {
+            mysql: this.mysqlCount,
+            files: this.filesCount
+          },
+          globalStats: {
+            success: this.globalSuccess,
+            error: this.globalError
+          },
+          todayStats: {
+            success: this.todaySuccess,
+            error: this.todayError
+          },
+          historicalPoints: this.chartPoints.map(p => ({ data: p.label, count: p.count }))
+        };
+
+        console.log("Inviando statistiche grafici a Mockoon (Request):", payloadGraphs);
+
+        const httpOptions = {
+          headers: new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          })
+        };
+
+        this.http.post<any>(`${this.apiUrl}/graph/summary`, payloadGraphs, httpOptions).subscribe({
+          next: (res) => {
+            console.log("Mockoon ha registrato il riepilogo grafici (Response):", res);
+            this.loading = false;
+            this.refreshUI();
+          },
+          error: (err) => {
+            console.error("Errore notifica a Mockoon, mantengo dati locali:", err);
+            this.loading = false;
+            this.refreshUI();
+          }
+        });
+
+      });
+    }, 600); 
+  }
+
+  // Proprietà getter usata nel template HTML per forzare il ricalcolo continuo delle statistiche.
   get triggerStatsUpdate(): boolean {
     this.calculateAllStats();
     return true;
   }
 
+  // Isola i log relativi agli script analizzandone l'ID univoco o parole chiave presenti nel messaggio.
   private isScriptLog(log: any): boolean {
     if (!log) return false;
     const hasScriptId = log.scriptId && String(log.scriptId).startsWith('SCR-');
@@ -105,6 +148,7 @@ ricalcola() {
     return !!(hasScriptId || isBackupMessage);
   }
 
+  // Elabora i contatori globali/giornalieri ed imposta le altezze in pixel delle barre dei grafici in modo proporzionale.
   calculateAllStats() {
     this.mysqlCount = 0; this.filesCount = 0;
     this.globalSuccess = 0; this.globalError = 0;
@@ -147,6 +191,7 @@ ricalcola() {
     this.generateHistorySvg(currentLogs);
   }
    
+  // Genera le stringhe di coordinate geometriche per mappare i punti e tracciare la linea dell'andamento storico (SVG).
   generateHistorySvg(currentLogs: any[]) {
     const points: string[] = [];
     this.chartPoints = [];
@@ -185,6 +230,7 @@ ricalcola() {
     this.svgPoints = points.join(' ');
   }
 
+  // Forza esplicitamente l'aggiornamento e la sincronizzazione immediata del template grafico di Angular.
   private refreshUI() {
     this.cdr.markForCheck();
     this.cdr.detectChanges();
