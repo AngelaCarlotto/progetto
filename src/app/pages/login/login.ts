@@ -21,7 +21,7 @@ export class LoginComponent {
 
   constructor(private http: HttpClient) {} 
 
-  // Invia le credenziali via POST al server e, in caso di successo, notifica il login riuscito.
+  // Invia le credenziali via POST al server Mockoon e, in caso di successo, notifica il login riuscito.
   onFormSubmit() {
     this.errorMessage = '';
     const loginBody = { username: this.username, password: this.password };
@@ -29,6 +29,11 @@ export class LoginComponent {
     this.http.post<any>(`${this.apiUrl}/auth/login`, loginBody).subscribe({
       next: (response) => {
         if (response && response.success) {
+
+          console.log(
+            `Login effettuato! (Utente: ${this.username})`
+          );
+
           this.logged.emit(this.username);
         } else {
           this.errorMessage = 'Credenziali non valide. Accesso negato.';
@@ -43,7 +48,12 @@ export class LoginComponent {
   // Simula l'autenticazione OAuth tramite GitHub mostrando un avviso e forzando l'accesso come utente amministratore.
   loginConGitHub() {
     this.errorMessage = '';
-    alert("Simulazione: Accesso tramite GitHub eseguito con successo!");
+    alert("Simulazione: Accesso tramite GitHub eseguito con successo");
+    
+    console.log(
+      "Login effettuato con GitHub!"
+    );
+
     this.logged.emit('admin_github');
   }
 }

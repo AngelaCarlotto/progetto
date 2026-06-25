@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { CustomerServerComponent } from './customer-server';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { DataService } from '../../services/data';
 
 describe('CustomerServerComponent', () => {
   let component: CustomerServerComponent;
@@ -8,12 +9,17 @@ describe('CustomerServerComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CustomerServerComponent],
-    }).compileComponents();
-
+      imports: [
+        CustomerServerComponent,
+        HttpClientTestingModule 
+      ],
+      providers: [DataService] 
+    })
+    .compileComponents();
+    
     fixture = TestBed.createComponent(CustomerServerComponent);
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {

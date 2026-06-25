@@ -34,31 +34,42 @@ export class Logs implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
-  // Avvia il caricamento iniziale dei log e configura il flusso RxJS con debounce per i report di ricerca.
   ngOnInit() {
     this.loadInitialLogs();
 
     this.searchSubscription = this.searchSubject.pipe(
       debounceTime(1500), 
       switchMap(query => {
-        if (!query) {
+        const cleanedQuery = query ? query.trim() : '';
+        if (!cleanedQuery) {
           return of(null);
         }
 
-        const queryLower = query.toLowerCase();
+        const queryLower = cleanedQuery.toLowerCase();
         
         const conteggio = this.enrichedLogs.filter(log => {
           return String(log.id || '').toLowerCase().includes(queryLower) ||
                  String(log.level || '').toLowerCase().includes(queryLower) ||
                  String(log.message || '').toLowerCase().includes(queryLower) ||
                  String(log.scriptId || '').toLowerCase().includes(queryLower) ||
+                 String(log.executionId || log.execution_id || '').toLowerCase().includes(queryLower) ||
                  String(log.formattedDateStr || '').includes(queryLower);
         }).length;
 
-        console.log(`%c[CONSOLE LOG] Sono state trovate corrispondenze per: "${query}"`, "color: #10b981; font-weight: bold;");
+        if (conteggio > 0) {
+          console.log(
+            `%c[SEARCH] Trovate ${conteggio} corrispondenze per: "${cleanedQuery}"`, 
+            "color: #0ea5e9; "
+          );
+        } else {
+          console.log(
+            `%c[SEARCH] Nessun risultato trovato per: "${cleanedQuery}"`, 
+            "color: #ef4444;"
+          );
+        }
 
         const bodyPayload = {
-          keyword: query,
+          keyword: cleanedQuery,
           esito_ricerca: conteggio > 0 ? 'Dato trovato' : 'Nessun risultato',
           totale_corrispondenze: conteggio
         };

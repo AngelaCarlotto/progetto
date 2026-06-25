@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, DoCheck, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -10,7 +10,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
   templateUrl: './graphs.html',
   styleUrl: './graphs.css',
 })
-export class GraphsComponent implements OnInit {
+export class GraphsComponent implements OnInit, DoCheck {
 
   private apiUrl = 'http://localhost:3000/api';
   loading = false;
@@ -37,27 +37,45 @@ export class GraphsComponent implements OnInit {
 
   mockData = { backupStorage: 68, activeServers: 12, trafficGb: 450 };
 
+  private lastScriptsLength = 0;
+
   constructor(
     public data: DataService,        
     private cdr: ChangeDetectorRef,
     private http: HttpClient
   ) {}
 
-  // Controlla la presenza locale dei dati: se disponibili calcola le statistiche, altrimenti li scarica dal server.
   ngOnInit() {
-    if (this.data.scripts && this.data.scripts.length > 0 && this.data.logs && this.data.logs.length > 0) {
+    this.syncDataFromServer();
+  }
+
+  ngDoCheck() {
+    const currentLength = this.data.scripts ? this.data.scripts.length : 0;
+    if (currentLength !== this.lastScriptsLength) {
+      this.lastScriptsLength = currentLength;
       this.calculateAllStats();
       this.refreshUI();
-    } else {
-      this.syncDataFromServer();
     }
   }
 
-  // Scarica in sequenza tramite API sia gli script che i log, salvandoli nel DataService condiviso.
+  private normalizeDateToISOString(dateStr: any): string {
+    if (!dateStr || typeof dateStr !== 'string') return '';
+    let normalized = dateStr.trim().replace(/\//g, '-');
+    if (normalized.includes('T')) {
+      return normalized.split('T')[0];
+    }
+    const parti = normalized.split(' ')[0].split('-');
+    if (parti.length === 3 && parti[0].length !== 4) {
+      return `${parti[2]}-${parti[1]}-${parti[0]}`;
+    }
+    return normalized.substring(0, 10);
+  }
+
   syncDataFromServer(callback?: () => void) {
     this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe({
       next: (scripts) => {
         this.data.scripts = Array.isArray(scripts) ? [...scripts].reverse() : [];
+        this.lastScriptsLength = this.data.scripts.length;
         
         this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe({
           next: (logs) => {
@@ -80,105 +98,100 @@ export class GraphsComponent implements OnInit {
     });
   }
 
-  // Sincronizza i dati dal database, genera il payload completo e invia le statistiche aggiornate all'endpoint di Mockoon.
   ricalcola() {
     this.loading = true;
     this.refreshUI();
 
     setTimeout(() => {
       this.syncDataFromServer(() => {
-        
         const payloadGraphs = {
           timestamp: new Date().toISOString(),
-          components: {
-            mysql: this.mysqlCount,
-            files: this.filesCount
-          },
-          globalStats: {
-            success: this.globalSuccess,
-            error: this.globalError
-          },
-          todayStats: {
-            success: this.todaySuccess,
-            error: this.todayError
-          },
+          components: { mysql: this.mysqlCount, files: this.filesCount },
+          globalStats: { success: this.globalSuccess, error: this.globalError },
+          todayStats: { success: this.todaySuccess, error: this.todayError },
           historicalPoints: this.chartPoints.map(p => ({ data: p.label, count: p.count }))
         };
 
-        console.log("Inviando statistiche grafici a Mockoon (Request):", payloadGraphs);
-
         const httpOptions = {
-          headers: new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          })
+          headers: new HttpHeaders({ 'Content-Type': 'application/json', 'Accept': 'application/json' })
         };
 
         this.http.post<any>(`${this.apiUrl}/graph/summary`, payloadGraphs, httpOptions).subscribe({
-          next: (res) => {
-            console.log("Mockoon ha registrato il riepilogo grafici (Response):", res);
+          next: () => {
             this.loading = false;
+
+            console.log(
+              "%c Pagina grafici aggiornata con successo! ", "color: #ad2ced"
+            );
+
             this.refreshUI();
           },
-          error: (err) => {
-            console.error("Errore notifica a Mockoon, mantengo dati locali:", err);
+          error: () => {
             this.loading = false;
             this.refreshUI();
           }
         });
-
       });
     }, 600); 
   }
 
-  // Proprietà getter usata nel template HTML per forzare il ricalcolo continuo delle statistiche.
-  get triggerStatsUpdate(): boolean {
-    this.calculateAllStats();
-    return true;
-  }
-
-  // Isola i log relativi agli script analizzandone l'ID univoco o parole chiave presenti nel messaggio.
   private isScriptLog(log: any): boolean {
     if (!log) return false;
-    const hasScriptId = log.scriptId && String(log.scriptId).startsWith('SCR-');
+    const hasScriptId = log.scriptId && String(log.scriptId).trim() !== '';
     const isBackupMessage = log.message && (
       log.message.toLowerCase().includes('script') || 
-      log.message.toLowerCase().includes('backup')
+      log.message.toLowerCase().includes('backup') ||
+      log.message.toLowerCase().includes('creato') ||
+      log.message.toLowerCase().includes('eliminato')
     );
     return !!(hasScriptId || isBackupMessage);
   }
 
-  // Elabora i contatori globali/giornalieri ed imposta le altezze in pixel delle barre dei grafici in modo proporzionale.
   calculateAllStats() {
-    this.mysqlCount = 0; this.filesCount = 0;
-    this.globalSuccess = 0; this.globalError = 0;
-    this.todaySuccess = 0; this.todayError = 0;
+    this.mysqlCount = 0; 
+    this.filesCount = 0;
+    this.globalSuccess = 0; 
+    this.globalError = 0;
+    this.todaySuccess = 0; 
+    this.todayError = 0;
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const dLocal = new Date();
+    const todayStr = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
 
     const currentScripts = this.data.scripts || [];
     const currentLogs = this.data.logs || [];
 
     currentScripts.forEach((s: any) => {
-      if (s.mysqlComponent) this.mysqlCount += (s.mysqlInstances?.length || 1);
-      if (s.filesComponent) this.filesCount += (s.fileInstances?.length || 1);
+      const haMysql = s.mysqlComponent === true || String(s.mysqlComponent).toLowerCase() === 'true';
+      if (haMysql) {
+        this.mysqlCount += 1;
+      }
+
+      const haFiles = s.filesComponent === true || String(s.filesComponent).toLowerCase() === 'true';
+      if (haFiles) {
+        this.filesCount += 1;
+      }
     });
 
     currentLogs.forEach((l: any) => {
       const isError = l.level?.toLowerCase() === 'error';
-      const logDateStr = l.createdAt ? l.createdAt.substring(0, 10) : '';
+      const currentLevel = String(l.level).toLowerCase();
+      const logDateStr = this.normalizeDateToISOString(l.createdAt);
       
       if (this.isScriptLog(l)) {
         if (isError) this.globalError++; else this.globalSuccess++;
-        if (logDateStr === todayStr) {
-          if (isError) this.todayError++; else this.todaySuccess++;
+        if (logDateStr === todayStr && (currentLevel === 'success' || currentLevel === 'info')) {
+          this.todaySuccess++;
+        } else if (logDateStr === todayStr && isError) {
+          this.todayError++;
         }
       }
     });
 
-    const maxSteps = Math.max(this.mysqlCount, this.filesCount, 1);
-    this.mysqlHeight = `${(this.mysqlCount / maxSteps) * 130}px`;
-    this.filesHeight = `${(this.filesCount / maxSteps) * 130}px`;
+    const totalScriptsActive = Math.max(currentScripts.length, 1);
+    
+    this.mysqlHeight = `${Math.min((this.mysqlCount / totalScriptsActive) * 130, 130)}px`;
+    this.filesHeight = `${Math.min((this.filesCount / totalScriptsActive) * 130, 130)}px`;
 
     const maxGlobal = Math.max(this.globalSuccess, this.globalError, 1);
     this.globalSuccessHeight = `${(this.globalSuccess / maxGlobal) * 130}px`;
@@ -191,7 +204,6 @@ export class GraphsComponent implements OnInit {
     this.generateHistorySvg(currentLogs);
   }
    
-  // Genera le stringhe di coordinate geometriche per mappare i punti e tracciare la linea dell'andamento storico (SVG).
   generateHistorySvg(currentLogs: any[]) {
     const points: string[] = [];
     this.chartPoints = [];
@@ -203,12 +215,18 @@ export class GraphsComponent implements OnInit {
 
     for (let i = 9; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const anno = d.getFullYear();
+      const mese = String(d.getMonth() + 1).padStart(2, '0');
+      const giorno = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${anno}-${mese}-${giorno}`;
       last10DaysDates.push(dateStr);
       
-      const dayLogsCount = currentLogs.filter((l: any) => 
-        l.createdAt?.substring(0, 10) === dateStr && this.isScriptLog(l)
-      ).length;
+      const dayLogsCount = currentLogs.filter((l: any) => {
+        const currentLevel = String(l.level).toLowerCase();
+        return this.normalizeDateToISOString(l.createdAt) === dateStr && 
+               this.isScriptLog(l) && 
+               (currentLevel === 'success' || currentLevel === 'info');
+      }).length;
       
       if (dayLogsCount > maxDayLogs) maxDayLogs = dayLogsCount;
     }
@@ -217,20 +235,25 @@ export class GraphsComponent implements OnInit {
       const dateStr = last10DaysDates[i];
       const x = startX + (i * dayStepX);
       
-      const dayLogsCount = currentLogs.filter((l: any) => 
-        l.createdAt?.substring(0, 10) === dateStr && this.isScriptLog(l)
-      ).length;
+      const dayLogsCount = currentLogs.filter((l: any) => {
+        const currentLevel = String(l.level).toLowerCase();
+        return this.normalizeDateToISOString(l.createdAt) === dateStr && 
+               this.isScriptLog(l) && 
+               (currentLevel === 'success' || currentLevel === 'info');
+      }).length;
       
       const y = totalHeight - ((dayLogsCount / maxDayLogs) * usableHeight);
       points.push(`${x},${y}`);
 
-      const labelText = i === 9 ? 'Oggi' : new Date(dateStr).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+      const dLocal = new Date();
+      const oggiLocaleStr = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
+
+      const labelText = dateStr === oggiLocaleStr ? 'Oggi' : new Date(dateStr).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
       this.chartPoints.push({ x, y, count: dayLogsCount, label: labelText });
     }
     this.svgPoints = points.join(' ');
   }
 
-  // Forza esplicitamente l'aggiornamento e la sincronizzazione immediata del template grafico di Angular.
   private refreshUI() {
     this.cdr.markForCheck();
     this.cdr.detectChanges();

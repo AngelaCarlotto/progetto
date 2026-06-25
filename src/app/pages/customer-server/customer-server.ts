@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data';
 import { HttpClient } from '@angular/common/http';
-import { Subject, Subscription, of } from 'rxjs';
+import { Subject, Subscription, forkJoin, of } from 'rxjs';
 import { debounceTime, switchMap, catchError } from 'rxjs/operators';
 
 @Component({
@@ -15,7 +15,7 @@ import { debounceTime, switchMap, catchError } from 'rxjs/operators';
 })
 export class CustomerServerComponent implements OnInit, OnDestroy {
 
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = 'http://localhost:3000/api'; 
 
   private searchSubject = new Subject<string>();
   private searchSubscription!: Subscription;
@@ -26,7 +26,7 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef 
   ) {}
 
-  // Inizializza i dati e configura la pipeline RxJS con debounce per inviare i report di ricerca anagrafica al server.
+  // Inizializza i dati e configura la pipeline RxJS con debounce per inviare i report di ricerca separati al server Mockoon.
   ngOnInit() {
     this.loadData();
 
@@ -47,21 +47,64 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
           s.name && s.name.toLowerCase().includes(queryLower)
         ).length;
 
-        console.log(
-          `%c[SEARCH CONSOLE]  Cercato: "${query}" | Risultati nel client -> Clienti: ${clientiTrovati}, Server: ${serverTrovati}`, 
-          "color: #0ea5e9; font-weight: bold;"
-        );
+        if (clientiTrovati > 0) {
+          console.log(
+            `%c [SEARCH] Cercato: "${query}" | Risultati -> Clienti trovati: ${clientiTrovati}`, 
+            "color: #0ea5e9; "
+          );
+        }
 
-        const bodyPayload = {
-          tipo_ricerca: "Anagrafica_Clienti_Server",
-          keyword: query,
-          esito: (clientiTrovati + serverTrovati) > 0 ? "Record trovati" : "Nessun match",
-          stats: { clienti: clientiTrovati, server: serverTrovati }
-        };
+        if (serverTrovati > 0) {
+          console.log(
+            `%c [SEARCH] Cercato: "${query}" | Risultati -> Server trovati: ${serverTrovati}`, 
+            "color: #0ea5e9; "
+          );
+        }
 
-        return this.http.post(`${this.apiUrl}/customers`, bodyPayload).pipe(
-          catchError(() => of(null))
-        );
+        if (clientiTrovati === 0 && serverTrovati === 0) {
+          console.log(
+            `%c [SEARCH] Cercato: "${query}" | Nessun risultato trovato nel client`, 
+            "color: #0ea5e9; "
+          );
+        }
+
+        const chiamateDistinte: any = {};
+
+        if (clientiTrovati > 0) {
+          chiamateDistinte.customers = this.http.post(`${this.apiUrl}/customers`, {
+            tipo_ricerca: "Anagrafica_Clienti",
+            keyword: query,
+            esito: "Record trovati",
+            stats: { clienti: clientiTrovati }
+          }).pipe(catchError(() => of(null)));
+        }
+
+        if (serverTrovati > 0) {
+          chiamateDistinte.servers = this.http.post(`${this.apiUrl}/servers`, {
+            tipo_ricerca: "Anagrafica_Server",
+            keyword: query,
+            esito: "Record trovati",
+            stats: { server: serverTrovati }
+          }).pipe(catchError(() => of(null)));
+        }
+
+        if (clientiTrovati === 0 && serverTrovati === 0) {
+          chiamateDistinte.customers = this.http.post(`${this.apiUrl}/customers`, {
+            tipo_ricerca: "Anagrafica_Clienti",
+            keyword: query,
+            esito: "Nessun match",
+            stats: { clienti: 0 }
+          }).pipe(catchError(() => of(null)));
+
+          chiamateDistinte.servers = this.http.post(`${this.apiUrl}/servers`, {
+            tipo_ricerca: "Anagrafica_Server",
+            keyword: query,
+            esito: "Nessun match",
+            stats: { server: 0 }
+          }).pipe(catchError(() => of(null)));
+        }
+
+        return forkJoin(chiamateDistinte);
       })
     ).subscribe();
   }
@@ -185,7 +228,7 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  // Chiude istantaneamente tutti i menu a tendina o pannelli a comparsa attualmente visibili nell'interfaccia.
+  // Chiude istantaneamente tutti i menu a tendina.
   closeAllDropdowns() {
     this.activeDropdownServerId = null;
     this.activeDropdownCustomerId = null;
@@ -256,7 +299,7 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  // Invia il nuovo cliente tramite richiesta POST al server e aggiorna l'elenco locale a schermo.
+  // Invia il nuovo cliente tramite richiesta POST a Mockoon e aggiorna l'elenco locale a schermo.
   createCustomer() {
     if (!this.customerForm.name.trim()) return;
 
@@ -270,27 +313,53 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
       next: () => {
         if (!Array.isArray(this.data.customers)) this.data.customers = [];
         this.data.customers = [newCustomer, ...this.data.customers];
+        
+        console.log(
+          `%c [CREATE] Customer "${newCustomer.name}" creato con successo!`, 
+          "color: #10b981;"
+        );
+
         this.showCustomerModal = false;
         this.refreshUI();
       },
       error: () => {
         if (!Array.isArray(this.data.customers)) this.data.customers = [];
         this.data.customers = [newCustomer, ...this.data.customers];
+        
+        console.log(
+          `%c [CREATE] Customer "${newCustomer.name}" creato con successo (Fallback locale)!`, 
+          "color: #f59e0b; font-weight: bold;"
+        );
+
         this.showCustomerModal = false;
         this.refreshUI();
       }
     });
   }
 
-  // Elimina un cliente dall'archivio remoto tramite richiesta DELETE e aggiorna la griglia dei record visibili.
+  // Elimina un cliente da Mockoon tramite richiesta DELETE e aggiorna la griglia dei record visibili.
   deleteCustomer(id: string) {
+    const customerName = this.data.customers?.find((c: any) => c.id === id)?.name || id;
+
     this.http.delete<any>(`${this.apiUrl}/customers/${id}`).subscribe({
       next: () => {
         this.data.customers = this.data.customers.filter((c: any) => c.id !== id);
+        
+        console.log(
+          `%c [DELETE] Customer "${customerName}" eliminato con successo!`, 
+          "color: #ef4444;"
+        );
+
         this.refreshUI();
       },
       error: () => {
         this.data.customers = this.data.customers.filter((c: any) => c.id !== id);
+        
+        console.log(
+          `%c [DELETE] Customer "${customerName}" eliminato con successo (Fallback locale)!`, 
+          "color: #f59e0b;"
+        );
+
         this.refreshUI();
       }
     });
@@ -317,6 +386,12 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
       next: () => {
         if (!Array.isArray(this.data.servers)) this.data.servers = [];
         this.data.servers = [newServer, ...this.data.servers];
+        
+        console.log(
+          `%c [CREATE] Server "${newServer.name}" creato con successo!`, 
+          "color: #10b981;"
+        );
+
         this.showServerModal = false;
         this.showSecretModal = true; 
         this.refreshUI();
@@ -324,6 +399,12 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
       error: () => {
         if (!Array.isArray(this.data.servers)) this.data.servers = [];
         this.data.servers = [newServer, ...this.data.servers];
+
+        console.log(
+          `%c [CREATE] Server "${newServer.name}" creato con successo (Fallback locale)!`, 
+          "color: #f59e0b;"
+        );
+
         this.showServerModal = false;
         this.showSecretModal = true; 
         this.refreshUI();
@@ -331,15 +412,29 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Rimuove un'istanza server inviando una richiesta DELETE HTTP ed estrapola il record rimosso dalla memoria.
+  // Rimuove un'istanza server inviando una richiesta DELETE HTTP a Mockoon ed estrapola il record rimosso dalla memoria.
   deleteServer(id: string) {
+    const serverName = this.data.servers?.find((s: any) => s.id === id)?.name || id;
+
     this.http.delete<any>(`${this.apiUrl}/servers/${id}`).subscribe({
       next: () => {
         this.data.servers = this.data.servers.filter((s: any) => s.id !== id);
+        
+        console.log(
+          `%c [DELETE] Server "${serverName}" eliminato con successo!`, 
+          "color: #ef4444;"
+        );
+
         this.refreshUI();
       },
       error: () => {
         this.data.servers = this.data.servers.filter((s: any) => s.id !== id);
+        
+        console.log(
+          `%c [DELETE] Server "${serverName}" eliminato con successo (Fallback locale)!`, 
+          "color: #f59e0b;"
+        );
+
         this.refreshUI();
       }
     });
@@ -354,6 +449,12 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
             clientId: mockCredentials?.clientId || 'id_regen_' + Math.random().toString(36).substring(2, 12),
             clientSecret: mockCredentials?.clientSecret || 'secret_regen_' + Math.random().toString(36).substring(2, 15)
           };
+
+          console.log(
+            "%c[SECURITY] Nuove credenziali API generate con successo!",
+             "color: #e988f4"
+          );
+
           this.closeAllDropdowns();
           this.showSecretModal = true; 
           this.refreshUI();
@@ -363,6 +464,12 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
             clientId: 'id_regen_' + Math.random().toString(36).substring(2, 12),
             clientSecret: 'secret_regen_' + Math.random().toString(36).substring(2, 15)
           };
+
+           console.log(
+            "%c[SECURITY] Nuove credenziali API generate con successo! (Fallback locale)!",
+            "color: #f59e0b"
+          );
+
           this.closeAllDropdowns();
           this.showSecretModal = true;
           this.refreshUI();
