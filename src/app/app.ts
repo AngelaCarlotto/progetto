@@ -10,6 +10,7 @@ import { Logs } from './pages/logs/logs';
 import { ScriptsComposer } from './pages/scripts-composer/scripts-composer';
 
 import { DataService } from './services/data';
+import { AuthService } from './services/auth/auth'; 
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 
@@ -40,7 +41,8 @@ export class AppComponent {
   constructor(
     private data: DataService, 
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService 
   ) {
     afterNextRender(() => {
       const sistemaInDark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -53,12 +55,25 @@ export class AppComponent {
       };
       applicaTemaAutomatico(sistemaInDark);
       sistemaInDark.addEventListener('change', applicaTemaAutomatico);
+
+      this.authService.getProfile().subscribe({
+        next: (utente: any) => {
+          if (utente) {
+            console.log(`%c[AUTO-LOGIN] Sessione ripristinata per l'utente: ${utente.name}`, "color: #94dcc4; ");
+            this.loggedUser = utente.name;
+            this.caricaDatiApplicazione();
+          } else {
+            console.log("[AUTO-LOGIN] Nessun utente precedentemente loggato.");
+            this.currentPage = 'login';
+            this.cdr.detectChanges();
+          }
+        }
+      });
     });
   }
 
-  login(username: string) {
-    this.loggedUser = username;
-
+  // Funzione centralizzata per scaricare tutti i dati da Mockoon
+  caricaDatiApplicazione() {
     forkJoin({
       customers: this.http.get<any[]>(`${this.apiUrl}/customers`),
       servers: this.http.get<any[]>(`${this.apiUrl}/servers`),
@@ -76,8 +91,24 @@ export class AppComponent {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error("Errore nel caricamento dati da Mockoon al login:", err);
+        console.error("Errore nel caricamento dati da Mockoon:", err);
         alert("Impossibile connettersi al server Mockoon. Verifica che sia acceso sulla porta 3000!");
+      }
+    });
+  }
+
+  // Metodo attivato quando l'utente compila manualmente il form di login
+  login(username: string) {
+    this.authService.getProfile().subscribe({
+      next: (utente) => {
+        this.loggedUser = utente ? utente.name : username;
+        
+        this.caricaDatiApplicazione();
+      },
+      error: (err) => {
+        console.error("Errore nel recupero del profilo al login manuale:", err);
+        this.loggedUser = username;
+        this.caricaDatiApplicazione();
       }
     });
   }
@@ -86,6 +117,7 @@ export class AppComponent {
     if (page === 'login') {
       this.isLoggedIn = false;
       this.loggedUser = ''; 
+      this.authService.logout(); 
       this.data.customers = [];
       this.data.servers = [];
       this.data.scripts = [];

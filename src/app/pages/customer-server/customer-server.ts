@@ -26,7 +26,6 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef 
   ) {}
 
-  // Inizializza i dati e configura la pipeline RxJS con debounce per inviare i report di ricerca separati al server Mockoon.
   ngOnInit() {
     this.loadData();
 
@@ -68,10 +67,10 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
           );
         }
 
-        const chiamateDistinte: any = {};
+        const chiamate: any = {};
 
         if (clientiTrovati > 0) {
-          chiamateDistinte.customers = this.http.post(`${this.apiUrl}/customers`, {
+          chiamate.customers = this.http.post(`${this.apiUrl}/customers`, {
             tipo_ricerca: "Anagrafica_Clienti",
             keyword: query,
             esito: "Record trovati",
@@ -80,7 +79,7 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
         }
 
         if (serverTrovati > 0) {
-          chiamateDistinte.servers = this.http.post(`${this.apiUrl}/servers`, {
+          chiamate.servers = this.http.post(`${this.apiUrl}/servers`, {
             tipo_ricerca: "Anagrafica_Server",
             keyword: query,
             esito: "Record trovati",
@@ -89,14 +88,14 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
         }
 
         if (clientiTrovati === 0 && serverTrovati === 0) {
-          chiamateDistinte.customers = this.http.post(`${this.apiUrl}/customers`, {
+          chiamate.customers = this.http.post(`${this.apiUrl}/customers`, {
             tipo_ricerca: "Anagrafica_Clienti",
             keyword: query,
             esito: "Nessun match",
             stats: { clienti: 0 }
           }).pipe(catchError(() => of(null)));
 
-          chiamateDistinte.servers = this.http.post(`${this.apiUrl}/servers`, {
+          chiamate.servers = this.http.post(`${this.apiUrl}/servers`, {
             tipo_ricerca: "Anagrafica_Server",
             keyword: query,
             esito: "Nessun match",
@@ -104,7 +103,7 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
           }).pipe(catchError(() => of(null)));
         }
 
-        return forkJoin(chiamateDistinte);
+        return forkJoin(chiamate);
       })
     ).subscribe();
   }
@@ -372,8 +371,8 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     const serverId = 'SRV-' + Math.floor(1000 + Math.random() * 9000);
     
     this.credentials = {
-      clientId: 'id_' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10),
-      clientSecret: 'secret_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+      clientId: Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10),
+      clientSecret: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
     };
 
     const newServer = {

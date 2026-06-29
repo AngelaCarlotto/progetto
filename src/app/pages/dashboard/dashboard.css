@@ -9,6 +9,7 @@
   box-sizing: border-box;
   transition: background-color 0.3s ease, width 0.3s cubic-bezier(0.4, 0, 0.2, 1), flex-basis 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: width, flex-basis;
+  position: relative;
 }
 
 .topbar {
@@ -70,7 +71,8 @@
   gap: 24px;
   box-sizing: border-box;
   height: calc(100vh - 70px); 
-  min-width: 0; 
+  overflow-y: auto;         
+  min-height: 0;
 }
 
 .stat-grid {
@@ -161,6 +163,7 @@
   gap: 20px;
   flex: 1;                  
   min-width: 0; 
+  min-height: 400px;
 }
 
 .chart-card {

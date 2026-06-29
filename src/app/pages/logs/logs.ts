@@ -2,9 +2,10 @@ import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data'; 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http'; 
 import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, switchMap, catchError, timeout } from 'rxjs/operators';
+import { AuthService } from '../../services/auth/auth'; 
 
 @Component({
   selector: 'app-logs',
@@ -31,7 +32,8 @@ export class Logs implements OnInit, OnDestroy {
   constructor(
     public data: DataService, 
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService 
   ) {}
 
   ngOnInit() {
@@ -52,21 +54,8 @@ export class Logs implements OnInit, OnDestroy {
                  String(log.level || '').toLowerCase().includes(queryLower) ||
                  String(log.message || '').toLowerCase().includes(queryLower) ||
                  String(log.scriptId || '').toLowerCase().includes(queryLower) ||
-                 String(log.executionId || log.execution_id || '').toLowerCase().includes(queryLower) ||
                  String(log.formattedDateStr || '').includes(queryLower);
         }).length;
-
-        if (conteggio > 0) {
-          console.log(
-            `%c[SEARCH] Trovate ${conteggio} corrispondenze per: "${cleanedQuery}"`, 
-            "color: #0ea5e9; "
-          );
-        } else {
-          console.log(
-            `%c[SEARCH] Nessun risultato trovato per: "${cleanedQuery}"`, 
-            "color: #ef4444;"
-          );
-        }
 
         const bodyPayload = {
           keyword: cleanedQuery,
@@ -74,21 +63,30 @@ export class Logs implements OnInit, OnDestroy {
           totale_corrispondenze: conteggio
         };
 
-        return this.http.post<any>(`${this.apiUrl}/logs`, bodyPayload).pipe(
-          catchError(() => of(null))
+        const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+
+        return this.http.post<any>(`${this.apiUrl}/logs/search`, bodyPayload, { headers }).pipe(
+          catchError((err) => {
+            console.warn("[SEARCH] Errore o Fallback locale sui parametri di ricerca:", err);
+            return of(null);
+          })
         );
       })
-    ).subscribe();
+    ).subscribe((risposta) => {
+      if (risposta) {
+        console.log(`%c[SEARCH] Risultati trovati per: "${risposta.keyword_ricevuta || this.search}"`, "color: #10b981; ");
+      }
+      this.loading = false;
+      this.refreshUI();
+    });
   }
 
-  // Cancella la sottoscrizione al flusso di ricerca per evitare perdite di memoria alla distruzione del componente.
   ngOnDestroy() {
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
     }
   }
 
-  // Scarica i log via API, formatta le date in formato leggibile e ordina i risultati dal più recente.
   loadInitialLogs() {
     this.loading = true;
     this.refreshUI();
@@ -96,7 +94,7 @@ export class Logs implements OnInit, OnDestroy {
     this.http.get<any[]>(`${this.apiUrl}/logs`).pipe(
       timeout(3000),
       catchError(err => {
-        console.error("[HTTP ERROR] Errore inizializzazione:", err);
+        console.error("[HTTP ERROR] Errore inizializzazione log:", err);
         this.loading = false;
         this.refreshUI();
         return of([]);
@@ -138,7 +136,6 @@ export class Logs implements OnInit, OnDestroy {
     });
   }
 
-  // Ritorna l'elenco dei log filtrati in base alla ricerca dell'utente e ne estrae la porzione per la pagina corrente.
   filteredLogs() {
     const query = this.search ? this.search.trim().toLowerCase() : '';
     let logsFiltrati = [...this.enrichedLogs];
@@ -149,7 +146,6 @@ export class Logs implements OnInit, OnDestroy {
                String(log.level || '').toLowerCase().includes(query) ||
                String(log.message || '').toLowerCase().includes(query) ||
                String(log.scriptId || '').toLowerCase().includes(query) ||
-               String(log.executionId || log.execution_id || '').toLowerCase().includes(query) ||
                (log.formattedDateStr ? log.formattedDateStr.includes(query) : false);
       });
     }
@@ -158,7 +154,6 @@ export class Logs implements OnInit, OnDestroy {
     return logsFiltrati.slice(start, start + this.itemsPerPage);
   }
 
-  // Calcola il numero totale di pagine necessarie per la paginazione, tenendo conto di eventuali filtri di ricerca.
   totalPages(): number {
     const query = this.search ? this.search.trim().toLowerCase() : '';
     if (!query) return Math.ceil(this.enrichedLogs.length / this.itemsPerPage) || 1;
@@ -174,43 +169,58 @@ export class Logs implements OnInit, OnDestroy {
     return Math.ceil(totaleFiltrati / this.itemsPerPage) || 1;
   }
 
-  // Resetta la paginazione e invia il testo digitato al flusso di ricerca RxJS.
   onSearchChange() {
     this.currentPage = 1;
     this.searchSubject.next(this.search.trim());
     this.refreshUI();
   }
 
-  // Apre o chiude il menu a tendina delle opzioni.
   toggleDropdown() { 
     this.dropdownAperto = !this.dropdownAperto; 
     this.refreshUI();
   }
 
-  // Chiede conferma all'utente ed invia una richiesta HTTP DELETE per svuotare l'intero archivio dei log.
   clearAllLogs() {
     this.dropdownAperto = false; 
+
+    const ruoloAttuale = this.authService.getUserRole();
+    console.log("%c[DEBUG LOGS] Tentativo di svuotamento. Ruolo rilevato:", "color: #3b82f6;", ruoloAttuale);
+
+    if (ruoloAttuale !== 'admin') {
+      alert('Operazione negata! Solo gli utenti con ruolo "admin" possono svuotare i log.');
+      return; 
+    }
+
     if (confirm('Sei sicuro di voler svuotare tutti i log?')) {
       this.loading = true;
-      this.http.delete(`${this.apiUrl}/logs`).subscribe({
-        next: () => {
+      
+      this.http.delete<any>(`${this.apiUrl}/logs`).subscribe({
+        next: (risposta) => {
+          
+          const rispostaFinale = (risposta && Object.keys(risposta).length > 0) 
+            ? risposta 
+            : { success: true, message: "Tutti i log sono stati svuotati" };
+          
+          console.log("%c[MOCKOON RESPONSE] Ricevuto dal server:", "color: #f59e0b; font-weight: bold;", rispostaFinale);
+          
           this.enrichedLogs = [];
           this.currentPage = 1; 
           this.loading = false;
           this.refreshUI(); 
         },
-        error: () => { this.loading = false; this.refreshUI(); }
+        error: (err) => { 
+          console.error("[DELETE ERROR] Errore durante lo svuotamento:", err);
+          this.loading = false; 
+          this.refreshUI(); 
+        }
       });
     }
   }
 
-  // Incrementa di uno la pagina corrente all'interno dei limiti massimi disponibili.
   nextPage() { if (this.currentPage < this.totalPages()) { this.currentPage++; this.refreshUI(); } }
 
-  // Decrementa di uno la pagina corrente impedendo di scendere sotto la prima pagina.
   previousPage() { if (this.currentPage > 1) { this.currentPage--; this.refreshUI(); } }
 
-  // Comunica manualmente ad Angular di aggiornare l'interfaccia utente a schermo.
   refreshUI() {
     this.cdr.markForCheck();
     this.cdr.detectChanges();

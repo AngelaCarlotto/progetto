@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http'; 
+import { AuthService } from '../../services/auth/auth'; 
 
 @Component({
   selector: 'app-login',
@@ -19,22 +20,31 @@ export class LoginComponent {
   password = '';
   errorMessage = '';
 
-  constructor(private http: HttpClient) {} 
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService 
+  ) {} 
 
-  // Invia le credenziali via POST al server Mockoon e, in caso di successo, notifica il login riuscito.
   onFormSubmit() {
     this.errorMessage = '';
+
+    if (!this.username.trim() || !this.password.trim()) {
+      this.errorMessage = 'Inserisci sia l\'username che la password per accedere.';
+      return;
+    }
+
     const loginBody = { username: this.username, password: this.password };
 
     this.http.post<any>(`${this.apiUrl}/auth/login`, loginBody).subscribe({
       next: (response) => {
         if (response && response.success) {
+          console.log(`[LOGIN] Credenziali corrette per: ${this.username}`);
 
-          console.log(
-            `Login effettuato! (Utente: ${this.username})`
-          );
+          const tokenDaSalvare = response.token ? response.token : this.username;
+          localStorage.setItem('token_autenticazione', tokenDaSalvare);
 
           this.logged.emit(this.username);
+
         } else {
           this.errorMessage = 'Credenziali non valide. Accesso negato.';
         }
@@ -45,15 +55,13 @@ export class LoginComponent {
     });
   }
 
-  // Simula l'autenticazione OAuth tramite GitHub mostrando un avviso e forzando l'accesso come utente amministratore.
   loginConGitHub() {
     this.errorMessage = '';
     alert("Simulazione: Accesso tramite GitHub eseguito con successo");
     
-    console.log(
-      "Login effettuato con GitHub!"
-    );
-
+    console.log("Login effettuato con GitHub!");
+    localStorage.setItem('token_autenticazione', 'admin');
+    
     this.logged.emit('admin_github');
   }
 }

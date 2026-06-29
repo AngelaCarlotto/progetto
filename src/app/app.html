@@ -1,10 +1,7 @@
-@if (currentPage === 'login' || !isLoggedIn) {
-  
+@if (!isLoggedIn) {
   <app-login (logged)="login($event)"></app-login>
-
 } 
 @else {
-
   <div class="app-container" style="display: flex;">
     
     <app-sidebar 
@@ -14,21 +11,27 @@
     </app-sidebar>
     
     <div class="main-content">
+      
       @if (currentPage === 'dashboard') {
         <app-dashboard></app-dashboard>
       }
+      
       @if (currentPage === 'customer') {
         <app-customer-server></app-customer-server>
       }
+      
       @if (currentPage === 'scripts') {
         <app-scripts-composer></app-scripts-composer>
       }
+      
       @if (currentPage === 'graphs') {
         <app-graphs></app-graphs>
       }
+      
       @if (currentPage === 'logs') {
         <app-logs></app-logs>
       }
+      
     </div>
 
   </div>
