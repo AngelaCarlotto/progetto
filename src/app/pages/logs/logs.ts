@@ -25,6 +25,9 @@ export class Logs implements OnInit, OnDestroy {
   loading = false;
 
   enrichedLogs: any[] = [];
+  
+  totalSuccessCount = 0;
+  totalErrorCount = 0;
 
   private searchSubject = new Subject<string>();
   private searchSubscription!: Subscription;
@@ -47,20 +50,17 @@ export class Logs implements OnInit, OnDestroy {
           return of(null);
         }
 
-        const queryLower = cleanedQuery.toLowerCase();
+        const currentFiltered = this.getFilteredLogsList(cleanedQuery);
         
-        const conteggio = this.enrichedLogs.filter(log => {
-          return String(log.id || '').toLowerCase().includes(queryLower) ||
-                 String(log.level || '').toLowerCase().includes(queryLower) ||
-                 String(log.message || '').toLowerCase().includes(queryLower) ||
-                 String(log.scriptId || '').toLowerCase().includes(queryLower) ||
-                 String(log.formattedDateStr || '').includes(queryLower);
-        }).length;
+        const successMatch = currentFiltered.filter(log => String(log.level).toLowerCase() === 'success').length;
+        const errorMatch = currentFiltered.filter(log => String(log.level).toLowerCase() === 'error').length;
 
         const bodyPayload = {
           keyword: cleanedQuery,
-          esito_ricerca: conteggio > 0 ? 'Dato trovato' : 'Nessun risultato',
-          totale_corrispondenze: conteggio
+          esito_ricerca: currentFiltered.length > 0 ? 'Dato trovato' : 'Nessun risultato',
+          totale_corrispondenze: currentFiltered.length,
+          totale_success: successMatch,
+          totale_error: errorMatch
         };
 
         const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
@@ -72,10 +72,19 @@ export class Logs implements OnInit, OnDestroy {
           })
         );
       })
-    ).subscribe((risposta) => {
-      if (risposta) {
-        console.log(`%c[SEARCH] Risultati trovati per: "${risposta.keyword_ricevuta || this.search}"`, "color: #10b981; ");
+    ).subscribe(() => {
+      const queryLower = this.search ? this.search.trim().toLowerCase() : '';
+      
+      if (queryLower) {
+        const totaleMatchReali = this.getFilteredLogsList(queryLower).length;
+        if (totaleMatchReali > 0) {
+          console.log(`%c[SEARCH] Risultati trovati per: "${this.search}" (${totaleMatchReali} match)`, "color: #0ea5e9; ");
+        } else {
+          console.log(`%c[SEARCH] Nessun risultato trovato per: "${this.search}"`, "color: #ef4444; ");
+        }
       }
+
+      this.updateGraphCounters();
       this.loading = false;
       this.refreshUI();
     });
@@ -99,7 +108,8 @@ export class Logs implements OnInit, OnDestroy {
         this.refreshUI();
         return of([]);
       })
-    ).subscribe((res) => {
+    )
+    .subscribe((res) => {
       const rawLogs = Array.isArray(res) ? res : [];
       
       this.enrichedLogs = rawLogs.map(log => {
@@ -118,8 +128,11 @@ export class Logs implements OnInit, OnDestroy {
           dataFormattataTabella = `${giorno}/${mese}/${anno} - ${ore}:${minuti}:${secondi}`;
         }
 
+        const execId = log.executionId || log.execution_id || log.ExecutionId || null;
+
         return {
           ...log,
+          displayExecutionId: execId ? execId : 'N/A',
           createdAtObj: dateObj,
           formattedDateStr: dataFormattataTabella ? dataFormattataTabella.toLowerCase() : ''
         };
@@ -131,47 +144,50 @@ export class Logs implements OnInit, OnDestroy {
         return b.createdAtObj.getTime() - a.createdAtObj.getTime();
       });
 
+      this.updateGraphCounters();
       this.loading = false;
       this.refreshUI();
     });
   }
 
-  filteredLogs() {
-    const query = this.search ? this.search.trim().toLowerCase() : '';
-    let logsFiltrati = [...this.enrichedLogs];
+  private updateGraphCounters() {
+    const logsSorgente = this.getFilteredLogsList(this.search);
 
-    if (query) {
-      logsFiltrati = logsFiltrati.filter(log => {
-        return String(log.id || '').toLowerCase().includes(query) ||
-               String(log.level || '').toLowerCase().includes(query) ||
-               String(log.message || '').toLowerCase().includes(query) ||
-               String(log.scriptId || '').toLowerCase().includes(query) ||
-               (log.formattedDateStr ? log.formattedDateStr.includes(query) : false);
-      });
+    this.totalSuccessCount = logsSorgente.filter(log => String(log.level).toLowerCase() === 'success').length;
+    this.totalErrorCount = logsSorgente.filter(log => String(log.level).toLowerCase() === 'error').length;
+  }
+  
+  private getFilteredLogsList(queryValue: string): any[] {
+    const query = queryValue ? queryValue.trim().toLowerCase() : '';
+    if (!query) {
+      return [...this.enrichedLogs];
     }
 
+    return this.enrichedLogs.filter(log => {
+      return String(log.id || '').toLowerCase().includes(query) ||
+             String(log.level || '').toLowerCase().includes(query) ||
+             String(log.message || '').toLowerCase().includes(query) ||
+             String(log.scriptId || '').toLowerCase().includes(query) ||
+             String(log.displayExecutionId || '').toLowerCase().includes(query) ||
+             (log.formattedDateStr ? log.formattedDateStr.includes(query) : false);
+    });
+  }
+
+  filteredLogs() {
+    const logsFiltrati = this.getFilteredLogsList(this.search);
     const start = (this.currentPage - 1) * this.itemsPerPage;
     return logsFiltrati.slice(start, start + this.itemsPerPage);
   }
 
   totalPages(): number {
-    const query = this.search ? this.search.trim().toLowerCase() : '';
-    if (!query) return Math.ceil(this.enrichedLogs.length / this.itemsPerPage) || 1;
-
-    const totaleFiltrati = this.enrichedLogs.filter(log => {
-      return String(log.id || '').toLowerCase().includes(query) ||
-             String(log.level || '').toLowerCase().includes(query) ||
-             String(log.message || '').toLowerCase().includes(query) ||
-             String(log.scriptId || '').toLowerCase().includes(query) ||
-             (log.formattedDateStr ? log.formattedDateStr.includes(query) : false);
-    }).length;
-
+    const totaleFiltrati = this.getFilteredLogsList(this.search).length;
     return Math.ceil(totaleFiltrati / this.itemsPerPage) || 1;
   }
 
   onSearchChange() {
     this.currentPage = 1;
-    this.searchSubject.next(this.search.trim());
+    this.searchSubject.next(this.search);
+    this.updateGraphCounters();
     this.refreshUI();
   }
 
@@ -193,18 +209,19 @@ export class Logs implements OnInit, OnDestroy {
 
     if (confirm('Sei sicuro di voler svuotare tutti i log?')) {
       this.loading = true;
+      this.refreshUI();
       
       this.http.delete<any>(`${this.apiUrl}/logs`).subscribe({
         next: (risposta) => {
-          
           const rispostaFinale = (risposta && Object.keys(risposta).length > 0) 
             ? risposta 
             : { success: true, message: "Tutti i log sono stati svuotati" };
           
-          console.log("%c[MOCKOON RESPONSE] Ricevuto dal server:", "color: #f59e0b; font-weight: bold;", rispostaFinale);
+          console.log("%c[MOCKOON RESPONSE] Ricevuto dal server:", "color: #f59e0b; ", rispostaFinale);
           
           this.enrichedLogs = [];
           this.currentPage = 1; 
+          this.updateGraphCounters();
           this.loading = false;
           this.refreshUI(); 
         },
@@ -217,12 +234,21 @@ export class Logs implements OnInit, OnDestroy {
     }
   }
 
-  nextPage() { if (this.currentPage < this.totalPages()) { this.currentPage++; this.refreshUI(); } }
+  nextPage() { 
+    if (this.currentPage < this.totalPages()) { 
+      this.currentPage++; 
+      this.refreshUI(); 
+    } 
+  }
 
-  previousPage() { if (this.currentPage > 1) { this.currentPage--; this.refreshUI(); } }
+  previousPage() { 
+    if (this.currentPage > 1) { 
+      this.currentPage--; 
+      this.refreshUI(); 
+    } 
+  }
 
   refreshUI() {
-    this.cdr.markForCheck();
-    this.cdr.detectChanges();
+    this.cdr.detectChanges(); 
   }
 }

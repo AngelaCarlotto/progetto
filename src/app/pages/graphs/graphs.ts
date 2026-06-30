@@ -119,11 +119,7 @@ export class GraphsComponent implements OnInit, DoCheck {
         this.http.post<any>(`${this.apiUrl}/graph/summary`, payloadGraphs, httpOptions).subscribe({
           next: () => {
             this.loading = false;
-
-            console.log(
-              "%c Pagina grafici aggiornata con successo! ", "color: #ad2ced"
-            );
-
+            console.log("%c Pagina grafici aggiornata con successo! ", "color: #ad2ced");
             this.refreshUI();
           },
           error: () => {
@@ -163,27 +159,29 @@ export class GraphsComponent implements OnInit, DoCheck {
 
     currentScripts.forEach((s: any) => {
       const haMysql = s.mysqlComponent === true || String(s.mysqlComponent).toLowerCase() === 'true';
-      if (haMysql) {
-        this.mysqlCount += 1;
-      }
+      if (haMysql) this.mysqlCount += 1;
 
       const haFiles = s.filesComponent === true || String(s.filesComponent).toLowerCase() === 'true';
-      if (haFiles) {
-        this.filesCount += 1;
-      }
+      if (haFiles) this.filesCount += 1;
     });
 
     currentLogs.forEach((l: any) => {
-      const isError = l.level?.toLowerCase() === 'error';
-      const currentLevel = String(l.level).toLowerCase();
-      const logDateStr = this.normalizeDateToISOString(l.createdAt);
-      
       if (this.isScriptLog(l)) {
-        if (isError) this.globalError++; else this.globalSuccess++;
-        if (logDateStr === todayStr && (currentLevel === 'success' || currentLevel === 'info')) {
-          this.todaySuccess++;
-        } else if (logDateStr === todayStr && isError) {
-          this.todayError++;
+        const currentLevel = String(l.level || '').toLowerCase().trim();
+        const logDateStr = this.normalizeDateToISOString(l.createdAt);
+        
+        if (currentLevel === 'success') {
+          this.globalSuccess++;
+        } else if (currentLevel === 'error') {
+          this.globalError++;
+        }
+
+        if (logDateStr === todayStr) {
+          if (currentLevel === 'success') {
+            this.todaySuccess++;
+          } else if (currentLevel === 'error') {
+            this.todayError++;
+          }
         }
       }
     });
@@ -222,10 +220,10 @@ export class GraphsComponent implements OnInit, DoCheck {
       last10DaysDates.push(dateStr);
       
       const dayLogsCount = currentLogs.filter((l: any) => {
-        const currentLevel = String(l.level).toLowerCase();
+        const currentLevel = String(l.level || '').toLowerCase().trim();
         return this.normalizeDateToISOString(l.createdAt) === dateStr && 
                this.isScriptLog(l) && 
-               (currentLevel === 'success' || currentLevel === 'info');
+               currentLevel === 'success';
       }).length;
       
       if (dayLogsCount > maxDayLogs) maxDayLogs = dayLogsCount;
@@ -236,10 +234,10 @@ export class GraphsComponent implements OnInit, DoCheck {
       const x = startX + (i * dayStepX);
       
       const dayLogsCount = currentLogs.filter((l: any) => {
-        const currentLevel = String(l.level).toLowerCase();
+        const currentLevel = String(l.level || '').toLowerCase().trim();
         return this.normalizeDateToISOString(l.createdAt) === dateStr && 
                this.isScriptLog(l) && 
-               (currentLevel === 'success' || currentLevel === 'info');
+               currentLevel === 'success';
       }).length;
       
       const y = totalHeight - ((dayLogsCount / maxDayLogs) * usableHeight);
@@ -255,7 +253,6 @@ export class GraphsComponent implements OnInit, DoCheck {
   }
 
   private refreshUI() {
-    this.cdr.markForCheck();
     this.cdr.detectChanges();
   }
 }

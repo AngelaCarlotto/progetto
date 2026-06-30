@@ -9,14 +9,27 @@
     </div>
 
     <div class="topbar-actions-container">
-      <input 
-        type="text" 
-        placeholder="Search Script ID..." 
-        [(ngModel)]="searchId" 
-        (input)="onSearchChange()" 
-        (focus)="onSearchFocus()"
-        class="search-input" 
-      />
+      <div class="search-container" style="position: relative; display: inline-block;">
+        <input 
+          type="text" 
+          placeholder="Search Script ID..." 
+          [(ngModel)]="searchId" 
+          (input)="onSearchChange()" 
+          (focus)="onSearchFocus()"
+          class="search-input" 
+          style="padding-right: 30px;" 
+        />
+        @if (searchId && searchId !== 'SCR-') {
+          <button 
+            type="button" 
+            (click)="clearSearch()" 
+            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #64748b; font-size: 14px; padding: 0;"
+            title="Cancella ricerca"
+          >
+            ✕
+          </button>
+        }
+      </div>
       <button class="btn-primary btn-green" (click)="openCreate()">+ Create Script</button>
     </div>
   </div>
@@ -259,16 +272,19 @@
             <div class="form-group">
               <label>Customer *</label>
               <select [(ngModel)]="scriptForm.customerId" (change)="onCustomerChange()">
+                <option value="" disabled>Select Customer</option>
                 @for (c of data.customers; track c.id) {
-                  <option [ngValue]="c.id">{{ c.name }} (ID: {{ c.id.substring(0,6) }}...)</option>
+                  <option [ngValue]="c.id">{{ c.name }} &nbsp;—&nbsp; [ID: {{ c.id }}]</option>
                 }
               </select>
             </div>
+            
             <div class="form-group">
               <label>Server *</label>
               <select [(ngModel)]="scriptForm.serverId" [disabled]="!scriptForm.customerId">
+                <option value="" disabled>Select Server</option>
                 @for (s of getFilteredServers(); track s.id) {
-                  <option [ngValue]="s.id">{{ s.name }}</option>
+                  <option [ngValue]="s.id">{{ s.name }} &nbsp;—&nbsp; [ID: {{ s.id }}]</option>
                 }
               </select>
             </div>

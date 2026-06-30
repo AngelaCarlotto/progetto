@@ -144,6 +144,11 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     });
   }
 
+  clearSearch(): void {
+    this.searchId = '';
+    this.resetSearch();
+  }
+
   onScheduleInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     let value = input.value;
@@ -189,27 +194,38 @@ export class ScriptsComposer implements OnInit, OnDestroy {
         return dataB - dataA;
       });
       this.refreshUI();
-      return; 
+    } else {
+      this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe(res => {
+        const rawScripts = Array.isArray(res) ? res : [];
+        rawScripts.sort((a, b) => {
+          const dataA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dataB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dataB - dataA;
+        });
+        this.data.scripts = rawScripts;
+        this.refreshUI();
+      });
     }
 
-    this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe(res => {
-      const rawScripts = Array.isArray(res) ? res : [];
-      rawScripts.sort((a, b) => {
+    this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe(res => {
+      const rawCustomers = Array.isArray(res) ? res : [];
+      rawCustomers.sort((a, b) => {
         const dataA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dataB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dataB - dataA;
+        return dataB !== dataA ? dataB - dataA : String(b.id).localeCompare(String(a.id));
       });
-      this.data.scripts = rawScripts;
-      this.refreshUI();
-    });
-
-    this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe(res => {
-      this.data.customers = res;
+      this.data.customers = rawCustomers;
       this.refreshUI();
     });
 
     this.http.get<any[]>(`${this.apiUrl}/servers`).subscribe(res => {
-      this.data.servers = res;
+      const rawServers = Array.isArray(res) ? res : [];
+      rawServers.sort((a, b) => {
+        const dataA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dataB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dataB !== dataA ? dataB - dataA : String(b.id).localeCompare(String(a.id));
+      });
+      this.data.servers = rawServers;
       this.refreshUI();
     });
   }

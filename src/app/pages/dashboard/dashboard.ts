@@ -117,15 +117,16 @@ export class DashboardComponent implements OnInit, DoCheck {
     const todayStr = `${dLocal.getFullYear()}-${String(dLocal.getMonth() + 1).padStart(2, '0')}-${String(dLocal.getDate()).padStart(2, '0')}`;
     
     const currentLogs = this.data.logs || [];
+    
     const todayBackupReal = currentLogs.filter(l => {
       const logDateISO = this.normalizeDateToISOString(l.createdAt);
-      const currentLevel = String(l.level).toLowerCase();
+      const currentLevel = String(l.level).toLowerCase().trim();
       return logDateISO === todayStr && 
              this.isScriptLog(l) &&
-             (currentLevel === 'success' || currentLevel === 'info');
+             currentLevel === 'success';
     }).length;
 
-    const totalErrors = currentLogs.filter(l => String(l.level).toLowerCase() === 'error' && this.isScriptLog(l)).length;
+    const totalErrors = currentLogs.filter(l => String(l.level).toLowerCase().trim() === 'error' && this.isScriptLog(l)).length;
     const totalLogs = currentLogs.filter(l => this.isScriptLog(l)).length;
     const errorRateReal = totalLogs > 0 ? ((totalErrors / totalLogs) * 100).toFixed(1) + '%' : '0%';
 
@@ -182,9 +183,7 @@ export class DashboardComponent implements OnInit, DoCheck {
         this.refreshUI();
 
         if (this.isManualRefresh) {
-          console.log(
-            "%c Dashboard aggiornata con successo!", "color: #ad2ced"
-          );
+          console.log("%c Dashboard aggiornata con successo!", "color: #ad2ced");
           this.isManualRefresh = false;
         }
       },
@@ -238,13 +237,14 @@ export class DashboardComponent implements OnInit, DoCheck {
 
     const currentLogs = this.data.logs || [];
     targetDates.forEach((targetDateStr, i) => {
+      
       const count = currentLogs.filter((l: any) => {
         const logDateISO = this.normalizeDateToISOString(l.createdAt);
-        const currentLevel = String(l.level).toLowerCase();
+        const currentLevel = String(l.level).toLowerCase().trim();
         
         return logDateISO === targetDateStr && 
                this.isScriptLog(l) &&
-               (currentLevel === 'success' || currentLevel === 'info');
+               currentLevel === 'success';
       }).length;
 
       const x = startX + (i * widthStep); 
@@ -270,7 +270,6 @@ export class DashboardComponent implements OnInit, DoCheck {
   }
     
   private refreshUI() {
-    this.cdr.markForCheck();
     this.cdr.detectChanges();
   }
 }
