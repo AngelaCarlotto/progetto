@@ -1,6 +1,6 @@
 import { Component, OnInit, DoCheck, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService } from '../../services/data';
+import { DataService } from '../../services/data/data';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Component({
@@ -58,6 +58,7 @@ export class GraphsComponent implements OnInit, DoCheck {
     }
   }
 
+  //adatta qualsiasi data tranformandola nel formato ISO
   private normalizeDateToISOString(dateStr: any): string {
     if (!dateStr || typeof dateStr !== 'string') return '';
     let normalized = dateStr.trim().replace(/\//g, '-');
@@ -71,6 +72,7 @@ export class GraphsComponent implements OnInit, DoCheck {
     return normalized.substring(0, 10);
   }
 
+  //recupera i dati dal server e li sincronizza
   syncDataFromServer(callback?: () => void) {
     this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe({
       next: (scripts) => {
@@ -98,6 +100,7 @@ export class GraphsComponent implements OnInit, DoCheck {
     });
   }
 
+  //ricalcola e si sincronizza nuovamente con i dati del server 
   ricalcola() {
     this.loading = true;
     this.refreshUI();
@@ -131,6 +134,7 @@ export class GraphsComponent implements OnInit, DoCheck {
     }, 600); 
   }
 
+  //Analizza un singolo log e decide se è un log di uno script o no 
   private isScriptLog(log: any): boolean {
     if (!log) return false;
     const hasScriptId = log.scriptId && String(log.scriptId).trim() !== '';
@@ -143,6 +147,7 @@ export class GraphsComponent implements OnInit, DoCheck {
     return !!(hasScriptId || isBackupMessage);
   }
 
+  //calcola l'altezza per le colonne dei grafici
   calculateAllStats() {
     this.mysqlCount = 0; 
     this.filesCount = 0;
@@ -202,6 +207,7 @@ export class GraphsComponent implements OnInit, DoCheck {
     this.generateHistorySvg(currentLogs);
   }
    
+  //calcola tutti i tipi di grafici
   generateHistorySvg(currentLogs: any[]) {
     const points: string[] = [];
     this.chartPoints = [];

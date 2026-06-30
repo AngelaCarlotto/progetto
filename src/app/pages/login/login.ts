@@ -25,6 +25,7 @@ export class LoginComponent {
     private authService: AuthService 
   ) {} 
 
+  //autenticazione standard
   onFormSubmit() {
     this.errorMessage = '';
 
@@ -55,6 +56,7 @@ export class LoginComponent {
     });
   }
 
+  //autenticazione con github
   loginConGitHub() {
     this.errorMessage = '';
     alert("Simulazione: Accesso tramite GitHub eseguito con successo");

@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../services/data';
+import { DataService } from '../../services/data/data';
 import { HttpClient } from '@angular/common/http';
 import { Subject, Subscription, forkJoin, of } from 'rxjs';
 import { debounceTime, switchMap, catchError } from 'rxjs/operators';
@@ -275,7 +275,7 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     return this.data.servers.filter(s => s.customerId == customerId);
   }
 
-  // Resetta i dati del modulo e mostra la finestra modale per inserire un nuovo cliente anagrafico.
+  // Resetta i dati del modulo e mostra la finestra modale per inserire un nuovo cliente.
   openCustomerModal() {
     this.closeAllDropdowns();
     this.customerForm.name = '';
@@ -298,7 +298,7 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  // Invia il nuovo cliente tramite richiesta POST a Mockoon e aggiorna l'elenco locale a schermo.
+  // Invia il nuovo cliente tramite richiesta POST a Mockoon e aggiorna la tabella.
   createCustomer() {
     if (!this.customerForm.name.trim()) return;
 
@@ -336,7 +336,7 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Elimina un cliente da Mockoon tramite richiesta DELETE e aggiorna la griglia dei record visibili.
+  // Elimina un cliente da Mockoon tramite richiesta DELETE e aggiorna la tabella.
   deleteCustomer(id: string) {
     const customerName = this.data.customers?.find((c: any) => c.id === id)?.name || id;
 
@@ -364,7 +364,7 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Genera in locale le chiavi di sicurezza API, invia il record server tramite POST e mostra la modale con i segreti.
+  // Creazione di un nuovo server, genera in locale le credenziali client id e client secret e le fa vedere tramite popup
   createServer() {
     if (!this.serverForm.name.trim() || !this.serverForm.customerId) return;
 
@@ -411,7 +411,7 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Rimuove un'istanza server inviando una richiesta DELETE HTTP a Mockoon ed estrapola il record rimosso dalla memoria.
+  // Rimuove il server, inviando una richiesta DELETE HTTP a Mockoon.
   deleteServer(id: string) {
     const serverName = this.data.servers?.find((s: any) => s.id === id)?.name || id;
 

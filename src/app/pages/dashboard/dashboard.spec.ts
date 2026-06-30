@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DashboardComponent } from './dashboard';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { DataService } from '../../services/data';
+import { DataService } from '../../services/data/data';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;

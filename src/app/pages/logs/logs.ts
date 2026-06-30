@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../services/data'; 
+import { DataService } from '../../services/data/data'; 
 import { HttpClient, HttpHeaders } from '@angular/common/http'; 
 import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, switchMap, catchError, timeout } from 'rxjs/operators';
@@ -18,27 +18,28 @@ export class Logs implements OnInit, OnDestroy {
 
   private apiUrl = 'http://localhost:3000/api';
   
-  search = '';
-  itemsPerPage = 10;
-  currentPage = 1;
-  dropdownAperto = false;
-  loading = false;
+  search = '';               
+  itemsPerPage = 10;         
+  currentPage = 1;           
+  dropdownAperto = false;   
+  loading = false;            
 
   enrichedLogs: any[] = [];
   
-  totalSuccessCount = 0;
-  totalErrorCount = 0;
+  totalSuccessCount = 0;     
+  totalErrorCount = 0;      
 
-  private searchSubject = new Subject<string>();
-  private searchSubscription!: Subscription;
+  private searchSubject = new Subject<string>(); 
+  private searchSubscription!: Subscription;     
 
   constructor(
-    public data: DataService, 
-    private http: HttpClient,
-    private cdr: ChangeDetectorRef,
-    private authService: AuthService 
+    public data: DataService,
+    private http: HttpClient,        
+    private cdr: ChangeDetectorRef,      
+    private authService: AuthService     
   ) {}
 
+  /*Configura il sistema di ricerca con debounce e avvia il caricamento iniziale.*/
   ngOnInit() {
     this.loadInitialLogs();
 
@@ -51,7 +52,6 @@ export class Logs implements OnInit, OnDestroy {
         }
 
         const currentFiltered = this.getFilteredLogsList(cleanedQuery);
-        
         const successMatch = currentFiltered.filter(log => String(log.level).toLowerCase() === 'success').length;
         const errorMatch = currentFiltered.filter(log => String(log.level).toLowerCase() === 'error').length;
 
@@ -68,7 +68,7 @@ export class Logs implements OnInit, OnDestroy {
         return this.http.post<any>(`${this.apiUrl}/logs/search`, bodyPayload, { headers }).pipe(
           catchError((err) => {
             console.warn("[SEARCH] Errore o Fallback locale sui parametri di ricerca:", err);
-            return of(null);
+            return of(null); 
           })
         );
       })
@@ -90,18 +90,20 @@ export class Logs implements OnInit, OnDestroy {
     });
   }
 
+  /*Cancella la sottoscrizione per evitare consumi di memoria superflui.*/
   ngOnDestroy() {
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
     }
   }
 
+  /*Recupera l'elenco iniziale di tutti i log disponibili sul server.*/
   loadInitialLogs() {
-    this.loading = true;
+    this.loading = true; 
     this.refreshUI();
 
     this.http.get<any[]>(`${this.apiUrl}/logs`).pipe(
-      timeout(3000),
+      timeout(3000), 
       catchError(err => {
         console.error("[HTTP ERROR] Errore inizializzazione log:", err);
         this.loading = false;
@@ -132,7 +134,7 @@ export class Logs implements OnInit, OnDestroy {
 
         return {
           ...log,
-          displayExecutionId: execId ? execId : 'N/A',
+          displayExecutionId: execId ? execId : 'N/A', 
           createdAtObj: dateObj,
           formattedDateStr: dataFormattataTabella ? dataFormattataTabella.toLowerCase() : ''
         };
@@ -150,6 +152,7 @@ export class Logs implements OnInit, OnDestroy {
     });
   }
 
+  /*Ricalcola il conteggio totale dei successi e degli errori basandosi solo sui log attualmente filtrati.*/
   private updateGraphCounters() {
     const logsSorgente = this.getFilteredLogsList(this.search);
 
@@ -157,6 +160,7 @@ export class Logs implements OnInit, OnDestroy {
     this.totalErrorCount = logsSorgente.filter(log => String(log.level).toLowerCase() === 'error').length;
   }
   
+  /*filtra l'intero array di log in base a una stringa di ricerca. Cerca la corrispondenza.*/
   private getFilteredLogsList(queryValue: string): any[] {
     const query = queryValue ? queryValue.trim().toLowerCase() : '';
     if (!query) {
@@ -175,29 +179,36 @@ export class Logs implements OnInit, OnDestroy {
 
   filteredLogs() {
     const logsFiltrati = this.getFilteredLogsList(this.search);
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    return logsFiltrati.slice(start, start + this.itemsPerPage);
+    const start = (this.currentPage - 1) * this.itemsPerPage; 
+    return logsFiltrati.slice(start, start + this.itemsPerPage); 
   }
 
+  /*Calcola il numero totale di pagine necessarie per la paginazione, basandosi sui log filtrati.*/
   totalPages(): number {
     const totaleFiltrati = this.getFilteredLogsList(this.search).length;
-    return Math.ceil(totaleFiltrati / this.itemsPerPage) || 1;
+    return Math.ceil(totaleFiltrati / this.itemsPerPage) || 1; 
   }
 
+  /*
+   * Eseguita ogni volta che l'utente modifica l'input della barra di ricerca.
+   * Resetta la paginazione alla prima pagina ed emette il valore nello stream RxJS.
+   */
   onSearchChange() {
     this.currentPage = 1;
-    this.searchSubject.next(this.search);
-    this.updateGraphCounters();
+    this.searchSubject.next(this.search); 
+    this.updateGraphCounters();          
     this.refreshUI();
   }
 
+  /*Inverte lo stato di apertura/chiusura (true/false) del menu dropdown delle opzioni nella UI.*/
   toggleDropdown() { 
     this.dropdownAperto = !this.dropdownAperto; 
     this.refreshUI();
   }
 
+  /*Svuota interamente il database dei log sul server. Include controlli di sicurezza basati sul ruolo utente.*/
   clearAllLogs() {
-    this.dropdownAperto = false; 
+    this.dropdownAperto = false; // Chiude preventivamente il menu a tendina
 
     const ruoloAttuale = this.authService.getUserRole();
     console.log("%c[DEBUG LOGS] Tentativo di svuotamento. Ruolo rilevato:", "color: #3b82f6;", ruoloAttuale);
@@ -234,6 +245,7 @@ export class Logs implements OnInit, OnDestroy {
     }
   }
 
+  /*Avanza alla pagina successiva della tabella dei log (se disponibile).*/
   nextPage() { 
     if (this.currentPage < this.totalPages()) { 
       this.currentPage++; 
@@ -241,6 +253,7 @@ export class Logs implements OnInit, OnDestroy {
     } 
   }
 
+  /*Ritorna alla pagina precedente della tabella dei log (fino alla pagina 1).*/
   previousPage() { 
     if (this.currentPage > 1) { 
       this.currentPage--; 

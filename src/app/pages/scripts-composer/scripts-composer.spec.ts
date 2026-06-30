@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { ScriptsComposer } from './scripts-composer';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../services/data';
+import { DataService } from '../../services/data/data';
 
 describe('ScriptsComposer Component', () => {
   let component: ScriptsComposer;

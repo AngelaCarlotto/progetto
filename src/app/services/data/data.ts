@@ -38,6 +38,7 @@ export class DataService {
     this.saveToStorage(); 
   }
 
+  /* recupera i dati precedentemente salvati nel localStorage per scripts, logs, customers e servers. Se non trova nulla, inizializza le variabili con un array vuoto '[]'.*/
   constructor() {
     if (this.isBrowser) {
       this.scripts = JSON.parse(localStorage.getItem('backup_scripts') || '[]');
@@ -47,6 +48,7 @@ export class DataService {
     }
   }
 
+  /*SALVATAGGIO DEI DATI*/
   saveToStorage() {
     if (this.isBrowser) {
       localStorage.setItem('backup_scripts', JSON.stringify(this._scripts$.value));

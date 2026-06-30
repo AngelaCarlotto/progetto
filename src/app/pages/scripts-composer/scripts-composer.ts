@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../services/data';
+import { DataService } from '../../services/data/data';
 import { HttpClient } from '@angular/common/http';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, switchMap, filter } from 'rxjs/operators';
@@ -12,12 +12,12 @@ interface MysqlInstance {
   user: string;
   password?: string;
   database: string;
-  selectedMysqlFiles: File[];
+  selectedMysqlFiles: File[]; 
 }
 
 interface FileInstance {
-  sourcePath: string;
-  selectedFiles: File[];
+  sourcePath: string;     
+  selectedFiles: File[];  
 }
 
 @Component({
@@ -36,45 +36,46 @@ export class ScriptsComposer implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
   private searchSubscription!: Subscription;
   
-  showCreate = false;
-  showEdit = false;
-  currentStep = 1;
-  activeEditTab = 1;
-  isChangingFtpPassword = false;
-  activeKebabId: string | null = null;
+  showCreate = false;             
+  showEdit = false;               
+  currentStep = 1;                
+  activeEditTab = 1;             
+  isChangingFtpPassword = false;  
+  activeKebabId: string | null = null; 
 
   scriptForm = {
     id: '',
-    path: '',
-    schedule: '',
-    serverId: '',
-    customerId: '',
-    mysqlComponent: false,     
-    mysqlInstances: [] as MysqlInstance[],
-    filesComponent: false,     
-    fileInstances: [] as FileInstance[],
-    ftpHost: '',
-    ftpUser: '',
-    ftpPassword: '',
-    type: 'FILE'
+    path: '',                     
+    schedule: '',                 
+    serverId: '',                 
+    customerId: '',               
+    mysqlComponent: false,        
+    mysqlInstances: [] as MysqlInstance[], 
+    filesComponent: false,        
+    fileInstances: [] as FileInstance[],  
+    ftpHost: '',                 
+    ftpUser: '',                  
+    ftpPassword: '',             
+    type: 'FILE'                  
   };
 
   selectedScript: any = null;
   private originalScriptBackup: string = '';
 
   constructor(
-    public data: DataService, 
-    private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    public data: DataService,       
+    private http: HttpClient,       
+    private cdr: ChangeDetectorRef  
   ) {}
 
+  /*Carica i dati di base (Script, Server, Clienti)e configura la pipeline di ricerca ad hoc per gli ID.*/
   ngOnInit() {
     this.loadInitialData();
 
     this.searchSubscription = this.searchSubject.pipe(
       debounceTime(600), 
-      filter(testo => testo.length >= 9),
-      switchMap(testoCercato => this.http.get<any>(`${this.apiUrl}/scripts/${testoCercato}`))
+      filter(testo => testo.length >= 9), 
+      switchMap(testoCercato => this.http.get<any>(`${this.apiUrl}/scripts/${testoCercato}`)) 
     ).subscribe({
       next: (scriptSingolo) => {
         if (scriptSingolo && scriptSingolo.id) {
@@ -93,17 +94,20 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     });
   }
 
+  /*Cancella la sottoscrizione per prevenire memory leak.*/
   ngOnDestroy() {
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
     }
   }
 
+  /*Riavvia la configurazione della ricerca in caso di errori critici sulla rete.*/
   private riavviaPipelineRicerca() {
     this.ngOnDestroy();
     this.ngOnInit();
   }
 
+  /*Esegue il filtro sul client se il server non risponde alla ricerca per ID.*/
   private rimettiFiltroLocale() {
     const testoCercato = this.searchId.trim();
     this.data.scripts = this.data.scripts.filter(
@@ -112,6 +116,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
+  /*Quando l'utente clicca sulla barra di ricerca, se è vuota pre-compila automaticamente con l'ID di esempio 'SCR-'.*/
   onSearchFocus(): void {
     if (!this.searchId.trim()) {
       this.searchId = 'SCR-';
@@ -119,6 +124,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     }
   }
 
+  /*Gestisce i formati numerici (es. se digiti 123 lo trasforma in SCR-123).*/
   onSearchChange(): void {
     let valoreInput = this.searchId.trim();
 
@@ -133,28 +139,31 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     }
 
     this.refreshUI(); 
-    this.searchSubject.next(valoreInput);
+    this.searchSubject.next(valoreInput); 
   }
 
+  /*Ripristina la lista completa degli script richiamando la GET generale dal server.*/
   private resetSearch(): void {
     this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe(res => {
       const rawScripts = Array.isArray(res) ? res : [];
-      this.data.scripts = [...rawScripts].reverse();
+      this.data.scripts = [...rawScripts].reverse(); // Mostra i più recenti in alto
       this.refreshUI();
     });
   }
 
+  /*Svuota il campo di ricerca e ripristina la lista completa.*/
   clearSearch(): void {
     this.searchId = '';
     this.resetSearch();
   }
 
+  /*Gestisce l'autocompletamento con asterischi `*` del campo schedule.*/
   onScheduleInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     let value = input.value;
 
     let cleanValue = value.replace(/[^0-9\s*]/g, '');
-    cleanValue = cleanValue.replace(/\s+/g, ' ');
+    cleanValue = cleanValue.replace(/\s+/g, ' '); 
 
     const blocchiUtente = cleanValue.split(' ').filter(b => b.length > 0);
     const terminaConSpazio = cleanValue.endsWith(' ');
@@ -186,6 +195,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
+  /*Recupera i dati di inizializzazione da mostrare a schermo: Script, Clienti e Server collegati.*/
   loadInitialData() {
     if (this.data.scripts && this.data.scripts.length > 0) {
       this.data.scripts.sort((a, b) => {
@@ -207,6 +217,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
       });
     }
 
+    // Caricamento e ordinamento dei Clienti (per ID e data creazione)
     this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe(res => {
       const rawCustomers = Array.isArray(res) ? res : [];
       rawCustomers.sort((a, b) => {
@@ -218,6 +229,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
       this.refreshUI();
     });
 
+    // Caricamento e ordinamento dei Server associati
     this.http.get<any[]>(`${this.apiUrl}/servers`).subscribe(res => {
       const rawServers = Array.isArray(res) ? res : [];
       rawServers.sort((a, b) => {
@@ -237,17 +249,20 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     }, 0);
   }
 
+  /*Apre o chiude il kebab menu di una riga specifica della tabella degli script.*/
   toggleKebab(scriptId: string, event: MouseEvent) {
     event.stopPropagation(); 
     this.activeKebabId = this.activeKebabId === scriptId ? null : scriptId;
     this.refreshUI();
   }
 
+  /*Chiude qualsiasi menu a tendina aperto.*/
   closeKebab() {
     this.activeKebabId = null;
     this.refreshUI();
   }
 
+  /*Apre la finestra modale per la creazione di un nuovo script di backup resettando lo stato del form.*/
   openCreate() {
     this.closeKebab();
     this.currentStep = 1; 
@@ -256,26 +271,31 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
+  /*Avanza allo step successivo della configurazione guidata (fino allo step 3).*/
   nextStep() { 
     if (this.currentStep < 3) this.currentStep++; 
     this.refreshUI();
   }
   
+  /*Ritorna allo step precedente della configurazione guidata.*/
   prevStep() { 
     if (this.currentStep > 1) this.currentStep--; 
     this.refreshUI();
   }
 
+  /* Filtra dinamicamente la lista dei server in base al cliente selezionato nel form.*/
   getFilteredServers(): any[] {
     if (!this.scriptForm.customerId) return [];
     return this.data.servers.filter(s => s.customerId === this.scriptForm.customerId);
   }
 
+  /*Se l'utente cambia il cliente nel form, resetta il server selezionato per evitare incongruenze.*/
   onCustomerChange() { 
     this.scriptForm.serverId = ''; 
     this.refreshUI();
   }
 
+  /*Aggiunge una nuova configurazione vuota di database MySQL all'array.*/
   addMysqlInstance() {
     this.scriptForm.mysqlInstances.push({
       host: '', port: '3306', user: '', password: '', database: '', selectedMysqlFiles: []
@@ -283,21 +303,28 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
+  /* Rimuove una configurazione di database MySQL in base all'indice.*/
   removeMysqlInstance(index: number) { 
     this.scriptForm.mysqlInstances.splice(index, 1); 
     this.refreshUI();
   }
   
+  /*Aggiunge un nuovo blocco di file fisici da includere nel backup.*/
   addFileInstance() { 
     this.scriptForm.fileInstances.push({ sourcePath: 'C:\\', selectedFiles: [] }); 
     this.refreshUI();
   }
   
+  /*Rimuove un blocco di configurazione file fisici in base all'indice.*/
   removeFileInstance(index: number) { 
     this.scriptForm.fileInstances.splice(index, 1); 
     this.refreshUI();
   }
 
+  /*
+   * Gestisce l'abilitazione delle checkbox per database o file.
+   * Se attivate inizializzano un elemento di default vuoto, altrimenti svuotano l'array.
+   */
   toggleComponent(type: 'mysql' | 'files') {
     if (type === 'mysql') {
       this.scriptForm.mysqlInstances = this.scriptForm.mysqlComponent 
@@ -311,6 +338,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
+  /*Gestisce l'evento di selezione file (file input) per l'istanza MySQL.*/
   onMysqlFilesSelected(event: any, index: number) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -320,17 +348,19 @@ export class ScriptsComposer implements OnInit, OnDestroy {
         ...filesArray
       ];
       setTimeout(() => {
-        input.value = '';
+        input.value = ''; 
         this.refreshUI();
       }, 100);
     }
   }
 
+  /*Rimuove un file specifico allegato a un'istanza MySQL.*/
   removeMysqlFile(instanceIndex: number, fileIndex: number) {
     this.scriptForm.mysqlInstances[instanceIndex].selectedMysqlFiles.splice(fileIndex, 1);
     this.refreshUI();
   }
 
+  /*Gestisce l'evento di selezione dei file fisici locali per un'istanza di directory.*/
   onFilesSelected(event: any, index: number) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -346,11 +376,13 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     }
   }
 
+  /*Rimuove un file fisico selezionato in una specifica istanza.*/
   removeFile(instanceIndex: number, fileIndex: number) {
     this.scriptForm.fileInstances[instanceIndex].selectedFiles.splice(fileIndex, 1);
     this.refreshUI();
   }
 
+  // VALIDAZIONI DEI VARI STEP DEL FORM
   isStep1Valid(): boolean { return !!(this.scriptForm.path && this.scriptForm.schedule && this.scriptForm.customerId && this.scriptForm.serverId); }
 
   isStep2Valid(): boolean {
@@ -382,6 +414,10 @@ export class ScriptsComposer implements OnInit, OnDestroy {
 
   isFormValid(): boolean { return this.isTab1Valid() && this.isTab2Valid() && this.isTab3Valid(); }
 
+  /*
+   * Compara lo stato corrente del form con la stringa JSON di backup creata all'apertura del modale.
+   * Ritorna true se sono state apportate modifiche effettive.
+   */
   hasChanges(): boolean {
     if (!this.showEdit) return false;
     const currentFtpPassword = this.isChangingFtpPassword ? this.scriptForm.ftpPassword : this.selectedScript.ftpPassword;
@@ -403,8 +439,9 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     return this.originalScriptBackup !== JSON.stringify(currentCompareState);
   }
 
+  /*Salva sul server una nuova configurazione di script e genera automaticamente un log di avvenuto successo.*/
   createScript() {
-    const idUnivoco = 'SCR-' + Math.floor(100000 + Math.random() * 900000);
+    const idUnivoco = 'SCR-' + Math.floor(100000 + Math.random() * 900000); 
     const dataOdierna = new Date().toISOString(); 
 
     const newScript = {
@@ -443,7 +480,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
             this.data.logs = [newLog, ...this.data.logs];
             this.refreshUI();
           },
-          error: (err) => console.error("Errore salvataggio LOG su Mockoon:", err)
+          error: (err) => console.error("Errore salvataggio LOG su backend:", err)
         });
       },
       error: () => {
@@ -457,6 +494,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.resetForm();
   }
 
+  /*Apre la finestra di modifica compilando i campi del form con i dati dello script selezionato.*/
   openEdit(script: any) {
     this.closeKebab();
     this.selectedScript = script;
@@ -492,6 +530,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
+  /*Salva sul server (HTTP PUT) le modifiche dello script modificato, calcola quali campi sono cambiati e inserisce un log informativo.*/
   saveEdit() {
     if (!this.hasChanges()) {
       this.showEdit = false;
@@ -575,6 +614,10 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.showEdit = false;
   }
 
+  /*
+   * Elimina uno script dal sistema inviando una richiesta HTTP DELETE.
+   * Gestisce l'eliminazione forzata sul client se il server risulta non raggiungibile.
+   */
   deleteScript(id: string) {
     const dataOdierna = new Date().toISOString();
 
@@ -606,11 +649,12 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     };
 
     this.http.delete<any>(`${this.apiUrl}/scripts/${id}`).subscribe({
-      next: () => rimozioneLocale(false),
-      error: () => rimozioneLocale(true)
+      next: () => rimozioneLocale(false), 
+      error: () => rimozioneLocale(true)   
     });
   }
 
+  /*recuperara l'elenco degli script filtrati in base a ciò che è presente nella barra di ricerca.*/
   get filteredScripts(): any[] {
     if (!this.data.scripts) return [];
     if (!this.searchId.trim()) return this.data.scripts;

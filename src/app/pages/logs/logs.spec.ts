@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Logs } from './logs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../services/data';
+import { DataService } from '../../services/data/data';
 
 describe('Logs Component', () => {
   let component: Logs;

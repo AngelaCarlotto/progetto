@@ -1,6 +1,6 @@
 import { Component, OnInit, DoCheck, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService } from '../../services/data'; 
+import { DataService } from '../../services/data/data'; 
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Component({
@@ -43,6 +43,7 @@ export class DashboardComponent implements OnInit, DoCheck {
     this.syncFreshData();
   }
 
+  //monitora i cambiamenti degli script e aggiorna a sua volta la pagina 
   ngDoCheck() {
     const currentLength = this.data.scripts ? this.data.scripts.length : 0;
     if (currentLength !== this.lastScriptsLength) {
@@ -51,6 +52,7 @@ export class DashboardComponent implements OnInit, DoCheck {
     }
   }
 
+  //recupera e sincronizza i dati in modo che siano accessibili anche nelle altre pagine
   syncFreshData(callback?: () => void) {
     this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe({
       next: (scripts) => {
@@ -77,6 +79,7 @@ export class DashboardComponent implements OnInit, DoCheck {
     });
   }
 
+  //Prende una data qualsiasi e la trasforma sempre nel formato standard ISO
   private normalizeDateToISOString(dateStr: any): string {
     if (!dateStr || typeof dateStr !== 'string') return '';
     let normalized = dateStr.trim().replace(/\//g, '-');
@@ -90,6 +93,7 @@ export class DashboardComponent implements OnInit, DoCheck {
     return normalized.substring(0, 10);
   }
 
+  //Analizza un singolo log e decide se è un log di uno script o no 
   private isScriptLog(log: any): boolean {
     if (!log) return false;
     const hasScriptId = log.scriptId && String(log.scriptId).trim() !== '';
@@ -102,6 +106,7 @@ export class DashboardComponent implements OnInit, DoCheck {
     return !!(hasScriptId || isBackupMessage);
   }
 
+  // conta i clienti e script attivi, backup odierni, errori e la ripartizione di file e sql basandosi sui dati esistenti 
   loadDashboardData() {
     this.generateLineChart(); 
     
@@ -147,6 +152,7 @@ export class DashboardComponent implements OnInit, DoCheck {
       });
     }
 
+    //invia un report al server, aggiorna le variabili del frontend e genera il grafico a donut
     const payloadDashboard = {
       totalCustomers: totalCustomersReal,
       activeScripts: activeScriptsReal,
@@ -198,6 +204,7 @@ export class DashboardComponent implements OnInit, DoCheck {
     });
   }
 
+  //feedback visivo immediato di caricamento
   refreshDashboard() {
     this.loading = true;
     this.isManualRefresh = true;
@@ -218,6 +225,7 @@ export class DashboardComponent implements OnInit, DoCheck {
     }, 600);
   }
 
+  //calcola il grafico lineare
   generateLineChart() {
     this.chartPoints = [];
     const pointsStrings: string[] = []; 

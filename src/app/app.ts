@@ -9,7 +9,7 @@ import { GraphsComponent} from './pages/graphs/graphs';
 import { Logs } from './pages/logs/logs';
 import { ScriptsComposer } from './pages/scripts-composer/scripts-composer';
 
-import { DataService } from './services/data';
+import { DataService } from './services/data/data';
 import { AuthService } from './services/auth/auth'; 
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
