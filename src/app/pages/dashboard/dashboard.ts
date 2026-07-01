@@ -52,8 +52,14 @@ export class DashboardComponent implements OnInit, DoCheck {
     }
   }
 
-  //recupera e sincronizza i dati in modo che siano accessibili anche nelle altre pagine
+  // Recupera e sincronizza i dati unendo i dati statici di Mockoon alla memoria del browser
   syncFreshData(callback?: () => void) {
+    // PASSAGGIO CRUCIALE: Carica IMMEDIATAMENTE i clienti dal localStorage prima di fare qualsiasi chiamata HTTP
+    const salvatiLocaliCustomers = localStorage.getItem('mock_customers');
+    if (salvatiLocaliCustomers) {
+      this.data.customers = JSON.parse(salvatiLocaliCustomers);
+    }
+
     this.http.get<any[]>(`${this.apiUrl}/scripts`).subscribe({
       next: (scripts) => {
         this.data.scripts = Array.isArray(scripts) ? [...scripts].reverse() : [];
@@ -61,7 +67,21 @@ export class DashboardComponent implements OnInit, DoCheck {
         
         this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe({
           next: (cust) => {
-            this.data.customers = cust;
+            const serverCustomers = Array.isArray(cust) ? cust : [];
+            
+            // Riprendiamo lo stato aggiornato (compreso il nuovo cliente creato)
+            const currentCustomers = this.data.customers || [];
+            
+            // Filtro di sicurezza: prendiamo i clienti locali che NON sono già presenti nell'array del server
+            const localiCustomer = currentCustomers.filter((c: any) => 
+              c && c.id && !serverCustomers.some((r: any) => r && r.id === c.id)
+            );
+            
+            // Uniamo i locali ai server (Es. 1 locale + 10 del server = 11)
+            this.data.customers = [...localiCustomer, ...serverCustomers];
+            
+            // Salviamo subito il set unito nel localStorage in modo che sia memorizzato sul browser
+            localStorage.setItem('mock_customers', JSON.stringify(this.data.customers));
             
             this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe({
               next: (logs) => {
@@ -69,13 +89,22 @@ export class DashboardComponent implements OnInit, DoCheck {
                 this.loadDashboardData();
                 if (callback) callback();
               },
-              error: () => { if (callback) callback(); }
+              error: () => { 
+                this.loadDashboardData();
+                if (callback) callback(); 
+              }
             });
           },
-          error: () => { if (callback) callback(); }
+          error: () => { 
+            this.loadDashboardData();
+            if (callback) callback(); 
+          }
         });
       },
-      error: () => { if (callback) callback(); }
+      error: () => { 
+        this.loadDashboardData();
+        if (callback) callback(); 
+      }
     });
   }
 

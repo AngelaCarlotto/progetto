@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data/data';
 import { HttpClient } from '@angular/common/http';
-import { Subject, Subscription, forkJoin, of } from 'rxjs';
+import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, switchMap, catchError } from 'rxjs/operators';
 
 @Component({
@@ -30,108 +30,86 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.loadData();
 
     this.searchSubscription = this.searchSubject.pipe(
-      debounceTime(1500),
+      debounceTime(400),
       switchMap(query => {
-        if (!query) {
+        if (!query.trim()) {
+          this.loadData(false); 
           return of(null);
         }
 
-        const queryLower = query.toLowerCase();
-
-        const clientiTrovati = (this.data.customers || []).filter((c: any) => 
-          c.name && c.name.toLowerCase().includes(queryLower)
-        ).length;
-
-        const serverTrovati = (this.data.servers || []).filter((s: any) => 
-          s.name && s.name.toLowerCase().includes(queryLower)
-        ).length;
-
-        if (clientiTrovati > 0) {
-          console.log(
-            `%c [SEARCH] Cercato: "${query}" | Risultati -> Clienti trovati: ${clientiTrovati}`, 
-            "color: #0ea5e9; "
-          );
-        }
-
-        if (serverTrovati > 0) {
-          console.log(
-            `%c [SEARCH] Cercato: "${query}" | Risultati -> Server trovati: ${serverTrovati}`, 
-            "color: #0ea5e9; "
-          );
-        }
-
-        if (clientiTrovati === 0 && serverTrovati === 0) {
-          console.log(
-            `%c [SEARCH] Cercato: "${query}" | Nessun risultato trovato nel client`, 
-            "color: #0ea5e9; "
-          );
-        }
-
-        const chiamate: any = {};
-
-        if (clientiTrovati > 0) {
-          chiamate.customers = this.http.post(`${this.apiUrl}/customers`, {
-            tipo_ricerca: "Anagrafica_Clienti",
-            keyword: query,
-            esito: "Record trovati",
-            stats: { clienti: clientiTrovati }
-          }).pipe(catchError(() => of(null)));
-        }
-
-        if (serverTrovati > 0) {
-          chiamate.servers = this.http.post(`${this.apiUrl}/servers`, {
-            tipo_ricerca: "Anagrafica_Server",
-            keyword: query,
-            esito: "Record trovati",
-            stats: { server: serverTrovati }
-          }).pipe(catchError(() => of(null)));
-        }
-
-        if (clientiTrovati === 0 && serverTrovati === 0) {
-          chiamate.customers = this.http.post(`${this.apiUrl}/customers`, {
-            tipo_ricerca: "Anagrafica_Clienti",
-            keyword: query,
-            esito: "Nessun match",
-            stats: { clienti: 0 }
-          }).pipe(catchError(() => of(null)));
-
-          chiamate.servers = this.http.post(`${this.apiUrl}/servers`, {
-            tipo_ricerca: "Anagrafica_Server",
-            keyword: query,
-            esito: "Nessun match",
-            stats: { server: 0 }
-          }).pipe(catchError(() => of(null)));
-        }
-
-        return forkJoin(chiamate);
+        return this.http.get<{ customers: any[]; servers: any[] }>(
+          `${this.apiUrl}/customer-server/search`,
+          { params: { q: query } }
+        ).pipe(
+          catchError(err => {
+            console.error("Errore di rete con Mockoon:", err);
+            return of(null);
+          })
+        );
       })
-    ).subscribe();
+    ).subscribe(res => {
+      if (res) {
+        const trovatiCustomers = (res.customers || []).filter((c: any) => c && c.id);
+        const trovatiServers = (res.servers || []).filter((s: any) => s && s.id);
+
+        this.data.customers = trovatiCustomers;
+        this.data.servers = trovatiServers;
+      }
+      this.refreshUI();
+    });
   }
 
-  // Termina la sottoscrizione attiva al flusso di ricerca quando il componente viene rimosso dalla memoria.
   ngOnDestroy() {
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
     }
   }
 
-  // Richiede via API i dati di clienti, server e log qualora l'istanza condivisa locale risulti vuota.
-  loadData() {
-    if (this.data.customers && this.data.customers.length > 0) {
+  // Carica i dati gestendo la persistenza sia via Server Mockoon che via LocalStorage locale
+  loadData(force = false) {
+    // 1. Recupera prima di tutto i dati salvati in sessione locale (se esistono)
+    const salvatiLocaliCustomers = localStorage.getItem('mock_customers');
+    const salvatiLocaliServers = localStorage.getItem('mock_servers');
+
+    if (salvatiLocaliCustomers) {
+      this.data.customers = JSON.parse(salvatiLocaliCustomers);
+    }
+    if (salvatiLocaliServers) {
+      this.data.servers = JSON.parse(salvatiLocaliServers);
+    }
+
+    // Se abbiamo già dati e non stiamo forzando la mano, ci fermiamo qui senza fare chiamate distruttive
+    if (!force && this.data.customers && this.data.customers.length > 0) {
       this.refreshUI();
       return;
     }
 
+    // Chiamata HTTP Customers
     this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe(res => {
-      this.data.customers = res;
+      const serverCustomers = Array.isArray(res) ? res : [];
+      
+      // Unisce i record di Mockoon con quelli memorizzati nel browser dell'utente
+      const locali = (this.data.customers || []).filter((c: any) => !serverCustomers.some((r: any) => r.id === c.id));
+      this.data.customers = [...locali, ...serverCustomers];
+      
+      // Aggiorna la memoria del browser
+      localStorage.setItem('mock_customers', JSON.stringify(this.data.customers));
       this.refreshUI();
     });
+
+    // Chiamata HTTP Servers
     this.http.get<any[]>(`${this.apiUrl}/servers`).subscribe(res => {
-      this.data.servers = res;
+      const serverList = Array.isArray(res) ? res : [];
+      
+      const localiServer = (this.data.servers || []).filter((s: any) => !serverList.some((r: any) => r.id === s.id));
+      this.data.servers = [...localiServer, ...serverList];
+      
+      localStorage.setItem('mock_servers', JSON.stringify(this.data.servers));
       this.refreshUI();
     });
+
     this.http.get<any[]>(`${this.apiUrl}/logs`).subscribe(res => {
-      this.data.logs = res;
+      this.data.logs = Array.isArray(res) ? res : [];
       this.refreshUI();
     });
   }
@@ -159,7 +137,6 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
 
   expandedCustomerIds: (string | number)[] = [];
 
-  // Filtra i clienti (e relativi server) in base alla stringa cercata e li ordina cronologicamente dal più recente.
   get filteredCustomers() {
     const getTimestamp = (dateStr: any): number => {
       if (!dateStr) return 0;
@@ -182,22 +159,9 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     };
 
     let result = Array.isArray(this.data.customers) ? [...this.data.customers] : [];
-
-    const query = this.searchQuery.trim().toLowerCase();
-    if (query) {
-      result = result.filter(c => {
-        const matchCustomer = c.name && c.name.toLowerCase().includes(query);
-        const matchServer = this.getServersByCustomer(c.id).some(s => 
-          s.name && s.name.toLowerCase().includes(query)
-        );
-        return matchCustomer || matchServer;
-      });
-    }
-
     return result.sort((a, b) => getTimestamp(b.createdAt) - getTimestamp(a.createdAt));
   }
 
-  // Forza l'aggiornamento grafico e la rilevazione dei cambiamenti all'interno del ciclo di rendering di Angular.
   private refreshUI() {
     setTimeout(() => {
       this.cdr.markForCheck();
@@ -205,7 +169,6 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     }, 0);
   }
 
-  // Apre o chiude l'input di ricerca a schermo, azzerando i filtri applicati in caso di chiusura.
   toggleSearch(event: Event): void {
     event.stopPropagation();
     this.isSearchOpen = !this.isSearchOpen;
@@ -221,13 +184,10 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  // Spinge la stringa digitata dall'utente all'interno dell'oggetto Subject per avviare il debounce di ricerca.
   onSearchChange(): void {
     this.searchSubject.next(this.searchQuery.trim());
-    this.refreshUI();
   }
 
-  // Chiude istantaneamente tutti i menu a tendina.
   closeAllDropdowns() {
     this.activeDropdownServerId = null;
     this.activeDropdownCustomerId = null;
@@ -237,7 +197,6 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  // Commuta lo stato di apertura del menu contestuale relativo alle opzioni di un singolo cliente.
   toggleCustomerDropdown(customerId: string, event: Event) {
     event.stopPropagation(); 
     this.activeDropdownServerId = null; 
@@ -245,7 +204,6 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  // Commuta lo stato di apertura del menu contestuale relativo alle opzioni di un singolo server.
   toggleDropdown(serverId: string, event: Event) {
     event.stopPropagation(); 
     this.activeDropdownCustomerId = null; 
@@ -253,7 +211,6 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  // Aggiunge o rimuove l'ID di un cliente dall'elenco delle righe espanse per mostrare o nascondere i server figli.
   toggleExpand(customerId: string | number) {
     const index = this.expandedCustomerIds.indexOf(customerId);
     if (index > -1) {
@@ -264,18 +221,15 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  // Determina se la sezione contenente i server di un cliente specifico è attualmente visibile.
   isExpanded(customerId: string | number): boolean {
     return this.expandedCustomerIds.includes(customerId);
   }
 
-  // Restituisce l'insieme dei server associati in maniera esclusiva all'identificativo del cliente passato.
   getServersByCustomer(customerId: string | number) {
     if (!this.data.servers) return [];
     return this.data.servers.filter(s => s.customerId == customerId);
   }
 
-  // Resetta i dati del modulo e mostra la finestra modale per inserire un nuovo cliente.
   openCustomerModal() {
     this.closeAllDropdowns();
     this.customerForm.name = '';
@@ -283,7 +237,6 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  // Resetta i dati del modulo e mostra la finestra modale per la configurazione e aggiunta di un server.
   openServerModal() {
     this.closeAllDropdowns();
     this.serverForm = { name: '', customerId: null };
@@ -291,14 +244,12 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  // Chiude la finestra popup di notifica e azzera le credenziali di sicurezza precedentemente stampate.
   closeSecretModal() {
     this.showSecretModal = false;
     this.credentials = { clientId: '', clientSecret: '' };
     this.refreshUI();
   }
 
-  // Invia il nuovo cliente tramite richiesta POST a Mockoon e aggiorna la tabella.
   createCustomer() {
     if (!this.customerForm.name.trim()) return;
 
@@ -308,63 +259,45 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
       createdAt: new Date().toISOString()
     };
 
+    console.log(`%c Creazione customer: ${newCustomer.name} (id: ${newCustomer.id})`, "color: #10b981; ");
+
     this.http.post(`${this.apiUrl}/customers`, newCustomer).subscribe({
       next: () => {
-        if (!Array.isArray(this.data.customers)) this.data.customers = [];
-        this.data.customers = [newCustomer, ...this.data.customers];
-        
-        console.log(
-          `%c [CREATE] Customer "${newCustomer.name}" creato con successo!`, 
-          "color: #10b981;"
-        );
-
-        this.showCustomerModal = false;
-        this.refreshUI();
+        this.salvaCustomerInMemoria(newCustomer);
       },
       error: () => {
-        if (!Array.isArray(this.data.customers)) this.data.customers = [];
-        this.data.customers = [newCustomer, ...this.data.customers];
-        
-        console.log(
-          `%c [CREATE] Customer "${newCustomer.name}" creato con successo (Fallback locale)!`, 
-          "color: #f59e0b; font-weight: bold;"
-        );
-
-        this.showCustomerModal = false;
-        this.refreshUI();
+        // Se Mockoon risponde 404/Errore, salviamo comunque in locale via LocalStorage
+        this.salvaCustomerInMemoria(newCustomer);
       }
     });
   }
 
-  // Elimina un cliente da Mockoon tramite richiesta DELETE e aggiorna la tabella.
-  deleteCustomer(id: string) {
-    const customerName = this.data.customers?.find((c: any) => c.id === id)?.name || id;
+  private salvaCustomerInMemoria(newCustomer: any) {
+    if (!Array.isArray(this.data.customers)) this.data.customers = [];
+    this.data.customers = [newCustomer, ...this.data.customers];
+    localStorage.setItem('mock_customers', JSON.stringify(this.data.customers));
+    this.showCustomerModal = false;
+    this.refreshUI();
+  }
 
+  deleteCustomer(id: string) {
     this.http.delete<any>(`${this.apiUrl}/customers/${id}`).subscribe({
       next: () => {
-        this.data.customers = this.data.customers.filter((c: any) => c.id !== id);
-        
-        console.log(
-          `%c [DELETE] Customer "${customerName}" eliminato con successo!`, 
-          "color: #ef4444;"
-        );
-
-        this.refreshUI();
+        this.rimuoviCustomerInMemoria(id);
       },
       error: () => {
-        this.data.customers = this.data.customers.filter((c: any) => c.id !== id);
-        
-        console.log(
-          `%c [DELETE] Customer "${customerName}" eliminato con successo (Fallback locale)!`, 
-          "color: #f59e0b;"
-        );
-
-        this.refreshUI();
+        this.rimuoviCustomerInMemoria(id);
       }
     });
   }
 
-  // Creazione di un nuovo server, genera in locale le credenziali client id e client secret e le fa vedere tramite popup
+  private rimuoviCustomerInMemoria(id: string) {
+    this.data.customers = (this.data.customers || []).filter((c: any) => c.id !== id);
+    localStorage.setItem('mock_customers', JSON.stringify(this.data.customers));
+    console.log(`%c Customer eliminato: ${id}`, "color: #ef4444;"); 
+    this.refreshUI();
+  }
+
   createServer() {
     if (!this.serverForm.name.trim() || !this.serverForm.customerId) return;
 
@@ -378,68 +311,49 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
     const newServer = {
       id: serverId,
       name: this.serverForm.name,
-      customerId: this.serverForm.customerId
+      customerId: this.serverForm.customerId,
+      createdAt: new Date().toISOString()
     };
+
+    console.log(`%c Creazione server: ${newServer.name} (id: ${newServer.id}) per customerId: ${newServer.customerId}`, "color: #10b981; ");
 
     this.http.post(`${this.apiUrl}/servers`, newServer).subscribe({
       next: () => {
-        if (!Array.isArray(this.data.servers)) this.data.servers = [];
-        this.data.servers = [newServer, ...this.data.servers];
-        
-        console.log(
-          `%c [CREATE] Server "${newServer.name}" creato con successo!`, 
-          "color: #10b981;"
-        );
-
-        this.showServerModal = false;
-        this.showSecretModal = true; 
-        this.refreshUI();
+        this.salvaServerInMemoria(newServer);
       },
       error: () => {
-        if (!Array.isArray(this.data.servers)) this.data.servers = [];
-        this.data.servers = [newServer, ...this.data.servers];
-
-        console.log(
-          `%c [CREATE] Server "${newServer.name}" creato con successo (Fallback locale)!`, 
-          "color: #f59e0b;"
-        );
-
-        this.showServerModal = false;
-        this.showSecretModal = true; 
-        this.refreshUI();
+        this.salvaServerInMemoria(newServer);
       }
     });
   }
 
-  // Rimuove il server, inviando una richiesta DELETE HTTP a Mockoon.
-  deleteServer(id: string) {
-    const serverName = this.data.servers?.find((s: any) => s.id === id)?.name || id;
+  private salvaServerInMemoria(newServer: any) {
+    if (!Array.isArray(this.data.servers)) this.data.servers = [];
+    this.data.servers = [newServer, ...this.data.servers];
+    localStorage.setItem('mock_servers', JSON.stringify(this.data.servers));
+    this.showServerModal = false;
+    this.showSecretModal = true; 
+    this.refreshUI();
+  }
 
+  deleteServer(id: string) {
     this.http.delete<any>(`${this.apiUrl}/servers/${id}`).subscribe({
       next: () => {
-        this.data.servers = this.data.servers.filter((s: any) => s.id !== id);
-        
-        console.log(
-          `%c [DELETE] Server "${serverName}" eliminato con successo!`, 
-          "color: #ef4444;"
-        );
-
-        this.refreshUI();
+        this.rimuoviServerInMemoria(id);
       },
       error: () => {
-        this.data.servers = this.data.servers.filter((s: any) => s.id !== id);
-        
-        console.log(
-          `%c [DELETE] Server "${serverName}" eliminato con successo (Fallback locale)!`, 
-          "color: #f59e0b;"
-        );
-
-        this.refreshUI();
+        this.rimuoviServerInMemoria(id);
       }
     });
   }
 
-  // Richiede o rigenera in modo sicuro le coppie Client ID e Client Secret di un server, visualizzando le nuove credenziali.
+  private rimuoviServerInMemoria(id: string) {
+    this.data.servers = (this.data.servers || []).filter((s: any) => s.id !== id);
+    localStorage.setItem('mock_servers', JSON.stringify(this.data.servers));
+    console.log(`%c Server eliminato: ${id}`, "color: #ef4444; ");
+    this.refreshUI();
+  }
+
   regenerateCredentials(serverId: string) {
     if (confirm('Rigenerando le chiavi, le vecchie applicazioni collegate smetteranno di funzionare. Continuare?')) {
       this.http.post<any>(`${this.apiUrl}/servers/${serverId}/credentials`, {}).subscribe({
@@ -448,12 +362,6 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
             clientId: mockCredentials?.clientId || 'id_regen_' + Math.random().toString(36).substring(2, 12),
             clientSecret: mockCredentials?.clientSecret || 'secret_regen_' + Math.random().toString(36).substring(2, 15)
           };
-
-          console.log(
-            "%c[SECURITY] Nuove credenziali API generate con successo!",
-             "color: #e988f4"
-          );
-
           this.closeAllDropdowns();
           this.showSecretModal = true; 
           this.refreshUI();
@@ -463,12 +371,6 @@ export class CustomerServerComponent implements OnInit, OnDestroy {
             clientId: 'id_regen_' + Math.random().toString(36).substring(2, 12),
             clientSecret: 'secret_regen_' + Math.random().toString(36).substring(2, 15)
           };
-
-           console.log(
-            "%c[SECURITY] Nuove credenziali API generate con successo! (Fallback locale)!",
-            "color: #f59e0b"
-          );
-
           this.closeAllDropdowns();
           this.showSecretModal = true;
           this.refreshUI();

@@ -68,7 +68,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef  
   ) {}
 
-  /*Carica i dati di base (Script, Server, Clienti)e configura la pipeline di ricerca ad hoc per gli ID.*/
+  /*Carica i dati di base (Script, Server, Clienti) e configura la pipeline di ricerca ad hoc per gli ID.*/
   ngOnInit() {
     this.loadInitialData();
 
@@ -107,7 +107,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.ngOnInit();
   }
 
-  /*Esegue il filtro sul client se il server non risponde alla ricerca per ID.*/
+  /*Esegue il filtro sul client se the server non risponde alla ricerca per ID.*/
   private rimettiFiltroLocale() {
     const testoCercato = this.searchId.trim();
     this.data.scripts = this.data.scripts.filter(
@@ -195,8 +195,19 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.refreshUI();
   }
 
-  /*Recupera i dati di inizializzazione da mostrare a schermo: Script, Clienti e Server collegati.*/
+  /*Recupera i dati di inizializzazione unendo i dati statici di Mockoon alla memoria del browser.*/
   loadInitialData() {
+    // Caricamento preventivo dal localStorage per evitare sfasamenti temporali
+    const salvatiLocaliCustomers = localStorage.getItem('mock_customers');
+    if (salvatiLocaliCustomers) {
+      this.data.customers = JSON.parse(salvatiLocaliCustomers);
+    }
+    const salvatiLocaliServers = localStorage.getItem('mock_servers');
+    if (salvatiLocaliServers) {
+      this.data.servers = JSON.parse(salvatiLocaliServers);
+    }
+
+    // Gestione e ordinamento degli Script
     if (this.data.scripts && this.data.scripts.length > 0) {
       this.data.scripts.sort((a, b) => {
         const dataA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -217,27 +228,41 @@ export class ScriptsComposer implements OnInit, OnDestroy {
       });
     }
 
-    // Caricamento e ordinamento dei Clienti (per ID e data creazione)
+    // Caricamento dei Clienti (Unione protetta localStorage + Mockoon)
     this.http.get<any[]>(`${this.apiUrl}/customers`).subscribe(res => {
       const rawCustomers = Array.isArray(res) ? res : [];
-      rawCustomers.sort((a, b) => {
+      const attualiCustomers = this.data.customers || [];
+      
+      // Filtra i record locali creati manualmente che non sono nel server finto
+      const localiCustomer = attualiCustomers.filter((c: any) => c && c.id && !rawCustomers.some((r: any) => r && r.id === c.id));
+      this.data.customers = [...localiCustomer, ...rawCustomers];
+      
+      this.data.customers.sort((a, b) => {
         const dataA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dataB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dataB !== dataA ? dataB - dataA : String(b.id).localeCompare(String(a.id));
       });
-      this.data.customers = rawCustomers;
+      
+      localStorage.setItem('mock_customers', JSON.stringify(this.data.customers));
       this.refreshUI();
     });
 
-    // Caricamento e ordinamento dei Server associati
+    // Caricamento dei Server (Unione protetta localStorage + Mockoon)
     this.http.get<any[]>(`${this.apiUrl}/servers`).subscribe(res => {
       const rawServers = Array.isArray(res) ? res : [];
-      rawServers.sort((a, b) => {
+      const attualiServers = this.data.servers || [];
+      
+      // Filtra i server locali associati ai clienti
+      const localiServer = attualiServers.filter((s: any) => s && s.id && !rawServers.some((r: any) => r && r.id === s.id));
+      this.data.servers = [...localiServer, ...rawServers];
+
+      this.data.servers.sort((a, b) => {
         const dataA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dataB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dataB !== dataA ? dataB - dataA : String(b.id).localeCompare(String(a.id));
       });
-      this.data.servers = rawServers;
+      
+      localStorage.setItem('mock_servers', JSON.stringify(this.data.servers));
       this.refreshUI();
     });
   }
@@ -286,7 +311,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
   /* Filtra dinamicamente la lista dei server in base al cliente selezionato nel form.*/
   getFilteredServers(): any[] {
     if (!this.scriptForm.customerId) return [];
-    return this.data.servers.filter(s => s.customerId === this.scriptForm.customerId);
+    return this.data.servers.filter(s => s.customerId == this.scriptForm.customerId);
   }
 
   /*Se l'utente cambia il cliente nel form, resetta il server selezionato per evitare incongruenze.*/
@@ -464,7 +489,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
     this.http.post(`${this.apiUrl}/scripts`, newScript).subscribe({
       next: () => {
         this.data.scripts = [newScript, ...this.data.scripts];
-        console.log(`%c [CREATE] Script "${newScript.id}" creato con successo!`, "color: #10b981;");
+        console.log(`%c [CREATE] Script "${newScript.id}" creato con successo!`, "color: #10b981");
 
         const newLog = {
           id: 'LOG-' + Math.floor(100000 + Math.random() * 900000),
@@ -485,7 +510,7 @@ export class ScriptsComposer implements OnInit, OnDestroy {
       },
       error: () => {
         this.data.scripts = [newScript, ...this.data.scripts];
-        console.log(`[CREATE] Script "${newScript.id}" creato con successo (Fallback locale)!`, "color: #f59e0b.");
+        console.log(`%c [CREATE] Script "${newScript.id}" creato con successo (Fallback locale)!`, "color: #f59e0b.");
         this.refreshUI();
       }
     });

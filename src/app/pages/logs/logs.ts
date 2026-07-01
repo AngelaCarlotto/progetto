@@ -51,36 +51,31 @@ export class Logs implements OnInit, OnDestroy {
           return of(null);
         }
 
-        const currentFiltered = this.getFilteredLogsList(cleanedQuery);
-        const successMatch = currentFiltered.filter(log => String(log.level).toLowerCase() === 'success').length;
-        const errorMatch = currentFiltered.filter(log => String(log.level).toLowerCase() === 'error').length;
+        const dateAwareQuery = this.normalizeDateQuery(cleanedQuery);
 
-        const bodyPayload = {
-          keyword: cleanedQuery,
-          esito_ricerca: currentFiltered.length > 0 ? 'Dato trovato' : 'Nessun risultato',
-          totale_corrispondenze: currentFiltered.length,
-          totale_success: successMatch,
-          totale_error: errorMatch
-        };
+        const safeQuery = this.escapeRegex(dateAwareQuery);
 
-        const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-
-        return this.http.post<any>(`${this.apiUrl}/logs/search`, bodyPayload, { headers }).pipe(
+        return this.http.get<{ logs: any[] }>(
+          `${this.apiUrl}/logs/search`,
+          { params: { keyword: safeQuery } }
+        ).pipe(
           catchError((err) => {
-            console.warn("[SEARCH] Errore o Fallback locale sui parametri di ricerca:", err);
-            return of(null); 
+            console.warn("[SEARCH] Errore o fallback locale sui parametri di ricerca:", err);
+            return of(null);
           })
         );
       })
-    ).subscribe(() => {
-      const queryLower = this.search ? this.search.trim().toLowerCase() : '';
-      
-      if (queryLower) {
-        const totaleMatchReali = this.getFilteredLogsList(queryLower).length;
-        if (totaleMatchReali > 0) {
-          console.log(`%c[SEARCH] Risultati trovati per: "${this.search}" (${totaleMatchReali} match)`, "color: #0ea5e9; ");
-        } else {
-          console.log(`%c[SEARCH] Nessun risultato trovato per: "${this.search}"`, "color: #ef4444; ");
+    ).subscribe(res => {
+      if (res && res.logs) {
+        res.logs.forEach((log: any, i: number) => {
+          const dataLeggibile = log.createdAt ? new Date(log.createdAt).toLocaleString('it-IT') : 'N/A';
+          console.log(
+            `%c Log trovato ${i + 1}: [${log.level}] ${log.message} — ${dataLeggibile} (id: ${log.id})`,
+            "color: #0ea5e9; "
+          );
+        });
+        if (res.logs.length === 0) {
+          console.log("%c Nessun risultato trovato.", "color: #ef4444; ");
         }
       }
 
@@ -88,6 +83,27 @@ export class Logs implements OnInit, OnDestroy {
       this.loading = false;
       this.refreshUI();
     });
+  }
+
+  private normalizeDateQuery(query: string): string {
+    const fullDateMatch = query.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (fullDateMatch) {
+      const [, day, month, year] = fullDateMatch;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+
+    const partialDateMatch = query.match(/^(\d{1,2})\/(\d{1,2})$/);
+    if (partialDateMatch) {
+      const [, day, month] = partialDateMatch;
+      return `-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+
+    return query;
+  }
+
+
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
   }
 
   /*Cancella la sottoscrizione per evitare consumi di memoria superflui.*/
@@ -208,7 +224,7 @@ export class Logs implements OnInit, OnDestroy {
 
   /*Svuota interamente il database dei log sul server. Include controlli di sicurezza basati sul ruolo utente.*/
   clearAllLogs() {
-    this.dropdownAperto = false; // Chiude preventivamente il menu a tendina
+    this.dropdownAperto = false;
 
     const ruoloAttuale = this.authService.getUserRole();
     console.log("%c[DEBUG LOGS] Tentativo di svuotamento. Ruolo rilevato:", "color: #3b82f6;", ruoloAttuale);
